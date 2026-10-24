@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package sales.identity.v1;
+
+// Synchronous reads that must be exact at the moment of the call.
+// Called by orders-api while calculating and submitting an order.
+// Missing ids are answered with the gRPC status NOT_FOUND.
+service IdentityService {
+  rpc GetClient(GetClientRequest) returns (GetClientResponse);
+  rpc GetSeller(GetSellerRequest) returns (GetSellerResponse);
+}
+
+message GetClientRequest {
+  string client_id = 1;
+}
+
+message GetSellerRequest {
+  string seller_id = 1;
+}
+
+message GetClientResponse {
+  Client client = 1;
+}
+
+message GetSellerResponse {
+  Seller seller = 1;
+}
+
+message Client {
+  string id = 1;
+  string trade_name = 2;
+  // The seller whose portfolio holds this client.
+  string seller_id = 3;
+  // The price table to use. When the client has none, identity answers with
+  // the default table and sets price_table_fallback.
+  string price_table_id = 4;
+  bool price_table_fallback = 5;
+  int32 credit_limit_cents = 6;
+  int32 credit_used_cents = 7;
+}
+
+message Seller {
+  string id = 1;
+  string name = 2;
+  string supervisor_id = 3;
+  // Maximum discount the seller may grant without approval, in basis points
+  // (1% = 100).
+  int32 discount_limit_bp = 4;
+}

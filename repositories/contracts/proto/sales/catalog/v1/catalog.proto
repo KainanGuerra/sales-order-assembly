@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package sales.catalog.v1;
+
+// Synchronous reads that must be exact at the moment of the call.
+// Called by orders-api while calculating and submitting an order.
+service CatalogService {
+  // Returns the sale rules and the unit price (from the given price table)
+  // for each requested product. Unknown ids are listed in unknown_product_ids.
+  rpc GetProducts(GetProductsRequest) returns (GetProductsResponse);
+}
+
+message GetProductsRequest {
+  string price_table_id = 1;
+  repeated string product_ids = 2;
+}
+
+message GetProductsResponse {
+  repeated ProductQuote products = 1;
+  repeated string unknown_product_ids = 2;
+}
+
+message ProductQuote {
+  string product_id = 1;
+  string sku = 2;
+  string ean = 3;
+  string description = 4;
+  // false when the product is discontinued/inactive.
+  bool active = 5;
+  // UN, FD or CX.
+  string sale_unit = 6;
+  // Units per pack. 1 for products sold by the unit.
+  int32 pack_factor = 7;
+  // When true, quantities (in units) must be a multiple of pack_factor.
+  bool multiple_only = 8;
+  // false when the product is missing from the price table.
+  bool has_price = 9;
+  // Price of ONE unit, in cents. Only meaningful when has_price is true.
+  int32 unit_price_cents = 10;
+}

@@ -1,0 +1,31 @@
+{
+  "name": "contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "gRPC contracts (.proto), generated TypeScript types and RabbitMQ event schemas shared by the services through a git submodule.",
+  "packageManager": "pnpm@12.15.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "lint": "buf lint",
+    "generate": "buf generate",
+    "check:generated": "pnpm generate && git diff --exit-code -- gen",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@bufbuild/buf": "1.75.0",
+    "@bufbuild/protobuf": "2.16.0",
+    "@grpc/grpc-js": "1.14.6",
+    "@nestjs/common": "12.2.0",
+    "@nestjs/microservices": "12.2.0",
+    "@types/node": "^24.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "ts-proto": "2.18.3",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5",
+    "zod": "4.6.7"
+  }
+}
