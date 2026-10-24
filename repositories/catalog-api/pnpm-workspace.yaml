@@ -1,0 +1,5 @@
+# Install scripts are denied by default. Both only run sanity checks: the
+# binaries ship in platform packages.
+allowBuilds:
+  protobufjs: false
+  esbuild: false
