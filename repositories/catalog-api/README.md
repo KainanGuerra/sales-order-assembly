@@ -14,8 +14,8 @@ Products, price tables and search. Owns the `catalog` Postgres schema. Read by `
 ## Run standalone
 
 ```bash
-cp .env.example .env
 # from the repository root:
+sh scripts/init-env.sh   # generates .env with random passwords
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build catalog-api
 curl -s -H 'x-inner-auth: <INNER_AUTH>' 'localhost:13002/products?q=acucar&priceTableId=TP01'
 ```

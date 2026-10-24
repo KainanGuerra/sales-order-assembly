@@ -46,7 +46,7 @@ Pré-requisitos: Docker com Compose e acesso à internet (as imagens são baixad
 ```bash
 git clone --recurse-submodules <url-do-repositório>
 cd <pasta>
-cp .env.example .env
+sh scripts/init-env.sh      # cria o .env com senhas aleatórias (nada de segredo no repositório)
 docker compose up
 ```
 
