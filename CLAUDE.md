@@ -13,6 +13,7 @@ The reviewers will pick code at random and ask me to explain it, make a live cha
 - **Phase A:** mandatory requirements 1–6 (portfolio scoping, product search by name/EAN with the client's price table, order building, totals and blocking rules, submit with status, automated tests of the rules).
 - **Phase B:** credit limit, order history with "repeat order", minimal supervisor approve/reject.
 - **Phase C:** offline drafting and sync (behaviour still to be decided).
+- **Phase D (last):** the `orchestration` repo, like the earlier multi-repo work: umbrella Helm chart with a subchart per service, kind cluster with Calico, ingress, NetworkPolicies, Kubernetes getting-started guide. The compose file moves into it; the root keeps a thin `docker-compose.yml` that `include:`s it, so `docker compose up` still works. Do not start it before A–C are done (`DECISIONS.md` D29).
 
 ## Architecture
 

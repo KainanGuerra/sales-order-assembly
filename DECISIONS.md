@@ -236,3 +236,13 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 - **Escolha:** Uma aplicação Nest híbrida (HTTP e gRPC) e um único guard que lê o segredo de `x-inner-auth` do cabeçalho ou dos metadados, comparando em tempo constante. Sem o segredo, HTTP responde 401 e gRPC responde `UNAUTHENTICATED` (um erro HTTP do Nest chegaria ao chamador gRPC como `UNKNOWN`).
 - **Por quê:** Um só código de autenticação, testado nos dois caminhos.
 - **O que faria diferente:** Tokens assinados por chamada em vez de um segredo compartilhado (já registrado em D16).
+
+## D29. Repositório de orquestração, na fase D (a última)
+
+- **Contexto:** Nos meus projetos anteriores, um repositório de orquestração reúne o gráfico Helm "guarda-chuva", os subgráficos de cada serviço, o cluster local (kind), o ingress e as políticas de rede, com um guia de primeiros passos. Quero o mesmo padrão aqui, mas só depois que as funcionalidades estiverem prontas.
+- **Alternativas consideradas:** deixar só o Docker Compose; substituir o Compose por Kubernetes; incluir a orquestração antes da fase de modo offline.
+- **Escolha:** Um repositório `orchestration` na **fase D**, depois das fases A (obrigatórios), B (crédito, histórico, aprovação, notificações) e C (offline). Ele contém: o gráfico Helm guarda-chuva com um subgráfico por serviço (cada serviço mantém o seu em `/k8s`), a configuração do cluster kind sem CNI padrão e com Calico para que as NetworkPolicies sejam aplicadas, o ingress, um `Deployment` por serviço com `wait-for-postgres`, contexto de segurança não-root, probes em `/health`, Secrets e ConfigMaps, e o guia de primeiros passos com imagens baixadas do GHCR. **O arquivo do Docker Compose também passa a morar nele**, para haver um único lugar que define como tudo roda.
+- **Como atende ao enunciado:** o enunciado exige `docker compose up`. Até a fase D o compose fica na raiz; na fase D o repositório raiz mantém um `docker-compose.yml` fino que usa `include:` para o do `orchestration`, então o comando continua o mesmo.
+- **Por quê:** Mantém o padrão que já uso e deixa a infraestrutura de execução concentrada, sem atrasar as regras de negócio, que é o que a avaliação pesa.
+- **Risco assumido:** É a fase mais dispensável para o enunciado; se o tempo acabar, o Compose na raiz continua sendo uma entrega completa, e isso será dito no README.
+- **O que faria diferente:** Fazer a versão mínima do Helm (um subgráfico) junto da fase A, para validar a forma de implantação cedo.

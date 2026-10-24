@@ -11,6 +11,7 @@ Módulo para vendedores que visitam pequenos varejistas (mercadinhos, minimercad
 | A | Requisitos obrigatórios 1–6 | Não iniciada |
 | B | Limite de crédito, histórico com "repetir pedido", aprovação do supervisor | Não iniciada |
 | C | Pedido offline com sincronização | Não iniciada |
+| D | Repositório de orquestração (Helm, kind, ingress), última fase | Não iniciada |
 
 ## Stack
 
@@ -28,6 +29,7 @@ O sistema segue o padrão de um repositório por serviço em uma organização d
 | `sales-orders-api` | Regras e ciclo de vida do pedido |
 | `sales-notifications-api` | Avisos ao supervisor (fase B) |
 | `sales-contracts` | `.proto` e esquemas de eventos |
+| `sales-orchestration` | Helm, kind, ingress e Compose (fase D) |
 
 ```
 <repositório guarda-chuva>

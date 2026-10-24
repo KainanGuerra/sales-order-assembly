@@ -34,6 +34,7 @@ flowchart LR
 | `sales-orders-api` | Todas as regras de pedido: cálculo, bloqueios, alçada, pedido mínimo, crédito, envio, aprovação, histórico, repetir pedido | `orders` | cliente gRPC de catalog e identity; publica eventos |
 | `sales-notifications-api` | Avisos ao supervisor para pedidos aguardando aprovação | `notifications` | consome `OrderSubmitted` |
 | `sales-contracts` | Arquivos `.proto` e esquemas de eventos | — | submódulo dos serviços |
+| `sales-orchestration` (fase D) | Gráfico Helm guarda-chuva, subgráficos, cluster kind com Calico, ingress, NetworkPolicies, Docker Compose e guia de primeiros passos | — | todos os serviços (implantação) |
 | `sales-platform` (guarda-chuva) | Documentos de entrega, `docker-compose.yml`, CI, submódulos | — | — |
 
 Infraestrutura: um PostgreSQL (um schema e um papel por serviço, **sem consultas entre schemas**), RabbitMQ e Redis.
@@ -98,3 +99,4 @@ Cada serviço importa sua parte na inicialização, de forma idempotente: identi
 - **A:** identity, catalog, orders, web; RabbitMQ e Redis já no compose.
 - **B:** crédito (consumidor em identity), histórico e repetir pedido, aprovação do supervisor, notifications.
 - **C:** pedido offline com sincronização.
+- **D:** repositório `orchestration` (Helm, kind, ingress, NetworkPolicies, guia de primeiros passos). O `docker-compose.yml` passa a morar nele; o repositório raiz mantém um arquivo fino com `include:` para que `docker compose up` continue funcionando. Ver `DECISIONS.md` D29.
