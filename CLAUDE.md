@@ -8,7 +8,7 @@ The reviewers will pick code at random and ask me to explain it, make a live cha
 
 ## Status
 
-`contracts` and `catalog-api` exist under `repositories/` and pass their tests; `catalog-api` also runs in Docker Compose. `identity-api`, `orders-api` and `web` do not exist yet. Delivery is phased:
+`contracts`, `catalog-api` and `identity-api` exist under `repositories/`, pass their tests and run in Docker Compose. `orders-api` and `web` do not exist yet. Delivery is phased:
 
 - **Phase A:** mandatory requirements 1–6 (portfolio scoping, product search by name/EAN with the client's price table, order building, totals and blocking rules, submit with status, automated tests of the rules).
 - **Phase B:** credit limit, order history with "repeat order", minimal supervisor approve/reject.

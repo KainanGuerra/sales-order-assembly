@@ -246,3 +246,20 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 - **Por quê:** Mantém o padrão que já uso e deixa a infraestrutura de execução concentrada, sem atrasar as regras de negócio, que é o que a avaliação pesa.
 - **Risco assumido:** É a fase mais dispensável para o enunciado; se o tempo acabar, o Compose na raiz continua sendo uma entrega completa, e isso será dito no README.
 - **O que faria diferente:** Fazer a versão mínima do Helm (um subgráfico) junto da fase A, para validar a forma de implantação cedo.
+
+## D30. Identity: quem pode ver o quê é decidido no servidor, com o usuário repassado pelo BFF
+
+- **Contexto:** O enunciado pede que o vendedor veja apenas os clientes da sua carteira, e o login é simulado (escolher o vendedor).
+- **Alternativas consideradas:** o BFF filtrar a carteira sozinho; o identity confiar no `sellerId` do caminho; o identity emitir tokens.
+- **Escolha:** O BFF valida a escolha com `POST /sessions/validate`, guarda a sessão e, em cada chamada, repassa `x-user-id` e `x-user-role` junto do segredo interno. O identity aplica a regra em uma função pura: um vendedor só acessa a própria carteira, e um supervisor só a dos vendedores que supervisiona. Um vendedor que pede o cliente de outro recebe a mesma resposta (404) de um cliente inexistente, e quem pede a carteira alheia recebe 403. As leituras entre serviços (gRPC) não passam por essa regra, porque o chamador é de confiança.
+- **Por quê:** A restrição vale mesmo que o BFF tenha um erro de filtro, e a regra tem testes diretos (quebrar a regra de propósito derrubou 3 testes em cada variação).
+- **Risco assumido:** O identity confia nos cabeçalhos de usuário do BFF, protegidos apenas pelo segredo compartilhado (D16).
+- **O que faria diferente:** Tokens assinados com o usuário dentro, em vez de cabeçalhos.
+
+## D31. O crédito utilizado não é sobrescrito pela carga do seed
+
+- **Contexto:** O identity importa o seed a cada partida, e o crédito utilizado passará a ser alterado pelos pedidos (reserva, D22).
+- **Alternativas consideradas:** sobrescrever tudo a cada partida (simples, mas apagaria o crédito consumido); importar só quando a tabela está vazia.
+- **Escolha:** A carga atualiza os demais campos, mas não toca em `credit_used_cents` depois da primeira carga. Há um teste para isso.
+- **Por quê:** Reiniciar o serviço não pode devolver crédito.
+- **O que faria diferente:** Separar a carga de dados de referência (a que reexecuta) da carga inicial de saldos (que roda uma vez).
