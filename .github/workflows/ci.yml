@@ -26,9 +26,13 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
 
-  catalog-api:
+  services:
     needs: contracts
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [catalog-api, identity-api]
     services:
       postgres:
         image: postgres:17-alpine
@@ -49,7 +53,6 @@ jobs:
       CATALOG_DB_PASSWORD: ci-catalog
       ORDERS_DB_PASSWORD: ci-orders
       NOTIFICATIONS_DB_PASSWORD: ci-notifications
-      TEST_DATABASE_URL: postgres://catalog_role:ci-catalog@127.0.0.1:5432/sales
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -61,16 +64,22 @@ jobs:
         working-directory: repositories/contracts
         run: pnpm install --frozen-lockfile && pnpm build
       - name: Install, lint, test
-        working-directory: repositories/catalog-api
+        working-directory: repositories/${{ matrix.service }}
         run: |
+          # catalog-api -> catalog_role / ci-catalog, identity-api -> identity_role / ci-identity
+          name="${{ matrix.service }}"; name="${name%-api}"
+          export TEST_DATABASE_URL="postgres://${name}_role:ci-${name}@127.0.0.1:5432/sales"
           pnpm install --frozen-lockfile
           pnpm lint
           pnpm test
 
-  publish-catalog-api:
+  publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: catalog-api
+    needs: services
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [catalog-api, identity-api]
     permissions:
       contents: read
       packages: write
@@ -85,14 +94,14 @@ jobs:
       - uses: docker/metadata-action@v5
         id: meta
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/sales-catalog-api
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/sales-${{ matrix.service }}
           tags: |
             type=sha,format=long
             type=raw,value=latest
       - uses: docker/build-push-action@v6
         with:
           context: repositories
-          file: repositories/catalog-api/Dockerfile
+          file: repositories/${{ matrix.service }}/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha

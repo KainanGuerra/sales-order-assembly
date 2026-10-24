@@ -27,11 +27,18 @@ SQL
 
 create_service_schema identity      "${IDENTITY_DB_PASSWORD:?IDENTITY_DB_PASSWORD must be set}"
 create_service_schema catalog       "${CATALOG_DB_PASSWORD:?CATALOG_DB_PASSWORD must be set}"
-# A second schema for integration tests: same owner, same migrations, no
-# interference with the data the running service uses.
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<SQL
-CREATE SCHEMA catalog_test AUTHORIZATION catalog_role;
-SQL
 
 create_service_schema orders        "${ORDERS_DB_PASSWORD:?ORDERS_DB_PASSWORD must be set}"
 create_service_schema notifications "${NOTIFICATIONS_DB_PASSWORD:?NOTIFICATIONS_DB_PASSWORD must be set}"
+
+# A second schema per service for integration tests: same owner, same
+# migrations, no interference with the data the running service uses.
+create_test_schema() {
+  schema="$1"
+  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<SQL
+CREATE SCHEMA ${schema}_test AUTHORIZATION ${schema}_role;
+SQL
+}
+
+create_test_schema identity
+create_test_schema catalog
