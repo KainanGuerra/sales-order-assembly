@@ -1,0 +1,43 @@
+# Shared infrastructure. Services are added to this file as they are built.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set; run: sh scripts/init-env.sh}
+      POSTGRES_DB: sales
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?IDENTITY_DB_PASSWORD must be set}
+      CATALOG_DB_PASSWORD: ${CATALOG_DB_PASSWORD:?CATALOG_DB_PASSWORD must be set}
+      ORDERS_DB_PASSWORD: ${ORDERS_DB_PASSWORD:?ORDERS_DB_PASSWORD must be set}
+      NOTIFICATIONS_DB_PASSWORD: ${NOTIFICATIONS_DB_PASSWORD:?NOTIFICATIONS_DB_PASSWORD must be set}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init-schemas.sh:/docker-entrypoint-initdb.d/init-schemas.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sales"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  catalog-api:
+    build:
+      context: ./repositories
+      dockerfile: catalog-api/Dockerfile
+    environment:
+      DATABASE_URL: postgres://catalog_role:${CATALOG_DB_PASSWORD}@postgres:5432/sales
+      INNER_AUTH: ${INNER_AUTH:?INNER_AUTH must be set}
+      SHOW_UNAVAILABLE_PRODUCTS: ${SHOW_UNAVAILABLE_PRODUCTS:-true}
+      SEED_FILE: /data/seed.json
+    volumes:
+      - ./seed.json:/data/seed.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+
+volumes:
+  postgres-data:

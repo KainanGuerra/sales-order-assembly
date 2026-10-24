@@ -1,0 +1,99 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: repositories/contracts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm check:generated
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  catalog-api:
+    needs: contracts
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: ci-postgres
+          POSTGRES_DB: sales
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d sales"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      # Same roles and schemas as the compose stack (infra/postgres/init-schemas.sh).
+      POSTGRES_USER: postgres
+      POSTGRES_DB: sales
+      PGHOST: 127.0.0.1
+      PGPASSWORD: ci-postgres
+      IDENTITY_DB_PASSWORD: ci-identity
+      CATALOG_DB_PASSWORD: ci-catalog
+      ORDERS_DB_PASSWORD: ci-orders
+      NOTIFICATIONS_DB_PASSWORD: ci-notifications
+      TEST_DATABASE_URL: postgres://catalog_role:ci-catalog@127.0.0.1:5432/sales
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: sh infra/postgres/init-schemas.sh
+      - name: Build contracts
+        working-directory: repositories/contracts
+        run: pnpm install --frozen-lockfile && pnpm build
+      - name: Install, lint, test
+        working-directory: repositories/catalog-api
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm test
+
+  publish-catalog-api:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: catalog-api
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/sales-catalog-api
+          tags: |
+            type=sha,format=long
+            type=raw,value=latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: repositories
+          file: repositories/catalog-api/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

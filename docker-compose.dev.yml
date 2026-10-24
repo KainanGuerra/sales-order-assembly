@@ -1,0 +1,10 @@
+# Local development only: publishes infrastructure ports on loopback so tests
+# and tools on the host can reach them. Never use this file for delivery.
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"
+  catalog-api:
+    ports:
+      - "127.0.0.1:13002:3002"
+      - "127.0.0.1:15052:50052"
