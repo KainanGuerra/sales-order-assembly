@@ -3,7 +3,7 @@ import {
   OrderApprovedEventSchema,
   OrderRejectedEventSchema,
   OrderSubmittedEventSchema,
-} from './order-events';
+} from './order-events.js';
 
 const validSubmitted = {
   orderId: '3f8c2d0e-8a53-4c6a-9d7c-1b6c1d2f6a10',

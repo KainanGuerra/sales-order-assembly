@@ -8,15 +8,16 @@
     "node": ">=24"
   },
   "scripts": {
-    "lint": "buf lint",
-    "generate": "buf generate",
+    "build": "tsc -p tsconfig.build.json",
     "check:generated": "pnpm generate && git diff --exit-code -- gen",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "generate": "buf generate",
+    "lint": "buf lint",
+    "prebuild": "rm -rf dist",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@bufbuild/buf": "1.75.0",
-    "@bufbuild/protobuf": "2.16.0",
     "@grpc/grpc-js": "1.14.6",
     "@nestjs/common": "12.2.0",
     "@nestjs/microservices": "12.2.0",
@@ -25,7 +26,38 @@
     "rxjs": "^7.8.2",
     "ts-proto": "2.18.3",
     "typescript": "7.0.2",
-    "vitest": "5.0.5",
+    "vitest": "5.0.5"
+  },
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./catalog": {
+      "types": "./dist/gen/ts/sales/catalog/v1/catalog.d.ts",
+      "default": "./dist/gen/ts/sales/catalog/v1/catalog.js"
+    },
+    "./identity": {
+      "types": "./dist/gen/ts/sales/identity/v1/identity.d.ts",
+      "default": "./dist/gen/ts/sales/identity/v1/identity.js"
+    }
+  },
+  "files": [
+    "dist",
+    "proto"
+  ],
+  "dependencies": {
+    "@bufbuild/protobuf": "2.16.0",
     "zod": "4.6.7"
+  },
+  "peerDependencies": {
+    "@grpc/grpc-js": "^1.14.0",
+    "@nestjs/common": "^12.0.0",
+    "@nestjs/microservices": "^12.0.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.0.0"
   }
 }
