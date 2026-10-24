@@ -17,7 +17,8 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A9 | `venda_somente_multiplo` é `true` para alguns produtos de embalagem e `false` para outros (ex.: Óleo, CX de 20) | Se `true`, a quantidade em unidades deve ser múltipla de `fator_embalagem`; se `false`, qualquer quantidade ≥ 1 é aceita |
 | A10 | `credito_utilizado` é um valor estático | Considera-se que já inclui os pedidos faturados do histórico. Pedidos criados no sistema ("Enviado" e "Aguardando aprovação") passam a somar-se a ele (fase B): o `identity` soma o total no momento da reserva (`ReserveCredit`, síncrona) e libera ao receber `OrderRejected`. Decisão minha |
 | A11 | Vendedor V02 tem alçada de 7% e o histórico PH003 usa exatamente 7% | O limite é inclusivo: desconto ≤ alçada fica dentro dela |
-| A12 | Nomes com acento e caixa variada | Busca insensível a acento e caixa |
+| A12 | Nomes com acento, caixa variada e erros de digitação | Busca insensível a acento e caixa, tolerante a erro de digitação (similaridade de palavra do `pg_trgm`). Consultas só com dígitos (8 a 14) ou no formato `SKU-n` são tratadas como código exato. Decisão minha |
+| A12b | Produtos de busca retornados por consulta | No máximo 50 por consulta (padrão 20); a ordem é descrição exata, mais próximo, id. Decisão minha |
 | A13 | Um único supervisor (S01), responsável pelos três vendedores | O supervisor vê apenas pedidos aguardando aprovação dos vendedores que supervisiona |
 | A14 | Pedidos do histórico têm status `Faturado` e `Cancelado` | São apenas leitura. Pedidos cancelados aparecem no histórico, mas não contam no crédito. Decisão minha |
 

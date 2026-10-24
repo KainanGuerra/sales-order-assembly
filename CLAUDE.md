@@ -8,7 +8,7 @@ The reviewers will pick code at random and ask me to explain it, make a live cha
 
 ## Status
 
-The `contracts` repo exists under `repositories/` (lint, generation, type-check and tests pass). The services do not exist yet. Delivery is phased:
+`contracts` and `catalog-api` exist under `repositories/` and pass their tests; `catalog-api` also runs in Docker Compose. `identity-api`, `orders-api` and `web` do not exist yet. Delivery is phased:
 
 - **Phase A:** mandatory requirements 1–6 (portfolio scoping, product search by name/EAN with the client's price table, order building, totals and blocking rules, submit with status, automated tests of the rules).
 - **Phase B:** credit limit, order history with "repeat order", minimal supervisor approve/reject.
@@ -18,6 +18,7 @@ The `contracts` repo exists under `repositories/` (lint, generation, type-check 
 
 Full picture in `ARQUITETURA.md`; reasoning in `DECISIONS.md` D15–D21.
 
+- **Local layout today:** one git repo (the umbrella) with the services as folders under `repositories/`; each installs `contracts` with `file:../contracts` (build it first). They become separate repos and a submodule later (`DECISIONS.md` D9, D26).
 - **Services (one repo each, placeholder names):** `identity-api` (sellers, supervisor, clients, limits, credit used), `catalog-api` (products, price tables, search), `orders-api` (every order rule), `notifications-api` (supervisor notices), `web` (Nuxt UI + BFF), `contracts` (`.proto` + event schemas, used as a git submodule), plus an umbrella repo with the deliverable docs, `docker-compose.yml`, CI and submodules.
 - **Infra:** one PostgreSQL (one schema and one role per service, **no cross-schema queries**), RabbitMQ, Redis.
 - **Browser → web only.** The Nuxt server is the BFF: it owns the session (Redis + cookie), validates the seller/supervisor pick with identity, and calls the services over HTTP with an inner-auth secret plus the user id and role.

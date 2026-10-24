@@ -210,3 +210,29 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 - **Escolha:** Dinheiro em centavos inteiros e descontos em **pontos-base** (1% = 100, inteiro, sem ponto flutuante). Pacotes `sales.catalog.v1` e `sales.identity.v1`, no layout padrão do `buf`. Entidade inexistente responde com o status gRPC `NOT_FOUND`. Os eventos (`OrderSubmitted`, `OrderApproved`, `OrderRejected`) são esquemas Zod em TypeScript, validados por quem publica e por quem consome. Os códigos internos de status são `SUBMITTED` e `AWAITING_APPROVAL`; a interface exibe "Enviado" e "Aguardando aprovação".
 - **Por quê:** Inteiros em todo lugar evitam arredondamento acidental; Zod combina com a validação do restante da stack.
 - **O que faria diferente:** Se houvesse consumidores em outras linguagens, descrever os eventos em Protobuf ou JSON Schema.
+
+## D26. Os serviços instalam o `contracts` como pacote local (`file:`), construído com `tsc`
+
+- **Contexto:** O `contracts` é um repositório à parte (D18), mas os serviços TypeScript precisam importar seus tipos gerados em tempo de execução. Com um vínculo simbólico (`link:`), o Node resolve as bibliotecas a partir da pasta do `contracts`, o que cria duas cópias de `@nestjs/microservices` e `zod` e não funciona numa imagem Docker.
+- **Alternativas consideradas:** `link:` para a pasta do `contracts`; compilar os `.ts` do `contracts` junto com cada serviço; publicar um pacote no registry.
+- **Escolha:** O `contracts` compila para JavaScript ESM (`pnpm build`), declara `zod` e `@bufbuild/protobuf` como dependências e `@nestjs/*`, `rxjs` e `@grpc/grpc-js` como dependências pares; os serviços o instalam com `file:../contracts`. O build do Docker usa a pasta `repositories/` como contexto: constrói o `contracts` e depois o serviço. Os caminhos dos `.proto` vêm de `CATALOG_PROTO_PATH` e `IDENTITY_PROTO_PATH`, porque o transporte gRPC do Nest ainda carrega o `.proto` em tempo de execução.
+- **Por quê:** Uma única cópia de cada biblioteca e uma imagem autossuficiente.
+- **Custo assumido:** Depois de mudar o contrato é preciso rodar o build do `contracts` e `pnpm install` nos serviços. Quando os serviços forem repositórios separados, o `contracts` entra como submódulo dentro de cada um e só os caminhos do Dockerfile mudam.
+- **O que faria diferente:** Publicar o pacote com versão semântica no GitHub Packages.
+
+## D27. Catálogo: busca por similaridade de palavra, migrações no início da aplicação e testes no Postgres real
+
+- **Contexto:** O vendedor digita no celular (erros de digitação, sem acento), o seed tem um EAN duplicado e produtos descontinuados.
+- **Alternativas consideradas:** `ILIKE` simples; similaridade de string inteira do `pg_trgm` (`%`), que falhou ao comparar "arros" com a descrição completa de "Arroz Branco Tipo 1 5kg"; testes só com mocks; esquema de teste separado criado pelos testes.
+- **Escolha:** Código numérico (EAN) ou SKU exato; texto por "contém" mais `word_similarity` (`<%`), ambos sobre `immutable_unaccent(lower(descrição))`, com índice GIN de trigramas. A ordem é descrição exata, depois a mais próxima, depois o id. Regras de visibilidade (disponível, sem preço, inativo) ficam em funções puras. As migrações do Drizzle rodam na criação do provedor do banco (a aplicação só sobe depois), e o próprio migrador registra o que já foi aplicado. Os testes de banco rodam as migrações reais no schema `catalog_test` do Postgres do compose.
+- **Por quê:** Os testes de busca com mocks não provariam o trigrama nem o acento, que são a parte mais arriscada do serviço. Uma mutação deliberada (inverter a ordenação por id) mostrou um buraco na cobertura, que foi corrigido com um teste de desempate.
+- **Custo assumido:** Os papéis de serviço receberam `CREATE` no banco, porque o migrador executa `CREATE SCHEMA IF NOT EXISTS` e o Postgres checa esse privilégio antes de verificar a existência. Isso não dá acesso ao schema de outro serviço (que exige `USAGE`), mas alarga o D19. A migração `0001` é escrita à mão e o script `db:generate` remove o prefixo `"public".` das chaves estrangeiras geradas.
+- **O que faria diferente:** Usar um papel de migração separado, com `CREATE`, e deixar o papel do serviço apenas com leitura e escrita nas tabelas; e travar a migração com um bloqueio consultivo se houver mais de uma réplica.
+
+## D28. Autenticação interna igual em HTTP e gRPC, e dois portões no mesmo processo
+
+- **Contexto:** O catálogo atende o BFF (HTTP) e o `orders` (gRPC).
+- **Alternativas consideradas:** dois processos; confiar apenas na rede interna.
+- **Escolha:** Uma aplicação Nest híbrida (HTTP e gRPC) e um único guard que lê o segredo de `x-inner-auth` do cabeçalho ou dos metadados, comparando em tempo constante. Sem o segredo, HTTP responde 401 e gRPC responde `UNAUTHENTICATED` (um erro HTTP do Nest chegaria ao chamador gRPC como `UNKNOWN`).
+- **Por quê:** Um só código de autenticação, testado nos dois caminhos.
+- **O que faria diferente:** Tokens assinados por chamada em vez de um segredo compartilhado (já registrado em D16).
