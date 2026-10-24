@@ -1,0 +1,829 @@
+{
+  "_meta": {
+    "descricao": "Dados de exemplo para o desafio técnico de força de vendas.",
+    "moeda": "BRL",
+    "observacoes": "preco_unidade é o preço de uma unidade (não da embalagem). fator_embalagem é a quantidade de unidades por embalagem de venda."
+  },
+  "supervisores": [
+    {
+      "id": "S01",
+      "nome": "Marta Fernandes"
+    }
+  ],
+  "vendedores": [
+    {
+      "id": "V01",
+      "nome": "Carlos Menezes",
+      "supervisor_id": "S01",
+      "alcada_desconto_percentual": 5
+    },
+    {
+      "id": "V02",
+      "nome": "Renata Lima",
+      "supervisor_id": "S01",
+      "alcada_desconto_percentual": 7
+    },
+    {
+      "id": "V03",
+      "nome": "Paulo Andrade",
+      "supervisor_id": "S01",
+      "alcada_desconto_percentual": 3
+    }
+  ],
+  "clientes": [
+    {
+      "id": "C001",
+      "nome_fantasia": "Mercadinho São José",
+      "razao_social": "Mercadinho São José Ltda",
+      "cnpj": "99.671.412/0001-10",
+      "vendedor_id": "V01",
+      "tabela_preco_id": "TP01",
+      "limite_credito": 5000,
+      "credito_utilizado": 1200,
+      "cidade": "Fortaleza",
+      "uf": "CE"
+    },
+    {
+      "id": "C002",
+      "nome_fantasia": "Minibox Bom Preço",
+      "razao_social": "Bom Preço Comércio de Alimentos Ltda",
+      "cnpj": "63.331.148/0001-29",
+      "vendedor_id": "V01",
+      "tabela_preco_id": "TP02",
+      "limite_credito": 12000,
+      "credito_utilizado": 11650,
+      "cidade": "Fortaleza",
+      "uf": "CE"
+    },
+    {
+      "id": "C003",
+      "nome_fantasia": "Conveniência Esquina",
+      "razao_social": "Esquina Conveniência ME",
+      "cnpj": "67.717.889/0001-01",
+      "vendedor_id": "V01",
+      "tabela_preco_id": "TP01",
+      "limite_credito": 2500,
+      "credito_utilizado": 0,
+      "cidade": "Caucaia",
+      "uf": "CE"
+    },
+    {
+      "id": "C004",
+      "nome_fantasia": "Mercearia Dona Lúcia",
+      "razao_social": "L. Barbosa Mercearia ME",
+      "cnpj": "45.948.749/0001-01",
+      "vendedor_id": "V01",
+      "tabela_preco_id": null,
+      "limite_credito": 3000,
+      "credito_utilizado": 0,
+      "cidade": "Maracanaú",
+      "uf": "CE"
+    },
+    {
+      "id": "C005",
+      "nome_fantasia": "Supermercado Família",
+      "razao_social": "Família Supermercados Ltda",
+      "cnpj": "10.895.667/0001-53",
+      "vendedor_id": "V02",
+      "tabela_preco_id": "TP02",
+      "limite_credito": 20000,
+      "credito_utilizado": 8300,
+      "cidade": "Natal",
+      "uf": "RN"
+    },
+    {
+      "id": "C006",
+      "nome_fantasia": "Mercadinho Central",
+      "razao_social": "Central Alimentos Ltda",
+      "cnpj": "30.832.052/0001-95",
+      "vendedor_id": "V02",
+      "tabela_preco_id": "TP03",
+      "limite_credito": 4000,
+      "credito_utilizado": 3900,
+      "cidade": "Mossoró",
+      "uf": "RN"
+    },
+    {
+      "id": "C007",
+      "nome_fantasia": "Empório Sertão",
+      "razao_social": "Empório Sertão Comércio Ltda",
+      "cnpj": "64.456.778/0001-92",
+      "vendedor_id": "V02",
+      "tabela_preco_id": "TP03",
+      "limite_credito": 6000,
+      "credito_utilizado": 1500,
+      "cidade": "Caicó",
+      "uf": "RN"
+    },
+    {
+      "id": "C008",
+      "nome_fantasia": "Mini Mercado Avenida",
+      "razao_social": "Avenida Mini Mercado ME",
+      "cnpj": "45.263.032/0001-18",
+      "vendedor_id": "V03",
+      "tabela_preco_id": "TP01",
+      "limite_credito": 3500,
+      "credito_utilizado": 500,
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    {
+      "id": "C009",
+      "nome_fantasia": "Mercantil Santa Rita",
+      "razao_social": "Santa Rita Mercantil Ltda",
+      "cnpj": "37.900.581/0001-28",
+      "vendedor_id": "V03",
+      "tabela_preco_id": "TP03",
+      "limite_credito": 8000,
+      "credito_utilizado": 2000,
+      "cidade": "Parnaíba",
+      "uf": "PI"
+    },
+    {
+      "id": "C010",
+      "nome_fantasia": "Conveniência 24h Posto Sol",
+      "razao_social": "Posto Sol Combustíveis Ltda",
+      "cnpj": "53.207.175/0001-30",
+      "vendedor_id": "V03",
+      "tabela_preco_id": "TP01",
+      "limite_credito": 4500,
+      "credito_utilizado": 4500,
+      "cidade": "Picos",
+      "uf": "PI"
+    }
+  ],
+  "produtos": [
+    {
+      "id": "P001",
+      "sku": "SKU-1000",
+      "ean": "7891958224128",
+      "descricao": "Arroz Branco Tipo 1 5kg",
+      "categoria": "mercearia",
+      "marca": "Grão Fino",
+      "unidade_venda": "UN",
+      "fator_embalagem": 1,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    },
+    {
+      "id": "P002",
+      "sku": "SKU-1001",
+      "ean": "7891249426033",
+      "descricao": "Feijão Carioca Tipo 1 1kg",
+      "categoria": "mercearia",
+      "marca": "Grão Fino",
+      "unidade_venda": "UN",
+      "fator_embalagem": 1,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    },
+    {
+      "id": "P003",
+      "sku": "SKU-1002",
+      "ean": "7891133568863",
+      "descricao": "Açúcar Cristal 1kg",
+      "categoria": "mercearia",
+      "marca": "Doce Vale",
+      "unidade_venda": "FD",
+      "fator_embalagem": 10,
+      "venda_somente_multiplo": true,
+      "ativo": true
+    },
+    {
+      "id": "P004",
+      "sku": "SKU-1003",
+      "ean": "7891469138105",
+      "descricao": "Óleo de Soja 900ml",
+      "categoria": "mercearia",
+      "marca": "Soyara",
+      "unidade_venda": "CX",
+      "fator_embalagem": 20,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    },
+    {
+      "id": "P005",
+      "sku": "SKU-1004",
+      "ean": "7891428688283",
+      "descricao": "Café Torrado e Moído 500g",
+      "categoria": "mercearia",
+      "marca": "Serra Alta",
+      "unidade_venda": "UN",
+      "fator_embalagem": 1,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    },
+    {
+      "id": "P006",
+      "sku": "SKU-1005",
+      "ean": "7891399588384",
+      "descricao": "Macarrão Espaguete 500g",
+      "categoria": "mercearia",
+      "marca": "Massa Boa",
+      "unidade_venda": "FD",
+      "fator_embalagem": 20,
+      "venda_somente_multiplo": true,
+      "ativo": true
+    },
+    {
+      "id": "P007",
+      "sku": "SKU-1006",
+      "ean": "7891287284633",
+      "descricao": "Sardinha em Óleo 125g",
+      "categoria": "mercearia",
+      "marca": "Mar Azul",
+      "unidade_venda": "CX",
+      "fator_embalagem": 50,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    },
+    {
+      "id": "P008",
+      "sku": "SKU-1007",
+      "ean": "7891237566697",
+      "descricao": "Biscoito Cream Cracker 400g",
+      "categoria": "mercearia",
+      "marca": "Crocante",
+      "unidade_venda": "UN",
+      "fator_embalagem": 1,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    },
+    {
+      "id": "P009",
+      "sku": "SKU-1008",
+      "ean": "7891831978575",
+      "descricao": "Achocolatado em Pó 400g",
+      "categoria": "mercearia",
+      "marca": "Chocomix",
+      "unidade_venda": "UN",
+      "fator_embalagem": 1,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    },
+    {
+      "id": "P010",
+      "sku": "SKU-1009",
+      "ean": "7891216687320",
+      "descricao": "Leite UHT Integral 1L",
+      "categoria": "bebidas",
+      "marca": "Vale Verde",
+      "unidade_venda": "CX",
+      "fator_embalagem": 12,
+      "venda_somente_multiplo": true,
+      "ativo": true
+    },
+    {
+      "id": "P011",
+      "sku": "SKU-1010",
+      "ean": "7891892545631",
+      "descricao": "Refrigerante Cola 2L",
+      "categoria": "bebidas",
+      "marca": "Gela",
+      "unidade_venda": "FD",
+      "fator_embalagem": 6,
+      "venda_somente_multiplo": true,
+      "ativo": true
+    },
+    {
+      "id": "P012",
+      "sku": "SKU-1011",
+      "ean": "7891666293881",
+      "descricao": "Água Mineral sem Gás 500ml",
+      "categoria": "bebidas",
+      "marca": "Fonte Clara",
+      "unidade_venda": "FD",
+      "fator_embalagem": 12,
+      "venda_somente_multiplo": true,
+      "ativo": true
+    },
+    {
+      "id": "P013",
+      "sku": "SKU-1012",
+      "ean": "7891142657992",
+      "descricao": "Cerveja Pilsen Lata 350ml",
+      "categoria": "bebidas",
+      "marca": "Lupulina",
+      "unidade_venda": "FD",
+      "fator_embalagem": 12,
+      "venda_somente_multiplo": true,
+      "ativo": true
+    },
+    {
+      "id": "P014",
+      "sku": "SKU-1013",
+      "ean": "7891139993157",
+      "descricao": "Suco de Uva Integral 1L",
+      "categoria": "bebidas",
+      "marca": "Vinhedo",
+      "unidade_venda": "UN",
+      "fator_embalagem": 1,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    },
+    {
+      "id": "P015",
+      "sku": "SKU-1014",
+      "ean": "7891225755621",
+      "descricao": "Detergente Líquido 500ml",
+      "categoria": "limpeza",
+      "marca": "Brilho",
+      "unidade_venda": "CX",
+      "fator_embalagem": 24,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    },
+    {
+      "id": "P016",
+      "sku": "SKU-1015",
+      "ean": "7891393450922",
+      "descricao": "Sabão em Pó 800g",
+      "categoria": "limpeza",
+      "marca": "Lava Mais",
+      "unidade_venda": "UN",
+      "fator_embalagem": 1,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    },
+    {
+      "id": "P017",
+      "sku": "SKU-1016",
+      "ean": "7891412272160",
+      "descricao": "Água Sanitária 1L",
+      "categoria": "limpeza",
+      "marca": "Clarinha",
+      "unidade_venda": "CX",
+      "fator_embalagem": 12,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    },
+    {
+      "id": "P018",
+      "sku": "SKU-1017",
+      "ean": "7891778276383",
+      "descricao": "Papel Higiênico Folha Dupla 4 rolos",
+      "categoria": "higiene",
+      "marca": "Macio",
+      "unidade_venda": "FD",
+      "fator_embalagem": 16,
+      "venda_somente_multiplo": true,
+      "ativo": true
+    },
+    {
+      "id": "P019",
+      "sku": "SKU-1018",
+      "ean": "7891908015868",
+      "descricao": "Sabonete em Barra 85g",
+      "categoria": "higiene",
+      "marca": "Pétala",
+      "unidade_venda": "CX",
+      "fator_embalagem": 12,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    },
+    {
+      "id": "P020",
+      "sku": "SKU-1019",
+      "ean": "7891135615978",
+      "descricao": "Creme Dental 90g",
+      "categoria": "higiene",
+      "marca": "Sorriso",
+      "unidade_venda": "UN",
+      "fator_embalagem": 1,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    },
+    {
+      "id": "P021",
+      "sku": "SKU-1020",
+      "ean": "7891853290372",
+      "descricao": "Refrigerante Laranja 2L (descontinuado)",
+      "categoria": "bebidas",
+      "marca": "Gela",
+      "unidade_venda": "FD",
+      "fator_embalagem": 6,
+      "venda_somente_multiplo": true,
+      "ativo": false
+    },
+    {
+      "id": "P022",
+      "sku": "SKU-1021",
+      "ean": "7891366875370",
+      "descricao": "Biscoito Recheado Chocolate 140g",
+      "categoria": "mercearia",
+      "marca": "Crocante",
+      "unidade_venda": "UN",
+      "fator_embalagem": 1,
+      "venda_somente_multiplo": false,
+      "ativo": false
+    },
+    {
+      "id": "P023",
+      "sku": "SKU-1022",
+      "ean": "7891831978575",
+      "descricao": "Achocolatado em Pó 400g Sachê",
+      "categoria": "mercearia",
+      "marca": "Chocomix",
+      "unidade_venda": "UN",
+      "fator_embalagem": 1,
+      "venda_somente_multiplo": false,
+      "ativo": true
+    }
+  ],
+  "tabelas_preco": [
+    {
+      "id": "TP01",
+      "nome": "Tabela Padrão",
+      "itens": [
+        {
+          "produto_id": "P001",
+          "preco_unidade": 26.9
+        },
+        {
+          "produto_id": "P002",
+          "preco_unidade": 7.49
+        },
+        {
+          "produto_id": "P003",
+          "preco_unidade": 4.79
+        },
+        {
+          "produto_id": "P004",
+          "preco_unidade": 7.19
+        },
+        {
+          "produto_id": "P005",
+          "preco_unidade": 17.9
+        },
+        {
+          "produto_id": "P006",
+          "preco_unidade": 3.33
+        },
+        {
+          "produto_id": "P007",
+          "preco_unidade": 5.69
+        },
+        {
+          "produto_id": "P008",
+          "preco_unidade": 4.79
+        },
+        {
+          "produto_id": "P009",
+          "preco_unidade": 8.49
+        },
+        {
+          "produto_id": "P010",
+          "preco_unidade": 4.99
+        },
+        {
+          "produto_id": "P011",
+          "preco_unidade": 8.99
+        },
+        {
+          "produto_id": "P012",
+          "preco_unidade": 1.15
+        },
+        {
+          "produto_id": "P013",
+          "preco_unidade": 3.29
+        },
+        {
+          "produto_id": "P014",
+          "preco_unidade": 12.49
+        },
+        {
+          "produto_id": "P015",
+          "preco_unidade": 2.39
+        },
+        {
+          "produto_id": "P016",
+          "preco_unidade": 13.79
+        },
+        {
+          "produto_id": "P017",
+          "preco_unidade": 3.49
+        },
+        {
+          "produto_id": "P018",
+          "preco_unidade": 5.19
+        },
+        {
+          "produto_id": "P019",
+          "preco_unidade": 2.29
+        },
+        {
+          "produto_id": "P020",
+          "preco_unidade": 4.39
+        },
+        {
+          "produto_id": "P021",
+          "preco_unidade": 7.99
+        },
+        {
+          "produto_id": "P022",
+          "preco_unidade": 2.69
+        },
+        {
+          "produto_id": "P023",
+          "preco_unidade": 8.29
+        }
+      ]
+    },
+    {
+      "id": "TP02",
+      "nome": "Tabela Volume",
+      "itens": [
+        {
+          "produto_id": "P001",
+          "preco_unidade": 25.29
+        },
+        {
+          "produto_id": "P002",
+          "preco_unidade": 7.04
+        },
+        {
+          "produto_id": "P003",
+          "preco_unidade": 4.5
+        },
+        {
+          "produto_id": "P004",
+          "preco_unidade": 6.76
+        },
+        {
+          "produto_id": "P005",
+          "preco_unidade": 16.83
+        },
+        {
+          "produto_id": "P006",
+          "preco_unidade": 3.13
+        },
+        {
+          "produto_id": "P007",
+          "preco_unidade": 5.35
+        },
+        {
+          "produto_id": "P008",
+          "preco_unidade": 4.5
+        },
+        {
+          "produto_id": "P009",
+          "preco_unidade": 7.98
+        },
+        {
+          "produto_id": "P010",
+          "preco_unidade": 4.69
+        },
+        {
+          "produto_id": "P011",
+          "preco_unidade": 8.45
+        },
+        {
+          "produto_id": "P012",
+          "preco_unidade": 1.08
+        },
+        {
+          "produto_id": "P013",
+          "preco_unidade": 3.09
+        },
+        {
+          "produto_id": "P014",
+          "preco_unidade": 11.74
+        },
+        {
+          "produto_id": "P015",
+          "preco_unidade": 2.25
+        },
+        {
+          "produto_id": "P016",
+          "preco_unidade": 12.96
+        },
+        {
+          "produto_id": "P017",
+          "preco_unidade": 3.28
+        },
+        {
+          "produto_id": "P018",
+          "preco_unidade": 4.88
+        },
+        {
+          "produto_id": "P019",
+          "preco_unidade": 2.15
+        },
+        {
+          "produto_id": "P020",
+          "preco_unidade": 4.13
+        },
+        {
+          "produto_id": "P021",
+          "preco_unidade": 7.51
+        },
+        {
+          "produto_id": "P022",
+          "preco_unidade": 2.53
+        },
+        {
+          "produto_id": "P023",
+          "preco_unidade": 7.79
+        }
+      ]
+    },
+    {
+      "id": "TP03",
+      "nome": "Tabela Interior",
+      "itens": [
+        {
+          "produto_id": "P001",
+          "preco_unidade": 28.78
+        },
+        {
+          "produto_id": "P002",
+          "preco_unidade": 8.01
+        },
+        {
+          "produto_id": "P003",
+          "preco_unidade": 5.13
+        },
+        {
+          "produto_id": "P004",
+          "preco_unidade": 7.69
+        },
+        {
+          "produto_id": "P005",
+          "preco_unidade": 19.15
+        },
+        {
+          "produto_id": "P006",
+          "preco_unidade": 3.56
+        },
+        {
+          "produto_id": "P007",
+          "preco_unidade": 6.09
+        },
+        {
+          "produto_id": "P008",
+          "preco_unidade": 5.13
+        },
+        {
+          "produto_id": "P009",
+          "preco_unidade": 9.08
+        },
+        {
+          "produto_id": "P010",
+          "preco_unidade": 5.34
+        },
+        {
+          "produto_id": "P011",
+          "preco_unidade": 9.62
+        },
+        {
+          "produto_id": "P012",
+          "preco_unidade": 1.23
+        },
+        {
+          "produto_id": "P013",
+          "preco_unidade": 3.52
+        },
+        {
+          "produto_id": "P014",
+          "preco_unidade": 13.36
+        },
+        {
+          "produto_id": "P015",
+          "preco_unidade": 2.56
+        },
+        {
+          "produto_id": "P016",
+          "preco_unidade": 14.76
+        },
+        {
+          "produto_id": "P017",
+          "preco_unidade": 3.73
+        },
+        {
+          "produto_id": "P018",
+          "preco_unidade": 5.55
+        },
+        {
+          "produto_id": "P019",
+          "preco_unidade": 2.45
+        },
+        {
+          "produto_id": "P020",
+          "preco_unidade": 4.7
+        },
+        {
+          "produto_id": "P022",
+          "preco_unidade": 2.88
+        },
+        {
+          "produto_id": "P023",
+          "preco_unidade": 8.87
+        }
+      ]
+    }
+  ],
+  "pedidos_historico": [
+    {
+      "id": "PH001",
+      "cliente_id": "C001",
+      "vendedor_id": "V01",
+      "data": "2026-09-15",
+      "status": "Faturado",
+      "itens": [
+        {
+          "produto_id": "P001",
+          "quantidade": 10,
+          "preco_unidade": 25.9,
+          "desconto_percentual": 0
+        },
+        {
+          "produto_id": "P006",
+          "quantidade": 40,
+          "preco_unidade": 3.29,
+          "desconto_percentual": 2
+        },
+        {
+          "produto_id": "P010",
+          "quantidade": 24,
+          "preco_unidade": 4.89,
+          "desconto_percentual": 0
+        },
+        {
+          "produto_id": "P022",
+          "quantidade": 30,
+          "preco_unidade": 2.59,
+          "desconto_percentual": 0
+        }
+      ]
+    },
+    {
+      "id": "PH002",
+      "cliente_id": "C001",
+      "vendedor_id": "V01",
+      "data": "2026-10-02",
+      "status": "Faturado",
+      "itens": [
+        {
+          "produto_id": "P002",
+          "quantidade": 15,
+          "preco_unidade": 7.49,
+          "desconto_percentual": 5
+        },
+        {
+          "produto_id": "P011",
+          "quantidade": 12,
+          "preco_unidade": 8.79,
+          "desconto_percentual": 0
+        },
+        {
+          "produto_id": "P015",
+          "quantidade": 24,
+          "preco_unidade": 2.39,
+          "desconto_percentual": 0
+        }
+      ]
+    },
+    {
+      "id": "PH003",
+      "cliente_id": "C005",
+      "vendedor_id": "V02",
+      "data": "2026-09-28",
+      "status": "Faturado",
+      "itens": [
+        {
+          "produto_id": "P013",
+          "quantidade": 48,
+          "preco_unidade": 3.09,
+          "desconto_percentual": 7
+        },
+        {
+          "produto_id": "P021",
+          "quantidade": 12,
+          "preco_unidade": 7.49,
+          "desconto_percentual": 0
+        },
+        {
+          "produto_id": "P012",
+          "quantidade": 24,
+          "preco_unidade": 1.08,
+          "desconto_percentual": 0
+        }
+      ]
+    },
+    {
+      "id": "PH004",
+      "cliente_id": "C006",
+      "vendedor_id": "V02",
+      "data": "2026-10-05",
+      "status": "Cancelado",
+      "itens": [
+        {
+          "produto_id": "P003",
+          "quantidade": 20,
+          "preco_unidade": 5.13,
+          "desconto_percentual": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,212 @@
+# DECISIONS
+
+Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrada tem: **Contexto**, **Alternativas consideradas**, **Escolha**, **Por quê** e **O que faria diferente com mais tempo**. Entradas não são renumeradas; mudanças de rumo viram uma nova entrada que referencia a anterior.
+
+---
+
+## D1. Escrever as convenções de engenharia antes do código, e registrar as decisões aqui
+
+- **Contexto:** O enunciado avalia as decisões e a justificativa, não a quantidade de funcionalidades. Antes de conhecer a stack final, defini como costumo estruturar serviços.
+- **Alternativas consideradas:** (a) um guia genérico de boas práticas; (b) decidir convenções caso a caso durante o desenvolvimento; (c) um ADR por arquivo.
+- **Escolha:** Um guia curto em `style-guide/` (arquitetura primeiro, linguagem depois) e este arquivo único, cronológico.
+- **Por quê:** Um padrão escrito deixa o revisor julgar desvios contra um critério declarado, e um log único é rápido de ler.
+- **O que faria diferente:** Fixar o guia depois de ver o código pronto, para podar o que não foi usado.
+
+## D2. Stack: Nuxt 4 (Vue 3) + NestJS + TypeScript + PostgreSQL
+
+- **Contexto:** O enunciado recomenda Vue 3, Node com TypeScript e PostgreSQL. Tenho experiência em TypeScript e .NET e foco em arquitetura de serviços.
+- **Alternativas consideradas:** Vue 3 puro (SPA) com Express/Fastify; .NET no backend (justificaria explicar o desvio da stack do time).
+- **Escolha:** Nuxt no frontend e NestJS no backend, ambos em TypeScript, com PostgreSQL. Versões exatas são fixadas na fase de código, depois de checar a compatibilidade entre elas.
+- **Por quê:** Fica dentro da stack recomendada. O NestJS impõe módulos, injeção de dependência e camadas, o que combina com a forma como organizo serviços.
+- **O que faria diferente:** Medir se o Nuxt (com SSR desligado) compensa frente a um Vue SPA simples para um app usado em campo.
+
+## D3. ORM: Drizzle (em vez de Prisma ou TypeORM)
+
+- **Contexto:** As regras do domínio são aritmética e junções (produto × tabela de preço × cliente). Eu nunca usei Drizzle, e quis experimentar uma tecnologia nova de forma consciente.
+- **Alternativas consideradas:** Prisma (mais conhecido, migrações mais maduras, linguagem de schema própria); TypeORM (integração nativa com Nest, tipagem mais fraca, `numeric` como string).
+- **Escolha:** Drizzle, com schema em TypeScript e `drizzle-kit` para migrações.
+- **Por quê:** Consultas próximas do SQL, sem etapa de geração de código, tipagem forte e um schema que o revisor lê como TypeScript. Dinheiro em centavos inteiros evita o problema do `numeric` virar string.
+- **Contexto da tecnologia (fontes secundárias, valores aproximados):** lançamento público em julho de 2022 (v0.11.0), código desde 2021, criado por Andrii Sherman e Alex Blokh; adoção citada entre ~4 e ~19 milhões de downloads semanais no npm e ~35 mil estrelas no GitHub, dependendo da fonte; a versão 1.0 ainda estava em beta/RC no fim de setembro de 2026, então a versão exata é fixada.
+- **Riscos assumidos:** API jovem, migrações menos tolerantes que as do Prisma, menos exemplos com Nest.
+- **O que faria diferente:** Escrever os mesmos testes de repositório contra Prisma e comparar o custo real de cada um.
+
+## D4. DTOs com Zod, e todas as regras no backend
+
+- **Contexto:** O pedido envolve regras de preço, embalagem, desconto e crédito que não podem divergir entre cliente e servidor.
+- **Alternativas consideradas:** class-validator/class-transformer (padrão em Nest, só backend); Zod em pacote compartilhado entre Nest e Nuxt; Valibot.
+- **Escolha:** Zod no backend (a integração com o Nest mudou em D23: pipe nativo, sem `nestjs-zod`), e **o backend é dono de todas as regras**: o frontend só exibe e envia intenções.
+- **Por quê:** Uma única implementação das regras elimina a divergência de preço e é o que o teste automatizado cobre. O pacote compartilhado foi descartado por quebrar a separação em repositórios por serviço.
+- **O que faria diferente:** O modo offline (fase C) não consegue recalcular totais localmente; se ele for implementado, reavaliar um pacote de regras puras compartilhado.
+
+## D5. Estado no frontend: Pinia + TanStack Query
+
+- **Contexto:** O app precisa guardar o rascunho do pedido e tolerar rede ruim.
+- **Alternativas consideradas:** Pinia + Pinia Colada; só Pinia; apenas `useState`/`useFetch` do Nuxt.
+- **Escolha:** Pinia para estado local (cliente selecionado, rascunho) e TanStack Query para dados do servidor (cache, repetição, atualização otimista).
+- **Por quê:** Separação clara entre estado do cliente e estado do servidor, com tratamento de falha e novo envio já resolvidos.
+- **O que faria diferente:** Avaliar o Pinia Colada quando estabilizar.
+
+## D6. UI: Nuxt UI
+
+- **Contexto:** O vendedor usa o app no celular, em campo.
+- **Alternativas consideradas:** PrimeVue, Vuetify, Tailwind puro.
+- **Escolha:** Nuxt UI (módulo oficial, Tailwind + Reka UI).
+- **Por quê:** Componentes acessíveis e responsivos prontos, menos peças para configurar com Nuxt.
+- **O que faria diferente:** Testar a usabilidade em um celular real com sinal ruim.
+
+## D7. Testes com Vitest em todos os pacotes
+
+- **Contexto:** O enunciado exige testes automatizados das regras de negócio.
+- **Alternativas consideradas:** Jest no backend e Vitest no frontend; Jest em tudo.
+- **Escolha:** Vitest em todos os repositórios.
+- **Por quê:** Um runner só, TypeScript e ESM sem configuração extra, e é o que o Nuxt usa.
+- **O que faria diferente:** Acrescentar testes de integração com Postgres real (Testcontainers) para o repositório.
+
+## D8. Dinheiro em centavos inteiros e arredondamento "por linha"
+
+- **Contexto:** Porcentagem de desconto gera frações de centavo, e o valor decide o pedido mínimo e a alçada. O `seed.json` traz preços em reais com ponto flutuante.
+- **Alternativas consideradas:** `numeric(12,2)` (Drizzle devolve string); arredondar o preço unitário já com desconto; arredondar só o total.
+- **Escolha:** Valores em centavos inteiros (conversão na importação do seed). Total da linha = preço × quantidade × (1 − desconto), arredondado uma vez, meio para cima. Desconto do pedido aplicado sobre a soma das linhas arredondadas e arredondado uma vez. Exemplos numéricos em `ASSUMPTIONS.md`.
+- **Por quê:** As linhas somam exatamente o total exibido, e a porcentagem digitada é aplicada de forma exata por linha.
+- **O que faria diferente:** Confirmar a regra com o produto; o arredondamento pelo preço unitário seria o certo se o desconto virasse preço de nota.
+
+## D9. Um repositório por serviço, mais um repositório guarda-chuva com submódulos
+
+- **Contexto:** Quero seguir o padrão que já uso (uma organização, um repositório por serviço, imagens em um registry), mas o enunciado pede um único repositório Git com `docker compose up`, `README.md` e histórico completo.
+- **Alternativas consideradas:** monorepo; repositórios separados sem guarda-chuva; guarda-chuva só com imagens publicadas; perguntar à equipe.
+- **Escolha:** Uma organização nova no GitHub com um repositório por serviço, e um repositório guarda-chuva que contém os documentos de entrega, o `docker-compose.yml`, o CI e os serviços como submódulos Git. Imagens publicadas no GitHub Container Registry (GHCR) pelo CI de cada serviço. A divisão exata em serviços fica para a próxima fase.
+- **Por quê:** Preserva a arquitetura em que acredito e entrega um único repositório clonável com `--recurse-submodules`.
+- **O que faria diferente:** Se o revisor tiver atrito com submódulos, entregar um monorepo equivalente.
+
+## D10. Entrega em fases
+
+- **Contexto:** 4 a 6 horas esperadas; "não esperamos que você faça tudo".
+- **Alternativas consideradas:** só os obrigatórios; tudo de uma vez.
+- **Escolha:** Fase A: requisitos obrigatórios 1–6. Fase B: limite de crédito e histórico com "repetir pedido". Fase C: pedido offline com sincronização.
+- **Por quê:** Cada fase deixa o sistema funcionando e testado; o que não for concluído fica documentado como fora do escopo.
+- **O que faria diferente:** Estimar cada fase antes de começar e registrar o tempo real.
+
+## D11. Sessão por cookie no servidor, escolhendo o vendedor ou o supervisor
+
+- **Contexto:** O enunciado permite simular o login escolhendo o vendedor, mas o vendedor só pode ver a própria carteira.
+- **Alternativas consideradas:** `X-Seller-Id` no cabeçalho (qualquer um altera); JWT.
+- **Escolha:** Tela única de seleção (vendedores e supervisor); o servidor guarda a sessão e entrega um cookie. Toda consulta é filtrada pelo vendedor da sessão no servidor.
+- **Por quê:** A restrição de carteira é imposta no servidor, não por confiança no cliente.
+- **O que faria diferente:** Trocar a simulação por autenticação real.
+
+## D12. Busca de produtos por similaridade (pg_trgm) e EAN exato
+
+- **Contexto:** Nomes têm acento (Açúcar, Feijão), o vendedor digita no celular, e o EAN `7891831978575` está duplicado no seed.
+- **Alternativas consideradas:** `ILIKE` com `unaccent`; busca de texto completo; só EAN exato.
+- **Escolha:** `pg_trgm` com `unaccent` para texto; EAN por igualdade exata. Em caso de EAN duplicado, ambos os produtos aparecem, ordenados por correspondência exata da descrição e depois pelo id.
+- **Por quê:** Tolera erro de digitação sem esconder produtos; as extensões são ativadas no script de inicialização do banco.
+- **O que faria diferente:** Medir a qualidade da busca com um catálogo maior.
+
+## D13. Configuração e flags por variáveis de ambiente validadas com Zod
+
+- **Contexto:** Produtos inativos ou sem preço na tabela do cliente precisam de um comportamento configurável.
+- **Alternativas consideradas:** flags em tabela do banco; parâmetro de consulta.
+- **Escolha:** Variáveis de ambiente (ex.: `SHOW_UNAVAILABLE_PRODUCTS`), validadas na inicialização.
+- **Por quê:** Simples, rastreável no compose, sem tela administrativa.
+- **O que faria diferente:** Flags em runtime se alguém precisasse alterá-las sem reiniciar.
+
+## D14. Mensagens de commit terminam com o nível de uso de IA
+
+- **Contexto:** O enunciado exige a linha final `IA: nenhuma`, `IA: parcial` ou `IA: majoritária`.
+- **Alternativas consideradas:** acrescentar também um trailer `Co-Authored-By`.
+- **Escolha:** Assunto, corpo e, por último, a linha `IA: …`. Sem trailer adicional.
+- **Por quê:** A linha pedida é a declaração honesta e a última da mensagem.
+- **O que faria diferente:** Registrar também, no `AI_LOG.md`, o commit de cada trecho gerado por IA.
+
+## D15. Backend em quatro serviços: identity, catalog, orders e notifications (mais web e contracts)
+
+- **Contexto:** Quero seguir o padrão de microsserviços que já uso. O enunciado pede 4 a 6 horas, então cada serviço extra tem custo real (imagem, CI, schema, chamadas entre serviços).
+- **Alternativas consideradas:** um backend modular único; dois serviços (catalog e orders); três serviços (sem notifications).
+- **Escolha:** `identity` (vendedores, supervisor, clientes, limites), `catalog` (produtos, preços, busca), `orders` (todas as regras de pedido) e `notifications` (avisos ao supervisor), mais o `web` (Nuxt) e o repositório `contracts`.
+- **Por quê:** Cada serviço tem um dono claro dos dados e das regras, e o fluxo de eventos tem consumidores reais.
+- **O que faria diferente:** Começar com os três serviços da fase A e criar o `notifications` só na fase B, medindo o custo de cada serviço adicional.
+
+## D16. Nuxt como BFF, dono da sessão (Redis)
+
+- **Contexto:** O navegador precisa falar com vários serviços e a restrição de carteira deve ser imposta no servidor.
+- **Alternativas consideradas:** proxy reverso por caminho; navegador chamando cada serviço; sessão sob responsabilidade do identity.
+- **Escolha:** O servidor do Nuxt é o BFF: o navegador só fala com ele. Ele valida a escolha de vendedor/supervisor com o identity, guarda a sessão no Redis, envia o cookie e, em cada chamada aos serviços, inclui um segredo interno e o usuário e o papel da sessão.
+- **Por quê:** Esconde os serviços, evita CORS e mantém a sessão num lugar só.
+- **O que faria diferente:** Trocar o segredo interno compartilhado por tokens assinados por chamada.
+
+## D17. Comunicação: gRPC síncrono e RabbitMQ assíncrono
+
+- **Contexto:** O pedido depende de preço, regras de embalagem, cliente e limites que pertencem a outros serviços.
+- **Alternativas consideradas:** HTTP entre serviços; cópias locais dos dados via eventos; RPC sobre RabbitMQ.
+- **Escolha:** `orders` consulta `catalog` e `identity` por gRPC, em lote, tanto no cálculo quanto no envio. O RabbitMQ (`@nestjs/microservices`, transporte RMQ) carrega apenas eventos publicados por `orders`, com consumidores idempotentes.
+- **Por quê:** Contratos fortemente tipados e uma separação clara entre o que precisa de resposta agora e o que pode ser assíncrono. O ganho de velocidade do gRPC sobre HTTP/JSON é real em geral (mensagens menores, HTTP/2; as fontes que consultei citam cerca de metade da latência), mas as medições variam muito e, com 23 produtos, a diferença é imperceptível. Por isso a justificativa é de contrato, não de desempenho.
+- **Custo assumido:** Arquivos `.proto` como segundo formato de contrato ao lado do Zod; cada chamada de cálculo depende de dois serviços disponíveis.
+- **O que faria diferente:** Medir o tempo de um cálculo com gRPC e com HTTP no mesmo ambiente antes de afirmar a diferença.
+
+## D18. Contratos em um repositório próprio, usado como submódulo
+
+- **Contexto:** Não há pacote compartilhado de código, mas os `.proto` e os esquemas de eventos precisam de uma fonte única.
+- **Alternativas consideradas:** cada serviço dono do seu `.proto` e os chamadores copiando; pacote publicado no GitHub Packages.
+- **Escolha:** Um repositório `contracts` incluído como submódulo Git em cada serviço.
+- **Por quê:** Uma fonte de verdade sem registry nem autenticação extra no build.
+- **O que faria diferente:** Gerar os tipos TypeScript no CI e publicá-los, se o número de serviços crescesse.
+
+## D19. Um PostgreSQL, um schema e um papel por serviço, sem consultas entre schemas
+
+- **Contexto:** Isolamento dos dados de cada serviço com uma infraestrutura leve de rodar.
+- **Alternativas consideradas:** um contêiner de banco por serviço; consultas entre schemas.
+- **Escolha:** Um PostgreSQL com os schemas `identity`, `catalog`, `orders` e `notifications`, cada um com seu papel e suas concessões. Nenhuma consulta entre schemas.
+- **Por quê:** A fronteira é imposta pelo banco, não só por convenção, e o compose continua enxuto.
+- **O que faria diferente:** Um banco por serviço, se fossem implantados separadamente.
+
+## D20. Rascunho no navegador, cálculo no servidor, e orders sem cópia dos dados dos outros serviços
+
+- **Contexto:** O backend é dono das regras, mas o vendedor edita o pedido continuamente.
+- **Alternativas consideradas:** rascunho salvo no servidor a cada edição; cópias locais de preços e clientes alimentadas por eventos.
+- **Escolha:** O rascunho fica no Pinia. A cada edição, o BFF envia o rascunho ao endpoint de cálculo de `orders`, que consulta catalog e identity por gRPC e devolve totais, motivos de bloqueio e status previsto, sem gravar nada. `orders` só grava no envio, com instantâneo de preço e produto em cada item.
+- **Por quê:** Nenhuma regra duplicada no frontend e nenhuma cópia de dados para manter sincronizada.
+- **O que faria diferente:** Se o cálculo a cada edição ficar lento, agrupar edições (debounce) ou guardar um cache curto de preços; para o modo offline, reavaliar o rascunho no servidor.
+
+## D21. Eventos de pedido e seus consumidores
+
+- **Contexto:** Sem cópias locais, o RabbitMQ precisa de uma função real.
+- **Alternativas consideradas:** publicar eventos sem consumidor; só o consumidor de crédito.
+- **Escolha:** `OrderSubmitted`, `OrderApproved` e `OrderRejected`, publicados por `orders`. `identity` mantém o crédito utilizado do cliente (soma no envio, libera na rejeição), `catalog` mantém a estatística de produtos mais pedidos e `notifications` avisa o supervisor. Todos idempotentes pelo id do pedido.
+- **Por quê:** Cada consumidor atualiza dados que pertencem a ele, sem consulta entre schemas.
+- **Risco assumido:** Duas submissões quase simultâneas podem ler o mesmo crédito disponível, porque a atualização é assíncrona. **Corrigido por D22** (reserva síncrona); o consumidor de crédito no identity passa a confirmar e liberar reservas, em vez de somar o total.
+- **O que faria diferente:** Reservar o crédito por uma chamada síncrona no momento do envio.
+
+## D22. Reserva síncrona de crédito no identity (corrige o risco de D21)
+
+- **Contexto:** Em D21, o crédito era atualizado por evento. Dois envios quase simultâneos para o mesmo cliente liam o mesmo crédito disponível e ambos passavam. Exemplo com o seed: o cliente C002 tem 350 disponíveis e recebe dois pedidos de 300; sem proteção, o crédito utilizado chegaria a 12.250 sobre um limite de 12.000.
+- **Alternativas consideradas:** (B) `orders` verificar o crédito sob um bloqueio por cliente (`pg_advisory_xact_lock`) na mesma transação que grava o pedido, somando os pedidos em aberto do próprio schema; manter a atualização por evento e aceitar o risco.
+- **Escolha:** (A) O `orders` chama `ReserveCredit(clientId, orderId, amount)` no `identity` por gRPC antes de gravar o pedido. O `identity` insere a reserva (chave primária = id do pedido, portanto idempotente) e faz `UPDATE ... SET credit_used = credit_used + :amount WHERE limit - credit_used >= :amount` na mesma transação; zero linhas atualizadas significa crédito insuficiente. Se a gravação do pedido falhar, o `orders` chama `ReleaseCredit`. A reserva nasce `pendente`, `OrderSubmitted` a torna `confirmada`, `OrderRejected` a libera, e um job libera as `pendente` com mais de 15 minutos.
+- **Por quê:** Mantém o crédito sob o dono dos dados do cliente, fecha a corrida com uma única instrução atômica e dá ao evento `OrderSubmitted` uma função real no identity. A opção B era mais simples (uma transação, sem compensação), mas move o controle do crédito para o `orders`.
+- **Custo assumido:** Fluxo em dois passos entre serviços e uma tabela de reservas; se `OrderSubmitted` atrasar mais que 15 minutos, uma reserva válida pode ser liberada por engano.
+- **O que faria diferente:** Publicar os eventos com um outbox transacional no `orders` (eliminando a janela do evento perdido) ou, se o crédito pudesse morar no `orders`, adotar a opção B por ser mais simples de explicar e de testar.
+
+## D23. Versões e ferramentas: Node 24, pnpm 12, TypeScript 7, NestJS 12
+
+- **Contexto:** Na fase de código, conferi as versões publicadas e a compatibilidade. O `nestjs-zod` 5.5 declara suporte apenas ao Nest 10 e 11, mas o Nest atual é o 12.2.0, que traz um `StandardSchemaValidationPipe` nativo (o arquivo está no pacote `@nestjs/common`). O TypeScript mais recente é o 7.0.2.
+- **Alternativas consideradas:** Nest 11 com `nestjs-zod` (par suportado, com integração ao Swagger); Nest 12 com `nestjs-zod` ignorando o aviso de dependência; TypeScript 6.0.3 (ferramentas mais maduras); npm no lugar do pnpm.
+- **Escolha:** Node 24, pnpm 12 (via corepack), NestJS 12 com o pipe nativo de Standard Schema e Zod (**sem** `nestjs-zod`, o que ajusta o D4) e TypeScript 7.0.2. No repositório de contratos, `buf lint`, a geração, a checagem de tipos com o TypeScript 7 e os testes passaram. As demais peças serão validadas uma a uma e este registro será atualizado se algo falhar.
+- **Por quê:** Suporte oficial, uma dependência a menos, e a oportunidade de usar as ferramentas atuais. O pnpm bloqueia scripts de instalação por padrão; liberei só o `@bufbuild/buf` (`allowBuilds`), que baixa o seu binário.
+- **Risco assumido:** O TypeScript 7 é o compilador nativo novo; plugins do Nest e do Nuxt (`vue-tsc`) podem ter lacunas. Se algum bloquear, a saída é fixar o 6.0.3 e registrar aqui.
+- **O que faria diferente:** Fixar o TypeScript 6.0.3 até confirmar a compatibilidade de todas as ferramentas, e só então subir para o 7.
+
+## D24. Tipos do gRPC gerados no repositório de contratos e versionados
+
+- **Contexto:** Com tipos escritos à mão, uma mudança no `.proto` passa despercebida pelo compilador e os testes com mocks continuam verdes.
+- **Alternativas consideradas:** carregar o `.proto` em tempo de execução com interfaces manuais; gerar os tipos em cada serviço.
+- **Escolha:** `buf` + `ts-proto` (com `nestJs=true`) rodam só no repositório `contracts`; o código gerado é versionado em `gen/ts`, e os serviços o leem pelo submódulo. O CI do contracts roda `buf lint`, falha se `gen/` estiver desatualizado e roda checagem de tipos e testes.
+- **Por quê:** Renomear um campo do contrato vira erro de compilação nos serviços que o usam, e nenhum serviço precisa do gerador no build.
+- **Custo assumido:** Código gerado no Git e a necessidade de atualizar o ponteiro do submódulo em cada serviço.
+- **O que faria diferente:** Publicar os tipos como pacote versionado se houvesse mais consumidores.
+
+## D25. Convenções dos contratos: centavos, pontos-base, `sales.<serviço>.v1` e eventos em Zod
+
+- **Contexto:** O seed traz descontos inteiros (5, 7, 3), mas um vendedor pode querer dar 2,5%.
+- **Alternativas consideradas:** percentual inteiro; decimal com duas casas; eventos em Protobuf ou JSON Schema.
+- **Escolha:** Dinheiro em centavos inteiros e descontos em **pontos-base** (1% = 100, inteiro, sem ponto flutuante). Pacotes `sales.catalog.v1` e `sales.identity.v1`, no layout padrão do `buf`. Entidade inexistente responde com o status gRPC `NOT_FOUND`. Os eventos (`OrderSubmitted`, `OrderApproved`, `OrderRejected`) são esquemas Zod em TypeScript, validados por quem publica e por quem consome. Os códigos internos de status são `SUBMITTED` e `AWAITING_APPROVAL`; a interface exibe "Enviado" e "Aguardando aprovação".
+- **Por quê:** Inteiros em todo lugar evitam arredondamento acidental; Zod combina com a validação do restante da stack.
+- **O que faria diferente:** Se houvesse consumidores em outras linguagens, descrever os eventos em Protobuf ou JSON Schema.
