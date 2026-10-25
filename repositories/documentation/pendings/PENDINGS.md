@@ -12,12 +12,12 @@
 4. A forma 1 de rodar foi conferida a partir de um clone público: `docker compose pull` sem login, `docker compose up` sem compilar.
 5. As ações do CI foram atualizadas para as versões que rodam no Node 24; o CI passou sem avisos de Node 20.
 6. As marcas de dúvida do `AI_LOG.md` foram resolvidas com as respostas reais: o código dos serviços não foi lido linha a linha, das telas só foi visto o que a IA mostrou no navegador, e o arredondamento ainda não pode ser explicado sozinho. O mapa de autoria passou a dizer **A** nas linhas de código.
-7. Sessão de estudo guiada com a IA (25/10/2026) sobre o arredondamento, `order-rules.ts`, `order-status.ts`, o crédito e `plan.ts`: cinco aulas, 15 perguntas, todas certas. Registrada no `AI_LOG.md`.
+7. Sessões de estudo guiadas com a IA (25/10/2026): o arredondamento, `order-rules.ts`, `order-status.ts`, o crédito, `plan.ts`, o fluxo do BFF e o código do modo offline. Sete aulas, 21 perguntas, 20 certas (a errada foi o que o BFF devolve para um 422 e para um serviço fora do ar). Registrado no `AI_LOG.md`.
+8. O autor conferiu os diagramas desta documentação e disse que estão certos; a busca do catálogo também foi considerada certa por ele (sem aula).
 
 **Falta:**
 
-8. Ler sozinho esses arquivos (e refazer à mão um exemplo de arredondamento, como o exemplo 1 de `ASSUMPTIONS.md`): a sessão acima foi explicada pela IA e conferida por perguntas, não foi leitura própria. Ficam ainda de fora do estudo `repeat-order.ts`, a busca do catálogo, o fluxo do BFF e o código do modo offline.
-9. Ver os diagramas desta documentação renderizados (seção 3): a sintaxe foi conferida, a aparência não (o GitHub os renderiza).
+9. Ler sozinho os arquivos estudados (e refazer à mão um exemplo de arredondamento, como o exemplo 1 de `ASSUMPTIONS.md`): as sessões foram explicadas pela IA e conferidas por perguntas, não foram leitura própria. Ficam ainda de fora do estudo `repeat-order.ts`, os repositórios e as consultas ao banco, e o resto das telas.
 
 ## 2. Limites conhecidos (todos já escritos no `README.md`, "O que ficou de fora")
 

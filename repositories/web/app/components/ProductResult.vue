@@ -1,11 +1,19 @@
 <script setup lang="ts">
+import type { DraftLine } from '~/stores/order';
 import type { ProductSearchItem } from '~/types/api';
 
-const props = defineProps<{ product: ProductSearchItem; added: boolean }>();
-defineEmits<{ add: [] }>();
+// `added` is the plain "already on the order" mark. With `line`, the card also
+// shows the cart controls (quantity, unit, remove) for that line. `locked` keeps
+// the add button off, with `lockedHint` saying why (the catalog without a client).
+const props = defineProps<{ product: ProductSearchItem; added: boolean; line?: DraftLine; locked?: boolean }>();
+defineEmits<{ add: []; remove: []; setQuantity: [quantity: number]; setUnit: [unit: 'UNIT' | 'PACK'] }>();
 const { t } = useI18n();
 
 const available = computed(() => props.product.availability === 'AVAILABLE');
+const unitItems = computed(() => [
+  { label: t('order.unitOptions.UNIT'), value: 'UNIT' },
+  { label: t('order.unitOptions.PACK', { n: props.product.packFactor }), value: 'PACK' },
+]);
 </script>
 
 <template>
@@ -20,7 +28,16 @@ const available = computed(() => props.product.availability === 'AVAILABLE');
       </p>
       <UBadge v-else-if="product.reason" color="warning" variant="subtle" size="sm">{{ t(`availability.${product.reason}`) }}</UBadge>
     </div>
-    <UButton v-if="added" color="neutral" variant="soft" size="sm" icon="i-lucide-check" :label="t('order.added')" disabled />
-    <UButton v-else :disabled="!available" size="sm" icon="i-lucide-plus" :label="t('order.add')" data-testid="add-product" @click="$emit('add')" />
+    <div v-if="line" class="flex shrink-0 flex-col items-end gap-2" data-testid="cart-controls">
+      <div class="flex items-center gap-1">
+        <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-minus" :disabled="line.quantity <= 1" :aria-label="t('cart.decrease')" data-testid="qty-minus" @click="$emit('setQuantity', line.quantity - 1)" />
+        <span class="w-9 text-center font-medium tabular-nums" data-testid="qty-value">{{ line.quantity }}</span>
+        <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-plus" :aria-label="t('cart.increase')" data-testid="qty-plus" @click="$emit('setQuantity', line.quantity + 1)" />
+      </div>
+      <USelect v-if="product.packFactor > 1" :model-value="line.unit" :items="unitItems" size="xs" class="w-40" data-testid="card-unit" @update:model-value="$emit('setUnit', $event as 'UNIT' | 'PACK')" />
+      <UButton color="error" variant="soft" size="xs" icon="i-lucide-trash-2" :label="t('order.remove')" data-testid="remove-product" @click="$emit('remove')" />
+    </div>
+    <UButton v-else-if="added" color="neutral" variant="soft" size="sm" icon="i-lucide-check" :label="t('order.added')" disabled />
+    <UButton v-else :disabled="!available || locked" size="sm" icon="i-lucide-plus" :label="t('order.add')" data-testid="add-product" @click="$emit('add')" />
   </div>
 </template>

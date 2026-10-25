@@ -280,5 +280,27 @@
     "title": "Pedidos pendentes",
     "subtitle": "Pedidos fechados sem sinal, esperando para serem enviados.",
     "empty": "Nenhum pedido pendente."
+  },
+  "cart": {
+    "title": "Carrinho",
+    "for": "Carrinho de {client}",
+    "empty": "Seu carrinho está vazio. Adicione produtos da lista.",
+    "itemCount": "{n} item | {n} itens",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "close": "Fechar pedido",
+    "clear": "Esvaziar",
+    "clearConfirm": "Toque de novo para esvaziar",
+    "chooseClient": "Escolha um cliente para adicionar produtos ao carrinho.",
+    "decrease": "Diminuir quantidade",
+    "increase": "Aumentar quantidade",
+    "switchTitle": "Trocar de cliente?",
+    "switchBody": "O carrinho atual é de outro cliente e será esvaziado, porque o preço depende da tabela de cada cliente.",
+    "switchConfirm": "Trocar e esvaziar",
+    "cancel": "Cancelar",
+    "outdated": "Desatualizado",
+    "open": "Ver carrinho",
+    "hide": "Fechar",
+    "openCart": "Abrir o carrinho"
   }
 }

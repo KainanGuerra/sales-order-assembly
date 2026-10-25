@@ -80,6 +80,7 @@ Cada serviço guarda a própria cópia da fatia que usa, em `seed/seed.json` (id
 | A25 | "Login" | Simulado: tela para escolher vendedor ou supervisor, com sessão por cookie no servidor |
 | A65 | Catálogo sem cliente escolhido | Mostra os preços da tabela padrão (TP01), e o supervisor, que não tem carteira, só vê assim. Lista só produtos ativos, por nome; um ativo sem preço na tabela aparece desabilitado, como na busca, se a variável de ambiente permitir (`DECISIONS.md` D61). Decisão minha |
 | A66 | "Pedidos" do vendedor | Todos os pedidos dele, de todos os clientes, os mais recentes primeiro (até 50); o filtro de situação só esconde linhas já recebidas. Decisão minha |
+| A67 | Carrinho do catálogo | É o rascunho do pedido, um só para o aplicativo: guarda os itens de um cliente por vez. Trocar de cliente com itens pede confirmação e esvazia (`DECISIONS.md` D62). Sem cliente escolhido no catálogo não se adiciona. Decisão minha |
 | A26 | Pedido offline (fase C) | Decidido: ver `DECISIONS.md` D54 a D56 e A53 a A59. O backend continua sendo o dono das regras |
 
 ## Arredondamento (método 1 — arredondar cada linha, meio para cima)

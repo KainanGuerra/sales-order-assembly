@@ -31,6 +31,7 @@ Cada serviço é dono de um schema e de um papel (`<serviço>_role`) que só enx
 
 Diagrama do envio: [Envio de um pedido](../diagrams/submit-order-flow.md).
 
+- **O carrinho** do catálogo é o próprio rascunho do pedido (`DECISIONS.md` D62): painel no catálogo, contador no cabeçalho, e "Fechar pedido" abre a página do pedido, que envia.
 - **A casca da tela:** cabeçalho com hambúrguer, menu lateral (coluna em tela larga, gaveta em tela estreita, sempre abaixo do cabeçalho), botão de tema de três modos e rodapé; os itens vêm de uma lista só, filtrada pelo papel (`DECISIONS.md` D61, `CODE_MAP.md`).
 - **Navegador → web:** só o BFF recebe o navegador. Cookie de sessão opaco; a sessão fica no Redis (seção 8).
 - **BFF → serviços:** HTTP/JSON. Cada chamada leva o segredo interno (`x-inner-auth`) e o usuário e o papel da sessão (`x-user-id`, `x-user-role`). Os serviços só aceitam chamadas com o segredo.

@@ -111,7 +111,7 @@ async function send() {
 <template>
   <div class="space-y-4">
     <div class="flex items-center gap-2">
-      <UButton to="/clients" color="neutral" variant="ghost" icon="i-lucide-arrow-left" :aria-label="t('app.back')" />
+      <UButton :to="{ path: '/catalog', query: { clientId } }" color="neutral" variant="ghost" icon="i-lucide-arrow-left" :aria-label="t('app.back')" data-testid="back" />
       <div class="min-w-0">
         <h1 class="truncate text-xl font-semibold">{{ client?.tradeName }}</h1>
         <p class="text-xs text-neutral-500">
@@ -163,7 +163,7 @@ async function send() {
       <UAlert v-if="submitProblem === 'refused'" role="alert" color="error" variant="subtle" icon="i-lucide-octagon-alert" :title="t('order.refused')" />
       <UAlert v-if="submitProblem === 'failed'" role="alert" color="error" variant="subtle" icon="i-lucide-wifi-off" :title="t('order.sendFailed')" />
 
-      <footer class="fixed inset-x-0 bottom-11 z-20 border-t border-neutral-200 bg-white p-3 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+      <footer class="fixed bottom-11 left-[var(--menu-w,0px)] right-0 z-20 border-t transition-[left] duration-200 border-neutral-200 bg-white p-3 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
         <UContainer class="space-y-2 p-0">
           <div class="flex items-end justify-between gap-3">
             <UFormField :label="t('order.orderDiscount')" :error="orderDiscountInvalid ? t('order.discountInvalid') : undefined" class="w-40">

@@ -23,6 +23,7 @@ Para achar rápido onde está cada coisa: onde mudar uma regra, como seguir um p
 | O reenvio do modo offline | decisão do que fazer com cada falha: `web/app/utils/connectivity.ts` (`classifyFailure`); a rodada de envio: `web/app/stores/pending.ts` (`flush`); quando tentar: `web/app/composables/usePendingSync.ts` (a cada 15 s) | tempo limite: `REQUEST_TIMEOUT_MS` (8 s) no mesmo `connectivity.ts` |
 | Os itens do menu e quem os vê | `web/app/utils/navigation.ts` (`NAV_ITEMS`, `navFor`, `isActive`); os rótulos em `web/i18n/locales/pt-BR.json` (`nav.*`) | |
 | A casca (cabeçalho, menu, rodapé) | `web/app/layouts/default.vue`, `web/app/components/AppMenu.vue`, `AppLogo.vue` | |
+| O carrinho do catálogo | `web/app/pages/catalog.vue` (troca de cliente, painel, barra no celular), `web/app/components/CartPanel.vue`, `ProductResult.vue` (botão e quantidade), `CartBadge.vue` (cabeçalho); o dado é o rascunho em `web/app/stores/order.ts` (`conflictsWith`) | `useCalculation.ts` |
 | A versão e os contatos do autor | `web/package.json` (`version`), `web/nuxt.config.ts` (`runtimeConfig.public.appVersion`), `web/app/utils/contact.ts` | |
 | O tema (claro, escuro, misto) | `web/app/utils/theme.ts` (regras puras), `web/app/composables/useAppTheme.ts`, `web/app/plugins/theme.client.ts`; cores em `web/app/app.config.ts` | |
 | Quais páginas cada papel abre | `web/app/middleware/auth.global.ts` | |

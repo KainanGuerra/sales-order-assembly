@@ -156,4 +156,24 @@ describe('order store', () => {
     order.setQuantity('P1', 99);
     expect(line.quantity).toBe(10);
   });
+
+  it('is not in conflict when the draft is empty, even if it belongs to another client', () => {
+    const order = useOrderStore();
+    order.start('C001');
+    expect(order.conflictsWith('C002')).toBe(false);
+  });
+
+  it('is not in conflict with the client the draft already belongs to', () => {
+    const order = useOrderStore();
+    order.start('C001');
+    order.addProduct(product({ id: 'P1' }));
+    expect(order.conflictsWith('C001')).toBe(false);
+  });
+
+  it('is in conflict when the draft has items for another client', () => {
+    const order = useOrderStore();
+    order.start('C001');
+    order.addProduct(product({ id: 'P1' }));
+    expect(order.conflictsWith('C002')).toBe(true);
+  });
 });

@@ -40,6 +40,9 @@ export const useOrderStore = defineStore('order', {
 
   getters: {
     isEmpty: (state) => state.lines.length === 0,
+    // True when the draft holds items for another client: using it for this one
+    // would mean emptying it first.
+    conflictsWith: (state) => (clientId: string) => state.lines.length > 0 && state.clientId !== null && state.clientId !== clientId,
     // The body of a calculation request.
     request: (state) => orderRequest(state.clientId ?? '', state.lines, state.orderDiscountBp),
   },

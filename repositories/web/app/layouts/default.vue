@@ -99,9 +99,11 @@ async function leave() {
 </script>
 
 <template>
-  <!-- Header and footer are fixed on every page. The login screen never scrolls: it
+  <!-- --menu-w is the width of the menu column, so a bar fixed to the bottom of a
+       page can start where the page does (see the order page and the catalog).
+       Header and footer are fixed on every page. The login screen never scrolls: it
        is exactly the screen between them (see pages/index.vue). -->
-  <div class="flex flex-col bg-neutral-50 dark:bg-neutral-950" :class="user ? 'min-h-dvh' : 'h-dvh overflow-hidden'">
+  <div class="flex flex-col bg-neutral-50 dark:bg-neutral-950" :class="user ? 'min-h-dvh' : 'h-dvh overflow-hidden'" :style="{ '--menu-w': user && isDesktop && desktopOpen ? '15rem' : '0px' }">
     <!-- "dark" on the header and the menu darkens just them in the mixed look. -->
     <header
       class="fixed inset-x-0 top-0 z-30 h-14 border-b border-neutral-200 bg-white/90 backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/90"
@@ -130,6 +132,7 @@ async function leave() {
             <UButton color="neutral" variant="ghost" :icon="themeIcon" :aria-label="t(`theme.${mode}`)" data-testid="theme-button" @click="cycle" />
           </UTooltip>
           <template v-if="user">
+            <CartBadge />
             <NotificationBell />
             <UAvatar :text="initials" size="sm" :alt="user.name" class="ml-1" />
             <span class="hidden max-w-40 truncate text-neutral-600 sm:inline dark:text-neutral-300">{{ user.name }}</span>

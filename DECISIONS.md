@@ -528,3 +528,13 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 - **Custo assumido:** o catálogo sem cliente usa a tabela padrão, cujo id o `web` lê de `NUXT_DEFAULT_PRICE_TABLE_ID` (padrão `TP01`), uma segunda cópia do que o `identity` já sabe (`DEFAULT_PRICE_TABLE_ID`); o gráfico Helm do `web` não passa a variável e fica com o padrão. A tela do supervisor para "Pedidos" é a própria fila de aprovações: ele não tem lista geral.
 - **O que faria diferente:** pedir a tabela padrão ao `identity` em vez de repeti-la; testes de ponta a ponta (Playwright) para o menu e o tema, que aqui só foram conferidos à mão no navegador.
 
+## D62. O carrinho do catálogo é o rascunho do pedido
+
+- **Contexto:** o catálogo só listava produtos; para pedir, o vendedor tinha de sair e buscar tudo de novo em `/orders/new/:cliente`. O carrinho do fiap-games (um contador no cabeçalho, um botão que alterna Adicionar/Remover em cada produto, uma página com o total) foi a referência.
+- **Alternativas consideradas:** um segundo carrinho só do catálogo (duas listas para manter iguais, e um pedido dois lugares); um carrinho por cliente (útil para quem visita várias lojas no dia, mas exige refazer o `order` store, a persistência e a fila offline); um carrinho no servidor (cada toque vira uma chamada, e sem sinal não funciona).
+- **Escolha:** **o carrinho é o rascunho do pedido que já existia** (`web/app/stores/order.ts`, guardado no navegador, calculado pelo backend a cada edição). Com um cliente escolhido, o catálogo mostra um painel ao lado (em tela estreita, uma barra acima do rodapé que abre o carrinho como uma folha entre o cabeçalho e o rodapé), cada produto ganha o botão Adicionar/Remover com a quantidade e a embalagem, e o cabeçalho mostra um contador que leva ao pedido. "Fechar pedido" abre a página do pedido, onde ficam o desconto e o envio: continua havendo um só lugar que envia. Sem cliente não se adiciona (não há tabela de preço nem cálculo).
+- **Trocar de cliente** com itens no carrinho pede confirmação e esvazia (a regra de antes, agora explícita): o preço é da tabela de cada cliente. Um rascunho vazio muda de cliente sem perguntar.
+- **Por quê:** nenhuma regra nova e nenhuma rota nova; a tela continua só mostrando o que o backend calculou.
+- **O que reabriria:** vendedores que alternam entre clientes no mesmo dia e reclamam de perder o carrinho; aí valeria um rascunho por cliente (e a fila offline já guarda pedidos por cliente).
+- **O que faria diferente:** testes de ponta a ponta para o fluxo (hoje conferido à mão no navegador).
+
