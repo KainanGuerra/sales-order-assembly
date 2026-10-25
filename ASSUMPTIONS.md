@@ -63,8 +63,15 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A50 | Quantos avisos a tela mostra | Os 30 mais novos (o serviço aceita até 100); não há expiração. Decisão minha |
 | A51 | O que entra na estatística de produtos mais pedidos | Unidades de todo pedido que chegou a `SUBMITTED` (direto ou depois de aprovado); pedidos aguardando ou rejeitados não contam. Decisão minha |
 | A52 | Como a estatística afeta a busca | Só desempata, depois da descrição exata e da similaridade (`DECISIONS.md` D52). Decisão minha |
+| A53 | O que o vendedor faz sem sinal | Monta o pedido normalmente e fecha com "Guardar para enviar"; o pedido espera no aparelho. Decisão minha |
+| A54 | O que a tela mostra sem totais novos | O último cálculo feito com sinal, marcado "desatualizado", com o aviso de que as regras serão conferidas no envio. Não há cálculo no navegador. Decisão minha |
+| A55 | Busca sem sinal | Só entre os produtos que o vendedor já viu para aquele cliente (até 300), por pedaço do nome, EAN ou SKU exatos; sem tolerância a erro de digitação. A tela avisa. Decisão minha |
+| A56 | Sinal fraco | Uma chamada que passa de 8 segundos conta como sem sinal; o pedido é guardado e reenviado com o mesmo id, o que é seguro. Decisão minha |
+| A57 | Como o pedido guardado é enviado | Sozinho, quando o sinal volta (e a cada 15 s enquanto houver pedido esperando); a tela avisa o resultado. Decisão minha |
+| A58 | Pedido guardado que o servidor recusa | Fica em "Pedidos pendentes" com os motivos do servidor; o vendedor corrige (volta ao editor com id novo) ou descarta (dois toques). Decisão minha |
+| A59 | Pedidos guardados e troca de usuário | Pertencem ao vendedor que os fez: só ele os vê e envia. Ao entrar ou sair, o resto (cache do service worker, produtos vistos) é apagado; os pedidos guardados ficam. Decisão minha |
 | A25 | "Login" | Simulado: tela para escolher vendedor ou supervisor, com sessão por cookie no servidor |
-| A26 | Pedido offline (fase C) | Comportamento a decidir quando chegarmos à fase C; o backend continua sendo o dono das regras |
+| A26 | Pedido offline (fase C) | Decidido: ver `DECISIONS.md` D54 a D56 e A53 a A59. O backend continua sendo o dono das regras |
 
 ## Arredondamento (método 1 — arredondar cada linha, meio para cima)
 

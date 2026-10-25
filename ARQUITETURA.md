@@ -107,5 +107,5 @@ Cada serviço importa sua parte na inicialização, de forma idempotente: identi
 
 - **A:** identity, catalog, orders, web; RabbitMQ e Redis já no compose.
 - **B:** crédito (consumidor em identity), histórico e repetir pedido, aprovação do supervisor, notifications.
-- **C:** pedido offline com sincronização.
+- **C:** pedido offline com sincronização (service worker, fila de pedidos no navegador; o servidor continua dono das regras).
 - **D:** repositório `orchestration` (Helm, kind, ingress, NetworkPolicies, guia de primeiros passos). O `docker-compose.yml` passa a morar nele; o repositório raiz mantém um arquivo fino com `include:` para que `docker compose up` continue funcionando. Ver `DECISIONS.md` D29.

@@ -4,13 +4,13 @@ Módulo para vendedores que visitam pequenos varejistas (mercadinhos, minimercad
 
 ## Estado atual
 
-**Fase A funcionando em Docker Compose**: interface web (Nuxt), catálogo, identity e orders, com PostgreSQL, RabbitMQ e Redis. Crédito, aprovação do supervisor, histórico com "repetir pedido" e notificações já funcionam; a estatística de produtos mais pedidos no catálogo também; falta o modo offline.
+**Fase A funcionando em Docker Compose**: interface web (Nuxt), catálogo, identity e orders, com PostgreSQL, RabbitMQ e Redis. Crédito, aprovação do supervisor, histórico com "repetir pedido" e notificações já funcionam; a estatística de produtos mais pedidos no catálogo também; o modo offline (montar o pedido sem sinal e enviar quando voltar) também. Falta só a orquestração (fase D).
 
 | Fase | Conteúdo | Estado |
 |---|---|---|
 | A | Requisitos obrigatórios 1–6 | Pronta: backend (catálogo, identity, orders com regras e testes) e interface (Nuxt) |
 | B | Limite de crédito, aprovação do supervisor, histórico com "repetir pedido", notificações | Pronta: crédito, aprovação, histórico com "repetir pedido", notificações e a estatística de produtos no catálogo |
-| C | Pedido offline com sincronização | Não iniciada |
+| C | Pedido offline com sincronização | Pronta: o app abre sem sinal, o pedido fica guardado no aparelho e é enviado quando o sinal volta (`DECISIONS.md` D54 a D56) |
 | D | Repositório de orquestração (Helm, kind, ingress), última fase | Não iniciada |
 
 ## Stack
@@ -89,6 +89,7 @@ Os testes das regras cobrem os casos de borda: desconto exatamente na alçada, p
 - Os fluxos de CI (testes e publicação das imagens no GHCR) estão escritos, **mas nunca rodaram no GitHub**.
 - A publicação dos eventos não usa outbox: se o RabbitMQ estiver fora no envio, o evento se perde (e com ele um aviso ou uma confirmação de crédito, que a reserva só recupera pela expiração).
 - Os avisos em tempo real (SSE) são difundidos no processo do notifications: com mais de uma réplica, precisariam de um corretor entre elas.
-- Modo offline e a orquestração com Helm são as fases C e D.
+- Modo offline: verificado em Chrome de computador, parando o servidor da interface para simular a falta de sinal; **não foi testado num celular real** nem com sinal fraco de verdade (a regra de 8 segundos tem teste de lógica, não medição). O service worker só existe na versão de produção (a imagem Docker), não no `nuxt dev`. Os pedidos guardados ficam no `localStorage` do navegador, que o usuário pode apagar. Não há ícones para instalar o app na tela inicial.
+- A orquestração com Helm é a fase D.
 
 **Fora do escopo do enunciado:** estoque, autenticação real, notificações externas, várias moedas.

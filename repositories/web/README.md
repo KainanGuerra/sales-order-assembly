@@ -33,10 +33,18 @@ NUXT_REDIS_URL=redis://:<REDIS_PASSWORD>@127.0.0.1:6379 pnpm dev
 ## Test
 
 ```bash
-pnpm test        # Vitest: formatting, the order store, the session store, error mapping, debounce, JSON-only rule
+pnpm test        # Vitest: formatting, the order store, the session store, error mapping, debounce, JSON-only rule, the offline queue and its failure rules, the seen-products search
 pnpm typecheck   # vue-tsc (TypeScript 6: vue-tsc does not run on TypeScript 7 yet)
 ```
 
 ## Not done here
 
-Component tests (the logic worth testing lives in the store, the helpers and the BFF, which are tested), the offline mode (phase C).
+Component tests (the logic worth testing lives in the store, the helpers and the BFF, which are tested), a real phone and real weak signal for the offline mode (it was checked on desktop Chrome by stopping the server).
+
+## Offline (phase C)
+
+- Production build only: `@vite-pwa/nuxt` writes a service worker that keeps the app's files (the page is prerendered once so it has an `index.html` to keep) and the last answer of `/api/auth/me`, `/api/clients` and `/api/clients/:id` (cache `api-reads`, network first, 5 s). Everything else goes to the network.
+- `stores/pending.ts`: the orders closed without signal (`localStorage`, key `sales.pending-orders`). `flush` sends the logged-in seller's waiting orders one at a time; the rules for each outcome are in `utils/connectivity.ts` (`classifyFailure`).
+- `composables/useConnectivity.ts` + `plugins/offline.client.ts`: "online" means the server answered; a request that fails or takes more than 8 s turns it off, and a probe on `/api/health` every 5 s turns it back on.
+- `stores/seen-products.ts` + `utils/seen-products.ts`: products already seen per client, searched on the phone when offline.
+- Logging in or out empties the service worker cache, the seen products and TanStack Query; the pending orders stay (they are the seller's). Logout without signal is refused, so a session is never left open on the server while the phone looks logged out.

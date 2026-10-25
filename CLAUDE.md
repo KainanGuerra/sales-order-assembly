@@ -8,11 +8,11 @@ The reviewers will pick code at random and ask me to explain it, make a live cha
 
 ## Status
 
-`contracts`, `catalog-api`, `identity-api`, `orders-api` and `web` exist under `repositories/`, pass their tests and run in Docker Compose together with RabbitMQ (phase A backend is complete: calculate, submit with the status, the rules). `web` (Nuxt app and BFF) exists too, so the phase A requirements 1 to 6 are implemented end to end. Phase B is done: **credit, approval, history with "repeat order", notifications and the catalog's product statistic** (reservation and consumer; the supervisor's decisions with a status history; each client's history, which includes the seed's orders, and a draft that repeats an old order at today's prices). Phases C and D are not built. Delivery is phased:
+`contracts`, `catalog-api`, `identity-api`, `orders-api` and `web` exist under `repositories/`, pass their tests and run in Docker Compose together with RabbitMQ (phase A backend is complete: calculate, submit with the status, the rules). `web` (Nuxt app and BFF) exists too, so the phase A requirements 1 to 6 are implemented end to end. Phase B is done: **credit, approval, history with "repeat order", notifications and the catalog's product statistic** (reservation and consumer; the supervisor's decisions with a status history; each client's history, which includes the seed's orders, and a draft that repeats an old order at today's prices). Phase C (offline) is done; phase D is not built. Delivery is phased:
 
 - **Phase A:** mandatory requirements 1–6 (portfolio scoping, product search by name/EAN with the client's price table, order building, totals and blocking rules, submit with status, automated tests of the rules).
 - **Phase B:** credit limit, order history with "repeat order", minimal supervisor approve/reject.
-- **Phase C:** offline drafting and sync (behaviour still to be decided).
+- **Phase C (done):** offline drafting and sync: the app opens without signal (service worker), an order closed offline waits in the browser and is sent when the signal returns (`DECISIONS.md` D54 to D56).
 - **Phase D (last):** the `orchestration` repo, like the earlier multi-repo work: umbrella Helm chart with a subchart per service, kind cluster with Calico, ingress, NetworkPolicies, Kubernetes getting-started guide. The compose file moves into it; the root keeps a thin `docker-compose.yml` that `include:`s it, so `docker compose up` still works. Do not start it before A–C are done (`DECISIONS.md` D29).
 
 ## Architecture
