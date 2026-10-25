@@ -1,12 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { DB, type Database } from '../../../db/database.module.js';
-import { priceTableItems, products } from '../../../db/schema.js';
+import { priceTableItems, productStats, products } from '../../../db/schema.js';
 import { isExactCodeQuery, type ProductRow } from '../search-rules.js';
 
 // Wrapped in a function so the same expression is used by the index, the
 // filter and the ranking.
 const normalizedDescription = sql`immutable_unaccent(lower(${products.description}))`;
+
+// Units ordered so far; a product nobody ordered counts as zero.
+const unitsOrdered = sql`coalesce(${productStats.unitsOrdered}, 0)`;
 
 // "%" and "_" are wildcards in LIKE; the seller's text is literal.
 export function escapeLike(text: string): string {
@@ -40,12 +43,14 @@ export class ProductsRepository {
       .leftJoin(
         priceTableItems,
         and(eq(priceTableItems.productId, products.id), eq(priceTableItems.priceTableId, priceTableId ?? '')),
-      );
+      )
+      // Only used to break ties between equally good matches.
+      .leftJoin(productStats, eq(productStats.productId, products.id));
 
     if (isExactCodeQuery(text)) {
       return withPrice
         .where(sql`${products.ean} = ${text} or upper(${products.sku}) = upper(${text})`)
-        .orderBy(asc(products.id))
+        .orderBy(desc(unitsOrdered), asc(products.id))
         .limit(limit);
     }
 
@@ -59,10 +64,13 @@ export class ProductsRepository {
     return withPrice
       .where(sql`(${contains}) or (${similar})`)
       .orderBy(
-        // Exact description first, then the closest match, then a stable order
-        // that also decides between the two products sharing an EAN.
+        // Exact description first, then the closest match. Only when two
+        // products match equally does the one ordered more often go first, and
+        // after that a stable order that also decides between the two
+        // products sharing an EAN.
         desc(sql`${normalizedDescription} = ${normalizedQuery}`),
         desc(sql`word_similarity(${normalizedQuery}, ${normalizedDescription})`),
+        desc(unitsOrdered),
         asc(products.id),
       )
       .limit(limit);

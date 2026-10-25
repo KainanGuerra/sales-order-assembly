@@ -1,4 +1,4 @@
-import { boolean, index, integer, pgTable, primaryKey, text } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core';
 
 // Tables are unqualified on purpose: the connection's search_path decides the
 // schema ("catalog" in the service, "catalog_test" in tests).
@@ -43,3 +43,18 @@ export const priceTableItems = pgTable(
   },
   (table) => [primaryKey({ columns: [table.priceTableId, table.productId] })],
 );
+
+// Units ordered per product, counted from the order.submitted events. No
+// foreign key to products on purpose: an event naming a product this catalog
+// does not know must not fail forever and end in the dead-letter queue.
+export const productStats = pgTable('product_stats', {
+  productId: text('product_id').primaryKey(),
+  unitsOrdered: integer('units_ordered').notNull(),
+});
+
+// The orders already counted. The primary key makes the count idempotent: a
+// redelivered event inserts nothing, so it adds nothing.
+export const countedOrders = pgTable('counted_orders', {
+  orderId: text('order_id').primaryKey(),
+  countedAt: timestamp('counted_at', { withTimezone: true }).notNull().defaultNow(),
+});

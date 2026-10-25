@@ -15,6 +15,9 @@ const EnvSchema = z.object({
   // EAN/SKU match. When off, both are hidden.
   SHOW_UNAVAILABLE_PRODUCTS: z.stringbool().default(true),
   SEED_FILE: z.string().default('/data/seed.json'),
+  RABBITMQ_URL: z.string().min(1).default('amqp://rabbitmq:5672'),
+  // Deliveries a failing event gets before the broker dead-letters it.
+  CONSUMER_MAX_DELIVERIES: z.coerce.number().int().min(1).default(5),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
