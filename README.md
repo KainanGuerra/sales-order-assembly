@@ -83,8 +83,8 @@ Os testes das regras cobrem os casos de borda: desconto exatamente na alçada, p
 
 **Da fase A, por escolha ou por falta de verificação**
 
-- A tela foi usada num navegador de computador; **não foi testada em um celular real nem em tela estreita** (o layout foi pensado para isso, mas não conferido).
-- O caminho em que o envio é recusado (422) e o aviso de "sem conexão" na tela do pedido foram escritos e cobertos nos testes do backend e do BFF, mas **não foram exercitados na interface**.
+- A tela foi conferida num navegador de computador e numa moldura de 390 px de largura (uma aproximação de celular: sem rolagem horizontal, grade de duas colunas, barra de totais fixa); **não foi testada em um aparelho real**.
+- Os caminhos de erro da tela do pedido foram exercitados com **falhas simuladas** (a chamada de rede foi interceptada na própria página): recusa do envio (422), falha de rede ao enviar (o reenvio usa o mesmo id e conclui) e cálculo indisponível (aviso, botão desabilitado, volta ao normal na edição seguinte). Contra o backend de verdade, a recusa só foi exercitada por testes e por chamadas à API.
 - Não há testes de componente do front; a lógica testada está no motor de regras, nos serviços, no store, nos utilitários e no BFF.
 - Os fluxos de CI (testes e publicação das imagens no GHCR) estão escritos, **mas nunca rodaram no GitHub**.
 - Os eventos do pedido são publicados, mas ainda **não há consumidores** (crédito, estatística de produtos, notificações), e a publicação não usa outbox: se o RabbitMQ estiver fora no envio, o evento se perde.
