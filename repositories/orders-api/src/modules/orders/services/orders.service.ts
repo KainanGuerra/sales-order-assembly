@@ -269,7 +269,7 @@ export class OrdersService {
       if (await this.repository.applyApproval(orderId, actor.id)) {
         const done = (await this.repository.findById(orderId))!;
         const approvedAt = done.history.find((step) => step.status === 'APPROVED')!.createdAt;
-        await this.publisher.publishApproved({ orderId, approvedBy: actor.id, approvedAt: approvedAt.toISOString() });
+        await this.publisher.publishApproved({ ...orderRef(done.order), approvedBy: actor.id, approvedAt: approvedAt.toISOString() });
         await this.publisher.publishSubmitted(submittedEvent(done, done.history.at(-1)!.createdAt));
         return toOrderView(done);
       }
@@ -302,7 +302,7 @@ export class OrdersService {
           this.logger.error(`Could not release the credit of rejected order ${orderId}; the event will`, error as Error);
         });
         await this.publisher.publishRejected({
-          orderId,
+          ...orderRef(done.order),
           rejectedBy: actor.id,
           reasonCode: dto.reasonCode,
           ...(reason.text ? { reasonText: reason.text } : {}),
@@ -406,14 +406,23 @@ function canSee(actor: Actor, order: OrderRow): boolean {
   return actor.role === 'SELLER' ? order.sellerId === actor.id : order.supervisorId === actor.id;
 }
 
-function placedEvent({ order, items }: OrderWithItems): OrderPlacedEvent {
+// Who the order is about, on every event: so a consumer can address and write a
+// message without calling another service.
+function orderRef(order: OrderRow) {
   return {
     orderId: order.id,
-    clientId: order.clientId,
     sellerId: order.sellerId,
     supervisorId: order.supervisorId,
-    status: order.status as InitialOrderStatus,
+    clientId: order.clientId,
+    clientTradeName: order.clientTradeName,
     totalCents: order.totalCents,
+  };
+}
+
+function placedEvent({ order, items }: OrderWithItems): OrderPlacedEvent {
+  return {
+    ...orderRef(order),
+    status: order.status as InitialOrderStatus,
     items: items.map((item) => ({ productId: item.productId, quantity: item.quantityUnits })),
     placedAt: order.createdAt.toISOString(),
   };
@@ -421,10 +430,7 @@ function placedEvent({ order, items }: OrderWithItems): OrderPlacedEvent {
 
 function submittedEvent({ order, items }: OrderWithItems, at: Date): OrderSubmittedEvent {
   return {
-    orderId: order.id,
-    clientId: order.clientId,
-    sellerId: order.sellerId,
-    totalCents: order.totalCents,
+    ...orderRef(order),
     items: items.map((item) => ({ productId: item.productId, quantity: item.quantityUnits })),
     submittedAt: at.toISOString(),
   };

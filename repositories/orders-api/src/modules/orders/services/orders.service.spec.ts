@@ -218,13 +218,12 @@ describe('OrdersService.submit', () => {
 
   it('announces an order within the limit as placed and then as submitted', async () => {
     await ctx.service.submit(seller, submission({ items: [{ productId: 'P2', quantity: 3, unit: 'PACK', discountBp: 0 }] }));
+    const ref = { orderId: ORDER_ID, sellerId: 'V01', supervisorId: 'S01', clientId: 'C001', clientTradeName: 'Mercadinho São José', totalCents: 360_000 };
     expect(ctx.publishPlaced).toHaveBeenCalledWith({
-      orderId: ORDER_ID, clientId: 'C001', sellerId: 'V01', supervisorId: 'S01', status: 'SUBMITTED',
-      totalCents: 360_000, items: [{ productId: 'P2', quantity: 36 }], placedAt: '2026-10-24T12:00:00.000Z',
+      ...ref, status: 'SUBMITTED', items: [{ productId: 'P2', quantity: 36 }], placedAt: '2026-10-24T12:00:00.000Z',
     });
     expect(ctx.publishSubmitted).toHaveBeenCalledWith({
-      orderId: ORDER_ID, clientId: 'C001', sellerId: 'V01', totalCents: 360_000,
-      items: [{ productId: 'P2', quantity: 36 }], submittedAt: '2026-10-24T12:00:00.000Z',
+      ...ref, items: [{ productId: 'P2', quantity: 36 }], submittedAt: '2026-10-24T12:00:00.000Z',
     });
   });
 
@@ -403,7 +402,11 @@ describe('OrdersService.approve', () => {
 
   it('announces the approval and then the submission', async () => {
     await ctx.service.approve(supervisor, ORDER_ID);
-    expect(ctx.publishApproved).toHaveBeenCalledWith({ orderId: ORDER_ID, approvedBy: 'S01', approvedAt: expect.any(String) });
+    // Every event says whom the order is about, so a consumer can address a message.
+    expect(ctx.publishApproved).toHaveBeenCalledWith({
+      orderId: ORDER_ID, sellerId: 'V01', supervisorId: 'S01', clientId: 'C001', clientTradeName: 'Mercadinho São José', totalCents: 47_000,
+      approvedBy: 'S01', approvedAt: expect.any(String),
+    });
     expect(ctx.publishSubmitted).toHaveBeenCalledWith(expect.objectContaining({ orderId: ORDER_ID, clientId: 'C001', totalCents: 47_000 }));
     const approved = ctx.publishApproved.mock.invocationCallOrder[0];
     const submitted = ctx.publishSubmitted.mock.invocationCallOrder[0];
@@ -482,7 +485,10 @@ describe('OrdersService.reject', () => {
   it('gives the credit back at once and announces the rejection with its reason', async () => {
     await ctx.service.reject(supervisor, ORDER_ID, { reasonCode: 'DISCOUNT_TOO_HIGH' });
     expect(ctx.releaseCredit).toHaveBeenCalledWith(ORDER_ID);
-    expect(ctx.publishRejected).toHaveBeenCalledWith({ orderId: ORDER_ID, rejectedBy: 'S01', reasonCode: 'DISCOUNT_TOO_HIGH', rejectedAt: expect.any(String) });
+    expect(ctx.publishRejected).toHaveBeenCalledWith({
+      orderId: ORDER_ID, sellerId: 'V01', supervisorId: 'S01', clientId: 'C001', clientTradeName: 'Mercadinho São José', totalCents: 47_000,
+      rejectedBy: 'S01', reasonCode: 'DISCOUNT_TOO_HIGH', rejectedAt: expect.any(String),
+    });
     expect(ctx.publishSubmitted).not.toHaveBeenCalled();
   });
 

@@ -34,6 +34,18 @@ export type OrderStatus = z.infer<typeof OrderStatusSchema>;
 export const InitialOrderStatusSchema = z.enum(['SUBMITTED', 'AWAITING_APPROVAL']);
 export type InitialOrderStatus = z.infer<typeof InitialOrderStatusSchema>;
 
+// Who an order is about, carried by every event so a consumer can address a
+// message (to the seller, to the supervisor) and write it (the client's name,
+// the amount) without calling another service.
+const OrderRefShape = {
+  orderId: z.uuid(),
+  sellerId: z.string().min(1),
+  supervisorId: z.string().min(1),
+  clientId: z.string().min(1),
+  clientTradeName: z.string().min(1),
+  totalCents: z.number().int().nonnegative(),
+};
+
 const OrderItemsSchema = z
   .array(
     z.object({
@@ -46,12 +58,8 @@ const OrderItemsSchema = z
 // The order was created. Credit stays held for it; a supervisor is told when it
 // is waiting for approval.
 export const OrderPlacedEventSchema = z.object({
-  orderId: z.uuid(),
-  clientId: z.string().min(1),
-  sellerId: z.string().min(1),
-  supervisorId: z.string().min(1),
+  ...OrderRefShape,
   status: InitialOrderStatusSchema,
-  totalCents: z.number().int().nonnegative(),
   items: OrderItemsSchema,
   placedAt: z.iso.datetime(),
 });
@@ -59,17 +67,14 @@ export type OrderPlacedEvent = z.infer<typeof OrderPlacedEventSchema>;
 
 // The order reached SUBMITTED: sent straight away, or after an approval.
 export const OrderSubmittedEventSchema = z.object({
-  orderId: z.uuid(),
-  clientId: z.string().min(1),
-  sellerId: z.string().min(1),
-  totalCents: z.number().int().nonnegative(),
+  ...OrderRefShape,
   items: OrderItemsSchema,
   submittedAt: z.iso.datetime(),
 });
 export type OrderSubmittedEvent = z.infer<typeof OrderSubmittedEventSchema>;
 
 export const OrderApprovedEventSchema = z.object({
-  orderId: z.uuid(),
+  ...OrderRefShape,
   approvedBy: z.string().min(1),
   approvedAt: z.iso.datetime(),
 });
@@ -87,7 +92,7 @@ export const RejectionReasonCodeSchema = z.enum(REJECTION_REASON_CODES);
 export type RejectionReasonCode = z.infer<typeof RejectionReasonCodeSchema>;
 
 export const OrderRejectedEventSchema = z.object({
-  orderId: z.uuid(),
+  ...OrderRefShape,
   rejectedBy: z.string().min(1),
   reasonCode: RejectionReasonCodeSchema,
   // Required when the code is OTHER.

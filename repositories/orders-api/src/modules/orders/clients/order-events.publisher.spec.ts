@@ -6,11 +6,13 @@ import { RabbitOrderEventsPublisher } from './order-events.publisher.js';
 const orderId = '3f8c2d0e-8a53-4c6a-9d7c-1b6c1d2f6a10';
 const items = [{ productId: 'P1', quantity: 5 }];
 
+const ref = { orderId, sellerId: 'V01', supervisorId: 'S01', clientId: 'C001', clientTradeName: 'Mercadinho São José', totalCents: 50_000 };
+
 const events = {
-  placed: { orderId, clientId: 'C001', sellerId: 'V01', supervisorId: 'S01', status: 'SUBMITTED' as const, totalCents: 50_000, items, placedAt: '2026-10-24T12:00:00.000Z' },
-  submitted: { orderId, clientId: 'C001', sellerId: 'V01', totalCents: 50_000, items, submittedAt: '2026-10-24T12:00:00.000Z' },
-  approved: { orderId, approvedBy: 'S01', approvedAt: '2026-10-24T12:05:00.000Z' },
-  rejected: { orderId, rejectedBy: 'S01', reasonCode: 'CREDIT_RISK' as const, rejectedAt: '2026-10-24T12:05:00.000Z' },
+  placed: { ...ref, status: 'SUBMITTED' as const, items, placedAt: '2026-10-24T12:00:00.000Z' },
+  submitted: { ...ref, items, submittedAt: '2026-10-24T12:00:00.000Z' },
+  approved: { ...ref, approvedBy: 'S01', approvedAt: '2026-10-24T12:05:00.000Z' },
+  rejected: { ...ref, rejectedBy: 'S01', reasonCode: 'CREDIT_RISK' as const, rejectedAt: '2026-10-24T12:05:00.000Z' },
 };
 
 describe('RabbitOrderEventsPublisher', () => {
