@@ -70,6 +70,10 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A57 | Como o pedido guardado é enviado | Sozinho, quando o sinal volta (e a cada 15 s enquanto houver pedido esperando); a tela avisa o resultado. Decisão minha |
 | A58 | Pedido guardado que o servidor recusa | Fica em "Pedidos pendentes" com os motivos do servidor; o vendedor corrige (volta ao editor com id novo) ou descarta (dois toques). Decisão minha |
 | A59 | Pedidos guardados e troca de usuário | Pertencem ao vendedor que os fez: só ele os vê e envia. Ao entrar ou sair, o resto (cache do service worker, produtos vistos) é apagado; os pedidos guardados ficam. Decisão minha |
+| A60 | Onde roda a orquestração nesta entrega | Em um cluster kind local de um nó, com as imagens construídas na máquina (tag `local`) e carregadas no cluster; publicar no GHCR e dividir os repositórios ficam para depois. Decisão minha |
+| A61 | Senhas no cluster | Geradas ao acaso no primeiro `up.sh`, em um Secret; mantidas nas execuções seguintes, porque o banco guarda as senhas com que foi criado. Apagar o cluster apaga tudo. Decisão minha |
+| A62 | Réplicas | Uma de cada. O notifications guarda no processo quem está com o fluxo aberto (D50), então não deve ser escalado antes de mudar isso. Decisão minha |
+| A63 | Porta do computador | 8080 (a mesma do Compose); só um dos dois roda por vez. Decisão minha |
 | A25 | "Login" | Simulado: tela para escolher vendedor ou supervisor, com sessão por cookie no servidor |
 | A26 | Pedido offline (fase C) | Decidido: ver `DECISIONS.md` D54 a D56 e A53 a A59. O backend continua sendo o dono das regras |
 

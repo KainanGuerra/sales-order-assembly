@@ -1,0 +1,16 @@
+image: rabbitmq:3.13-management-alpine
+storage: 1Gi
+
+# The "rabbitmq" user of the image.
+runAsUser: 100
+runAsGroup: 101
+
+resources:
+  requests: { cpu: 100m, memory: 256Mi }
+  limits: { memory: 768Mi }
+
+networkPolicy:
+  ingress:
+    - from: [identity-api, catalog-api, orders-api, notifications-api]
+      ports: [5672]
+  egress: []

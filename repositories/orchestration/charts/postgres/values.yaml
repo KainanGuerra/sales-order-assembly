@@ -1,0 +1,16 @@
+image: postgres:17-alpine
+storage: 1Gi
+
+# The "postgres" user of the alpine image.
+runAsUser: 70
+
+resources:
+  requests: { cpu: 100m, memory: 256Mi }
+  limits: { memory: 512Mi }
+
+networkPolicy:
+  ingress:
+    - from: [identity-api, catalog-api, orders-api, notifications-api]
+      ports: [5432]
+  # Nothing to send: a database starts no connections.
+  egress: []

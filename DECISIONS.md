@@ -475,3 +475,29 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 - **Limite honesto:** os pedidos guardados (nome do cliente e produtos) continuam no `localStorage` depois de sair. Num aparelho compartilhado, quem abrir o navegador e souber procurar os vê, mesmo sem poder enviá-los pela tela.
 - **O que faria diferente:** Cifrar a fila com uma chave derivada da sessão, ou pedir o login do mesmo vendedor para mostrá-la.
 
+## D57. Como o Helm está organizado: biblioteca, um gráfico por serviço, guarda-chuva
+
+- **Contexto:** D29 pede um gráfico guarda-chuva com um subgráfico por serviço, cada serviço mantendo o seu em `k8s/`. Você escolheu um gráfico de biblioteca compartilhado e infraestrutura escrita à mão, e manter o Compose na raiz até a divisão dos repositórios.
+- **Alternativas consideradas:** cada gráfico de serviço autossuficiente (uns 100 linhas repetidas cinco vezes); gráficos prontos (Bitnami) para PostgreSQL, RabbitMQ e Redis (menos a escrever, mas não consigo explicá-los linha por linha, exigem internet na instalação e as imagens tiveram mudança de licença).
+- **Escolha:** `sales-lib` (biblioteca) tem os modelos de Deployment, Service e NetworkPolicy; o gráfico de cada serviço (`<serviço>/k8s`) é um `values.yaml` e três modelos de uma linha. PostgreSQL, RabbitMQ e Redis são gráficos pequenos escritos à mão, com as mesmas imagens do Compose. O `umbrella` instala tudo, mais o Ingress e a política de "negar tudo". Os recursos se chamam como o gráfico (`catalog-api`, `postgres`), não como a instalação, então os nomes que os serviços usam entre si são os mesmos do Compose. Segredos: um Secret com valores aleatórios, criado no primeiro `up.sh` e mantido nas execuções seguintes (o banco já tem aquelas senhas); o arquivo do seed e o script de criação dos esquemas têm uma cópia só no projeto e chegam ao cluster como ConfigMaps. As URLs com senha usam a substituição `$(NOME)` do Kubernetes, então a senha não aparece em nenhum arquivo.
+- **Por quê:** Uma correção de segurança ou de sonda vale para os cinco serviços de uma vez, e cada serviço novo é um arquivo de valores.
+- **Custo assumido:** o gráfico de um serviço depende da biblioteca, que mora no repositório de orquestração; depois da divisão em repositórios esse caminho passa a apontar para um submódulo.
+- **O que faria diferente:** Publicar a biblioteca como pacote (OCI) e versioná-la.
+
+## D58. Ingress: Traefik, porque o ingress-nginx foi aposentado
+
+- **Contexto:** D29 diz "ingress". O `ingress-nginx` era a escolha de sempre, mas o Kubernetes o [aposentou em março de 2026](https://www.kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/): sem novas versões e sem correções, nem de segurança. A [nota oficial](https://www.kubernetes.io/blog/2026/01/29/ingress-nginx-statement/) diz que nenhuma alternativa o substitui sem mudanças.
+- **Alternativas consideradas:** `ingress-nginx` mesmo assim (mais exemplos, mas um revisor pode perguntar por que um projeto aposentado); Gateway API com Envoy Gateway (o sucessor oficial, mas traz Gateway, HTTPRoute e GatewayClass, mais a escrever e a explicar).
+- **Escolha:** Traefik (gráfico 42.1.3, fixado no script), lendo o recurso `Ingress` comum, que continua simples. Os eventos enviados pelo servidor (SSE) passam sem nenhuma configuração de buffer: verificado abrindo o fluxo do supervisor por ele e vendo chegar um aviso no momento em que um pedido que exige aprovação foi enviado. O Calico (v3.31.0, fixado) é quem aplica as NetworkPolicies, porque a rede padrão do kind não aplica.
+- **Por quê:** Está mantido, funciona no kind e não muda o formato do que escrevemos.
+- **O que faria diferente:** Migrar para Gateway API quando o restante da equipe a adotar.
+
+## D59. Políticas de rede: negar tudo, entrada e saída, e provar que bloqueia
+
+- **Escolha:** O namespace nega tudo nos dois sentidos; o gráfico de cada carga acrescenta só o que ela precisa (o DNS sai sempre): o ingress só chega ao `web`; o `web` fala com os quatro serviços e o Redis; o `orders-api` fala com o catálogo e o identity **só por gRPC** (as portas HTTP deles ficam fechadas para ele); os quatro serviços falam com PostgreSQL e RabbitMQ; ninguém fala com o `web`. Segurança dos pods: usuário que não é root, `seccomp` padrão, sem capacidades, sistema de arquivos somente leitura (com um volume `/tmp`), **exceto o RabbitMQ**, cujo script de partida grava a configuração em `/etc/rabbitmq`.
+- **Defeito encontrado ao montar:** o contêiner que espera as dependências roda dentro do pod e obedece à política dele. Ele esperava o catálogo na porta HTTP, que a política do `orders-api` não permite, e esperaria para sempre; a espera passou a usar as portas gRPC.
+- **Verificado (`scripts/verify.sh`):** o sistema responde pelo ingress, um pedido é aceito (com catálogo, identity, orders e RabbitMQ participando), o mesmo id devolve o mesmo pedido, o fluxo SSE abre, o segredo interno não está nos arquivos que o navegador baixa e onze conexões reais de dentro dos pods: as permitidas funcionam e as proibidas expiram. **Quebra de propósito:** apagar as políticas faz os sete testes de "negado" falharem; com as nove de volta, todos passam.
+- **Limites:** uma réplica de tudo (o difusor de avisos mora no processo, D50); sem TLS, sem escala automática, limites de recursos chutados e não medidos, sem cópia de segurança do volume do banco; o navegador não foi usado neste cluster (a extensão estava desconectada), então a interface não foi conferida de novo nele; as imagens são construídas na máquina e carregadas no kind, sem passar pelo GHCR.
+- **Exigência do ambiente:** o kind precisa de `fs.inotify.max_user_instances` maior que o padrão de 128 quando há outro cluster na máquina; sem isso o nó nunca fica pronto. Está no guia.
+- **O que faria diferente:** Rodar `verify.sh` no CI, em um cluster kind do próprio GitHub.
+

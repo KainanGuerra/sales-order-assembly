@@ -1,0 +1,21 @@
+# The way in from outside: everything goes to the web app, which is the BFF.
+# The server-sent events of the notifications are an ordinary long response and
+# need no special setting here.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+  labels:
+    app.kubernetes.io/part-of: sales
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 3000

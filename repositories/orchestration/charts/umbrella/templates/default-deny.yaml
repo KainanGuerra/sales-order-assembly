@@ -1,0 +1,11 @@
+# Nothing may talk to anything unless a policy says so. Each workload's chart
+# adds the few paths it needs (see the networkPolicy of its values.yaml).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  labels:
+    app.kubernetes.io/part-of: sales
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]

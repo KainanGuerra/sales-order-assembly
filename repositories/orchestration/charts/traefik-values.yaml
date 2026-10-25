@@ -1,0 +1,26 @@
+# Traefik for the local kind cluster (installed by scripts/up.sh, chart pinned there).
+# It listens on the node's port 80 (kind maps it to localhost:8080) and reads plain
+# Ingress resources of class "traefik".
+deployment:
+  replicas: 1
+nodeSelector:
+  ingress-ready: "true"
+ports:
+  web:
+    hostPort: 80
+  # The HTTPS entry point is not used here.
+  websecure:
+    expose:
+      default: false
+service:
+  spec:
+    type: ClusterIP
+providers:
+  kubernetesIngress:
+    ingressClass: traefik
+  # The Gateway API provider is not used.
+  kubernetesGateway:
+    enabled: false
+ingressClass:
+  enabled: true
+  isDefaultClass: true

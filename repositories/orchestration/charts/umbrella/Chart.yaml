@@ -1,0 +1,17 @@
+apiVersion: v2
+name: sales
+description: "The whole sales system: the web app and four services, with PostgreSQL, RabbitMQ and Redis."
+type: application
+version: 0.1.0
+appVersion: "0.0.1"
+dependencies:
+  - { name: postgres, version: 0.1.0, repository: "file://../postgres" }
+  - { name: rabbitmq, version: 0.1.0, repository: "file://../rabbitmq" }
+  - { name: redis, version: 0.1.0, repository: "file://../redis" }
+  # Each service keeps its chart in its own folder (k8s/). Once the services are
+  # separate repositories, these paths point into the submodules.
+  - { name: identity-api, version: 0.1.0, repository: "file://../../../identity-api/k8s" }
+  - { name: catalog-api, version: 0.1.0, repository: "file://../../../catalog-api/k8s" }
+  - { name: orders-api, version: 0.1.0, repository: "file://../../../orders-api/k8s" }
+  - { name: notifications-api, version: 0.1.0, repository: "file://../../../notifications-api/k8s" }
+  - { name: web, version: 0.1.0, repository: "file://../../../web/k8s" }

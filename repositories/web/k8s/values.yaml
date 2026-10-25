@@ -1,0 +1,56 @@
+# Values of the web chart. The umbrella chart can override any of them.
+replicaCount: 1
+
+image:
+  repository: sales/web
+  tag: local
+  pullPolicy: IfNotPresent
+
+ports:
+  - { name: http, port: 3000 }
+
+probePath: /api/health
+
+seed: false
+
+waitFor:
+  - redis:6379
+  - identity-api:3001
+  - catalog-api:3002
+  - orders-api:3003
+  - notifications-api:3004
+
+# The inner-auth secret stays on the server: it is a Secret, never a public setting.
+secretEnv:
+  - { name: NUXT_INNER_AUTH, key: inner-auth }
+  - { name: REDIS_PASSWORD, key: redis-password }
+
+env:
+  NUXT_CATALOG_URL: "http://catalog-api:3002"
+  NUXT_IDENTITY_URL: "http://identity-api:3001"
+  NUXT_NOTIFICATIONS_URL: "http://notifications-api:3004"
+  NUXT_ORDERS_URL: "http://orders-api:3003"
+  NUXT_REDIS_URL: "redis://:$(REDIS_PASSWORD)@redis:6379"
+  # Turn on when the app is served over HTTPS.
+  NUXT_SESSION_COOKIE_SECURE: "false"
+
+resources:
+  requests: { cpu: 50m, memory: 128Mi }
+  limits: { memory: 512Mi }
+
+networkPolicy:
+  ingress:
+    # Only the ingress controller reaches the web app.
+    - fromNamespace: traefik
+      ports: [3000]
+  egress:
+    - to: [identity-api]
+      ports: [3001]
+    - to: [catalog-api]
+      ports: [3002]
+    - to: [orders-api]
+      ports: [3003]
+    - to: [notifications-api]
+      ports: [3004]
+    - to: [redis]
+      ports: [6379]

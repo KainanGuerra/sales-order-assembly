@@ -1,0 +1,14 @@
+image: redis:7-alpine
+
+# The "redis" user of the image.
+runAsUser: 999
+
+resources:
+  requests: { cpu: 20m, memory: 32Mi }
+  limits: { memory: 128Mi }
+
+networkPolicy:
+  ingress:
+    - from: [web]
+      ports: [6379]
+  egress: []

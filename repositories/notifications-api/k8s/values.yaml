@@ -1,0 +1,45 @@
+# Values of the notifications-api chart. The umbrella chart can override any of them.
+replicaCount: 1
+
+image:
+  repository: sales/notifications-api
+  tag: local
+  pullPolicy: IfNotPresent
+
+ports:
+  - { name: http, port: 3004 }
+
+probePath: /health
+
+# Mounts the seed file (the "seed" ConfigMap) at /data/seed.json.
+seed: false
+
+# Wait for these (host:port) before the service starts.
+waitFor:
+  - postgres:5432
+  - rabbitmq:5672
+
+# From the shared Secret. Listed first, so the values below can use them as $(NAME).
+secretEnv:
+  - { name: DB_PASSWORD, key: notifications-db-password }
+  - { name: INNER_AUTH, key: inner-auth }
+  - { name: RABBITMQ_PASSWORD, key: rabbitmq-password }
+
+env:
+  DATABASE_URL: "postgres://notifications_role:$(DB_PASSWORD)@postgres:5432/sales"
+  RABBITMQ_URL: "amqp://sales:$(RABBITMQ_PASSWORD)@rabbitmq:5672"
+
+resources:
+  requests: { cpu: 50m, memory: 128Mi }
+  limits: { memory: 512Mi }
+
+# Receive only from, and send only to, what is listed (everything else is denied).
+networkPolicy:
+  ingress:
+    - from: [web]
+      ports: [3004]
+  egress:
+    - to: [postgres]
+      ports: [5432]
+    - to: [rabbitmq]
+      ports: [5672]

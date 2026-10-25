@@ -1,0 +1,25 @@
+# A one-node local cluster for the system.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  # kind's own network plugin does not apply NetworkPolicies. Without one, the
+  # nodes stay "NotReady" until Calico is installed (scripts/up.sh does it), and
+  # Calico is what enforces the policies in the charts.
+  disableDefaultCNI: true
+  # Calico's default pod range.
+  podSubnet: 192.168.0.0/16
+nodes:
+  - role: control-plane
+    # The ingress controller runs on this node and listens on its port 80.
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      # http://localhost:8080 on this machine reaches the ingress controller.
+      - containerPort: 80
+        hostPort: 8080
+        listenAddress: "127.0.0.1"
+        protocol: TCP

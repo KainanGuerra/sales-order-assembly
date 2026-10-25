@@ -1,0 +1,18 @@
+# Settings shared by every chart in the system.
+global:
+  # Where the images come from. Empty: images already on the nodes (what
+  # scripts/up.sh loads into kind). For published images, e.g. ghcr.io/<organization>.
+  imageRegistry: ""
+  imageTag: local
+  # The Secret with every password and the inner-auth secret (scripts/create-secrets.sh).
+  secretName: sales-secrets
+
+# The ingress controller's class, and the namespace it runs in (the web app
+# accepts connections only from there).
+ingress:
+  className: traefik
+
+# Anything of a subchart can be changed here, under its name, for example:
+#   orders-api:
+#     env:
+#       MIN_ORDER_CENTS: "50000"

@@ -6,3 +6,7 @@ dist/
 .output/
 coverage/
 *.log
+
+# Helm: packaged dependencies are rebuilt by the scripts
+repositories/**/charts/*.tgz
+repositories/**/Chart.lock

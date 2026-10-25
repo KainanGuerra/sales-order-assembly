@@ -1,0 +1,57 @@
+# Values of the orders-api chart. The umbrella chart can override any of them.
+replicaCount: 1
+
+image:
+  repository: sales/orders-api
+  tag: local
+  pullPolicy: IfNotPresent
+
+ports:
+  - { name: http, port: 3003 }
+
+probePath: /health
+
+# Mounts the seed file (the "seed" ConfigMap) at /data/seed.json.
+seed: true
+
+# Wait for these (host:port) before the service starts.
+waitFor:
+  - postgres:5432
+  - rabbitmq:5672
+  - catalog-api:50052
+  - identity-api:50051
+
+# From the shared Secret. Listed first, so the values below can use them as $(NAME).
+secretEnv:
+  - { name: DB_PASSWORD, key: orders-db-password }
+  - { name: INNER_AUTH, key: inner-auth }
+  - { name: RABBITMQ_PASSWORD, key: rabbitmq-password }
+
+env:
+  CATALOG_GRPC_URL: "catalog-api:50052"
+  DATABASE_URL: "postgres://orders_role:$(DB_PASSWORD)@postgres:5432/sales"
+  DEFAULT_PRICE_TABLE_ID: "TP01"
+  IDENTITY_GRPC_URL: "identity-api:50051"
+  MAX_DISCOUNT_BP: "1000"
+  MIN_ORDER_CENTS: "30000"
+  RABBITMQ_URL: "amqp://sales:$(RABBITMQ_PASSWORD)@rabbitmq:5672"
+  SEED_FILE: "/data/seed.json"
+
+resources:
+  requests: { cpu: 50m, memory: 128Mi }
+  limits: { memory: 512Mi }
+
+# Receive only from, and send only to, what is listed (everything else is denied).
+networkPolicy:
+  ingress:
+    - from: [web]
+      ports: [3003]
+  egress:
+    - to: [postgres]
+      ports: [5432]
+    - to: [rabbitmq]
+      ports: [5672]
+    - to: [catalog-api]
+      ports: [50052]
+    - to: [identity-api]
+      ports: [50051]

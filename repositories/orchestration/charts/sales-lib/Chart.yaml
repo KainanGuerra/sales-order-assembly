@@ -1,0 +1,5 @@
+apiVersion: v2
+name: sales-lib
+description: "Shared templates for the sales services (deployment, service, network policy). A library chart: it deploys nothing by itself."
+type: library
+version: 0.1.0

@@ -1,0 +1,9 @@
+apiVersion: v2
+name: postgres
+description: "PostgreSQL for every service: one schema and one login role each, created on the first start."
+type: application
+version: 0.1.0
+dependencies:
+  - name: sales-lib
+    version: 0.1.0
+    repository: file://../sales-lib

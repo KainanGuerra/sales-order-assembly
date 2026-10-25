@@ -1,0 +1,5 @@
+The system is installed. Open http://localhost:8080 (the kind cluster maps the
+ingress to that port) and pick a seller.
+
+  kubectl get pods -n {{ .Release.Namespace }}
+  kubectl get networkpolicy -n {{ .Release.Namespace }}

@@ -4,14 +4,14 @@ Módulo para vendedores que visitam pequenos varejistas (mercadinhos, minimercad
 
 ## Estado atual
 
-**Fase A funcionando em Docker Compose**: interface web (Nuxt), catálogo, identity e orders, com PostgreSQL, RabbitMQ e Redis. Crédito, aprovação do supervisor, histórico com "repetir pedido" e notificações já funcionam; a estatística de produtos mais pedidos no catálogo também; o modo offline (montar o pedido sem sinal e enviar quando voltar) também. Falta só a orquestração (fase D).
+**Fase A funcionando em Docker Compose**: interface web (Nuxt), catálogo, identity e orders, com PostgreSQL, RabbitMQ e Redis. Crédito, aprovação do supervisor, histórico com "repetir pedido" e notificações já funcionam; a estatística de produtos mais pedidos no catálogo também; o modo offline (montar o pedido sem sinal e enviar quando voltar) também. A orquestração em Kubernetes (fase D) funciona num cluster kind local.
 
 | Fase | Conteúdo | Estado |
 |---|---|---|
 | A | Requisitos obrigatórios 1–6 | Pronta: backend (catálogo, identity, orders com regras e testes) e interface (Nuxt) |
 | B | Limite de crédito, aprovação do supervisor, histórico com "repetir pedido", notificações | Pronta: crédito, aprovação, histórico com "repetir pedido", notificações e a estatística de produtos no catálogo |
 | C | Pedido offline com sincronização | Pronta: o app abre sem sinal, o pedido fica guardado no aparelho e é enviado quando o sinal volta (`DECISIONS.md` D54 a D56) |
-| D | Repositório de orquestração (Helm, kind, ingress), última fase | Não iniciada |
+| D | Repositório de orquestração (Helm, kind, ingress), última fase | Pronta no cluster local (kind + Calico + Traefik, políticas de rede verificadas); falta publicar as imagens no GHCR e dividir os repositórios (`DECISIONS.md` D57 a D59) |
 
 ## Stack
 
@@ -56,6 +56,20 @@ Depois de `docker compose up`, abra `http://localhost:8080`. É o único serviç
 
 Cada serviço também roda sozinho: veja o `README.md` do repositório dele (`cp .env.example .env && docker compose up --build`).
 
+### Em Kubernetes (fase D)
+
+Outra forma de rodar o mesmo sistema, num cluster kind local, com Helm, Calico (que aplica as políticas de rede) e Traefik. Precisa de `docker`, `kind`, `kubectl`, `helm` e `openssl`:
+
+```bash
+cd repositories/orchestration
+./scripts/up.sh       # cria o cluster, constrói e carrega as imagens, instala os gráficos
+./scripts/verify.sh   # confere o sistema, o segredo e as políticas de rede
+# abra http://localhost:8080
+./scripts/down.sh
+```
+
+Pare o Compose antes (a porta 8080 é a mesma). O guia completo, com a solução do erro de limite de inotify do kind, está em `repositories/orchestration/README.md`.
+
 ### Imagens
 
 O CI de cada serviço publica a imagem no GitHub Container Registry (GHCR), com tag do commit e `latest`. O `docker-compose.yml` baixa essas imagens; não é preciso compilar nada localmente.
@@ -90,6 +104,6 @@ Os testes das regras cobrem os casos de borda: desconto exatamente na alçada, p
 - A publicação dos eventos não usa outbox: se o RabbitMQ estiver fora no envio, o evento se perde (e com ele um aviso ou uma confirmação de crédito, que a reserva só recupera pela expiração).
 - Os avisos em tempo real (SSE) são difundidos no processo do notifications: com mais de uma réplica, precisariam de um corretor entre elas.
 - Modo offline: verificado em Chrome de computador, parando o servidor da interface para simular a falta de sinal; **não foi testado num celular real** nem com sinal fraco de verdade (a regra de 8 segundos tem teste de lógica, não medição). O service worker só existe na versão de produção (a imagem Docker), não no `nuxt dev`. Os pedidos guardados ficam no `localStorage` do navegador, que o usuário pode apagar. Não há ícones para instalar o app na tela inicial.
-- A orquestração com Helm é a fase D.
+- Em Kubernetes: as imagens são construídas na máquina e carregadas no kind (não passam pelo GHCR); uma réplica de cada serviço; sem TLS, sem escala automática, sem cópia de segurança do volume do banco; os limites de recursos são estimativas, não medidas. A interface não foi conferida no navegador dentro desse cluster (só pela API, incluindo o fluxo de avisos pelo ingress). Os gráficos não passam por lint no CI, e o CI nunca rodou no GitHub.
 
 **Fora do escopo do enunciado:** estoque, autenticação real, notificações externas, várias moedas.
