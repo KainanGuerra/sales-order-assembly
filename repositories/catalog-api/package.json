@@ -4,7 +4,7 @@
   "description": "Catalog service: products, price tables, search and the gRPC price lookup.",
   "author": "",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "build": "nest build",

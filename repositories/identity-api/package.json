@@ -4,7 +4,7 @@
   "description": "Identity service: sellers, supervisors, clients (portfolio), price-table fallback and the gRPC client/seller lookup.",
   "author": "",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "build": "nest build",

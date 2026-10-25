@@ -4,7 +4,7 @@
   "description": "Notifications service: who is told about what when an order changes, and the live stream that tells the screen.",
   "author": "",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "build": "nest build",

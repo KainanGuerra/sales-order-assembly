@@ -2,7 +2,8 @@
   "name": "contracts",
   "version": "0.1.0",
   "private": true,
-  "description": "gRPC contracts (.proto), generated TypeScript types and RabbitMQ event schemas shared by the services through a git submodule.",
+  "description": "gRPC contracts (.proto), generated TypeScript types and RabbitMQ event schemas shared by the services through a local package.",
+  "license": "MIT",
   "packageManager": "pnpm@12.15.0",
   "engines": {
     "node": ">=24"

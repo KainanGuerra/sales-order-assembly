@@ -4,7 +4,7 @@
   "description": "Orders service: order calculation, business rules, submission, approval and history.",
   "author": "",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "build": "nest build",

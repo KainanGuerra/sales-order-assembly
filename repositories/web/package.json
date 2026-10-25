@@ -3,6 +3,7 @@
   "type": "module",
   "private": true,
   "description": "Seller web app (Nuxt UI) and the BFF the browser talks to: session, calls to the backend services.",
+  "license": "MIT",
   "packageManager": "pnpm@12.15.0",
   "engines": {
     "node": ">=24"
