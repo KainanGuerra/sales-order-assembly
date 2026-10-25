@@ -402,3 +402,34 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 - **Escolha, tela:** O rascunho é carregado como o pedido em andamento. Se já há um pedido em andamento, pergunta antes de substituí-lo (cancelar não mexe em nada; substituir gera um novo id de pedido). A tela do pedido avisa que os preços são os de hoje, que os descontos começam em zero, e lista o que não foi copiado.
 - **Falha minha encontrada ao quebrar o código de propósito:** a verificação "o pedido é do vendedor que pede" era mascarada pela verificação do cliente (um vendedor que não é dono do pedido também não é dono do cliente); um teste novo cobre o caso em que o cliente passou ao vendedor que pede.
 - **O que faria diferente:** Paginar o histórico e mostrar, na linha do histórico, o que mudou de preço desde aquele pedido.
+
+## D49. Notificações: quem é avisado de quê, e como não avisar duas vezes
+
+- **Contexto:** Você pediu avisos "para todos, em todos os eventos". Lido ao pé da letra, o vendedor receberia dois avisos de "enviado" e o supervisor, um aviso de um pedido que ele mesmo acabou de decidir.
+- **Alternativas consideradas:** um aviso por evento para cada pessoa envolvida (duplicados); só o supervisor é avisado (o que o enunciado pede, e nada mais).
+- **Escolha:** Uma tabela explícita, em funções puras (`domain/plan.ts`), que diz quem recebe o quê:
+
+  | Evento | Supervisor | Vendedor |
+  |---|---|---|
+  | `order.placed`, aguardando aprovação | `APPROVAL_NEEDED` (pede uma decisão) | `ORDER_AWAITING_APPROVAL` |
+  | `order.placed`, dentro da alçada | nada | nada (o `order.submitted` seguinte avisa) |
+  | `order.submitted` | `ORDER_SENT` (informação) | `ORDER_SENT` |
+  | `order.approved` | — | `ORDER_APPROVED` |
+  | `order.rejected` | — | `ORDER_CANCELLED`, com o motivo |
+
+  Para isso os quatro eventos passaram a levar vendedor, supervisor, nome do cliente e total (`OrderRefShape` em `contracts`), então o notifications não chama nenhum outro serviço. Cada aviso é único por (pedido, pessoa, tipo): o banco recusa a repetição (`ON CONFLICT DO NOTHING`), então uma mensagem entregue duas vezes não cria nada e ninguém é avisado de novo.
+- **Por quê:** Cada fato chega a cada pessoa uma vez, e a tabela cabe numa página de testes.
+- **O que faria diferente:** Deixar cada pessoa escolher o que quer receber.
+
+## D50. Aviso em tempo real: Server-Sent Events que só dizem "mudou"
+
+- **Contexto:** O supervisor precisa ver um pedido pendente sem recarregar a página. Opções: consultar de tempos em tempos, WebSocket, SSE.
+- **Escolha:** SSE, passando pelo BFF (o navegador só fala com ele; o segredo interno continua só no servidor). O serviço manda apenas o evento `changed` (e um `ping` a cada 25 s para que proxies não derrubem a conexão ociosa); a tela então pede a lista de novo. Ao conectar, o primeiro `changed` sai na hora, então o que chegou enquanto a conexão estava fora é recuperado do mesmo jeito. Avisos novos e não lidos aparecem como um aviso passageiro na tela (toast) uma vez só.
+- **Por quê:** Não carregar o conteúdo no fluxo torna o canal descartável: perder uma mensagem custa uma leitura a mais, não um aviso perdido. É unidirecional e usa HTTP comum.
+- **Limites conhecidos:** o difusor mora no processo (com mais de uma réplica, o aviso só chega a quem está ligado àquela réplica; precisaria de um corretor entre elas); se o navegador desiste da conexão, a tela tenta de novo a cada 5 s, passando pelo BFF, que manda ao login se a sessão acabou.
+- **O que faria diferente:** Difundir entre réplicas pelo RabbitMQ ou pelo Redis.
+
+## D51. Ciclo de vida do aviso: lido ao abrir, resolvido quando o pedido é decidido
+
+- **Escolha:** Abrir o aviso o marca como lido e leva ao pedido (o supervisor vai à tela de análise, que também mostra pedidos já decididos; o vendedor, ao seu pedido). "Marcar todas como lidas" existe. Quando o pedido é decidido, os avisos que pediam ou esperavam a decisão (`APPROVAL_NEEDED`, `ORDER_AWAITING_APPROVAL`) ficam **resolvidos**: continuam na lista, esmaecidos e marcados "Já decidido". A leitura guarda o primeiro momento (marcar de novo não o muda). Marcar o aviso de outra pessoa responde "não encontrado".
+- **O que faria diferente:** Apagar avisos antigos (hoje a lista só cresce; a tela mostra os 30 mais novos).

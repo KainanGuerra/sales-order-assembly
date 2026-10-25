@@ -58,6 +58,9 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A45 | Quantos pedidos o histórico mostra | Os 10 últimos do cliente, só os do próprio vendedor (um vendedor que herda um cliente não vê os pedidos do anterior). Decisão minha |
 | A46 | Quem marca um pedido como faturado | Ninguém neste sistema: não há faturamento. Só os pedidos importados do seed têm `INVOICED`. Decisão minha |
 | A47 | Repetir com um pedido em andamento | Pergunta antes de substituir; cancelar não muda nada. Decisão minha |
+| A48 | Quem é avisado de quê | Ver a tabela em `DECISIONS.md` D49: o supervisor é avisado de pedidos que esperam decisão e dos enviados; o vendedor, de tudo o que acontece com os seus pedidos. Pedido dentro da alçada só gera o aviso de "enviado". Decisão minha |
+| A49 | Quando o aviso conta como lido | Ao abrir (clicar), ou em "marcar todas". O toast na tela não conta como leitura. Decisão minha |
+| A50 | Quantos avisos a tela mostra | Os 30 mais novos (o serviço aceita até 100); não há expiração. Decisão minha |
 | A25 | "Login" | Simulado: tela para escolher vendedor ou supervisor, com sessão por cookie no servidor |
 | A26 | Pedido offline (fase C) | Comportamento a decidir quando chegarmos à fase C; o backend continua sendo o dono das regras |
 

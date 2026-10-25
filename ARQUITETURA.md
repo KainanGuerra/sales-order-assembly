@@ -15,9 +15,9 @@ flowchart LR
   Orders -->|gRPC: preço, regras do produto| Catalog
   Orders -->|gRPC: cliente, tabela, limites, crédito| Identity
   Orders -->|publica eventos| MQ{{RabbitMQ}}
-  MQ -->|OrderSubmitted/Approved/Rejected| Identity
+  MQ -->|OrderPlaced/Rejected| Identity
   MQ -->|OrderSubmitted| Catalog
-  MQ -->|OrderSubmitted| Notifications
+  MQ -->|Placed/Submitted/Approved/Rejected| Notifications
   Identity --- PG[(PostgreSQL)]
   Catalog --- PG
   Orders --- PG
@@ -32,7 +32,7 @@ flowchart LR
 | `sales-identity-api` | Supervisores, vendedores, clientes (carteira), tabela de preço do cliente (com fallback), limites de alçada e de crédito, crédito utilizado | `identity` | servidor gRPC; consome eventos de pedido |
 | `sales-catalog-api` | Produtos, tabelas de preço, busca (`pg_trgm` + `unaccent`), regras de embalagem, flags de produtos indisponíveis | `catalog` | servidor gRPC; consome `OrderSubmitted` (estatística) |
 | `sales-orders-api` | Todas as regras de pedido: cálculo, bloqueios, alçada, pedido mínimo, crédito, envio, aprovação, histórico, repetir pedido | `orders` | cliente gRPC de catalog e identity; publica eventos |
-| `sales-notifications-api` | Avisos ao supervisor para pedidos aguardando aprovação | `notifications` | consome `OrderSubmitted` |
+| `sales-notifications-api` | Avisos a vendedores e supervisores sobre os pedidos (lista, lidos, resolvidos) e o fluxo SSE que avisa a tela | `notifications` | consome os quatro eventos de pedido |
 | `sales-contracts` | Arquivos `.proto` e esquemas de eventos | — | submódulo dos serviços |
 | `sales-orchestration` (fase D) | Gráfico Helm guarda-chuva, subgráficos, cluster kind com Calico, ingress, NetworkPolicies, Docker Compose e guia de primeiros passos | — | todos os serviços (implantação) |
 | `sales-platform` (guarda-chuva) | Documentos de entrega, `docker-compose.yml`, CI, submódulos | — | — |
@@ -53,12 +53,18 @@ Infraestrutura: um PostgreSQL (um schema e um papel por serviço, **sem consulta
 | Evento | Publicado por | Consumidores | O que fazem |
 |---|---|---|---|
 | `OrderPlaced` (`order.placed`) | orders | identity | confirma a reserva de crédito do pedido (`PENDING` para `CONFIRMED`) |
-| | | notifications | cria aviso para o supervisor se o pedido aguarda aprovação |
-| `OrderSubmitted` (`order.submitted`) | orders | catalog | incrementa a estatística de produtos mais pedidos |
-| `OrderApproved` (`order.approved`) | orders | (ninguém ainda) | o crédito continua reservado; não há o que fazer |
+| | | notifications | avisa o supervisor (pede decisão) e o vendedor se o pedido aguarda aprovação |
+| `OrderSubmitted` (`order.submitted`) | orders | notifications | avisa vendedor e supervisor que o pedido foi enviado |
+| | | catalog | incrementa a estatística de produtos mais pedidos (ainda não construído) |
+| `OrderApproved` (`order.approved`) | orders | notifications | avisa o vendedor e resolve os avisos que esperavam a decisão |
 | `OrderRejected` (`order.rejected`) | orders | identity | libera o crédito (`RELEASED`); o orders também o libera por chamada direta |
+| | | notifications | avisa o vendedor (pedido cancelado, com o motivo) e resolve os avisos pendentes |
 
-Todo consumidor é idempotente (chave: id do pedido).
+Todo consumidor é idempotente (chave: id do pedido; no notifications, pedido + pessoa + tipo). Todo evento leva pedido, vendedor, supervisor, cliente e total, para que o consumidor não precise chamar outro serviço.
+
+## Notificações
+
+O notifications guarda um aviso por (pedido, pessoa, tipo), com `read_at` e `resolved_at`. A tela fala com o BFF: lista, contagem de não lidos, marcar como lido e `GET /api/notifications/stream` (SSE), que o BFF repassa do serviço com o segredo interno e o usuário da sessão. O fluxo só diz `changed` (e `ping` como batimento); a tela pede a lista de novo. Ver `DECISIONS.md` D49 a D51.
 
 ## Reserva de crédito
 

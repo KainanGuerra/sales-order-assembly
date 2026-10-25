@@ -4,12 +4,12 @@ Módulo para vendedores que visitam pequenos varejistas (mercadinhos, minimercad
 
 ## Estado atual
 
-**Fase A funcionando em Docker Compose**: interface web (Nuxt), catálogo, identity e orders, com PostgreSQL, RabbitMQ e Redis. Os consumidores dos eventos, a aprovação, o crédito, o histórico e o modo offline ainda não existem.
+**Fase A funcionando em Docker Compose**: interface web (Nuxt), catálogo, identity e orders, com PostgreSQL, RabbitMQ e Redis. Crédito, aprovação do supervisor, histórico com "repetir pedido" e notificações já funcionam; faltam a estatística de produtos no catálogo e o modo offline.
 
 | Fase | Conteúdo | Estado |
 |---|---|---|
 | A | Requisitos obrigatórios 1–6 | Pronta: backend (catálogo, identity, orders com regras e testes) e interface (Nuxt) |
-| B | Limite de crédito, aprovação do supervisor, histórico com "repetir pedido", notificações | Em andamento: crédito, aprovação e histórico com "repetir pedido" prontos; faltam as notificações e os consumidores de catálogo |
+| B | Limite de crédito, aprovação do supervisor, histórico com "repetir pedido", notificações | Em andamento: crédito, aprovação, histórico com "repetir pedido" e notificações prontos; falta o consumidor de estatística no catálogo |
 | C | Pedido offline com sincronização | Não iniciada |
 | D | Repositório de orquestração (Helm, kind, ingress), última fase | Não iniciada |
 
@@ -27,7 +27,7 @@ O sistema segue o padrão de um repositório por serviço em uma organização d
 | `sales-identity-api` | Vendedores, supervisor, clientes, limites, crédito utilizado |
 | `sales-catalog-api` | Produtos, tabelas de preço, busca |
 | `sales-orders-api` | Regras e ciclo de vida do pedido |
-| `sales-notifications-api` | Avisos ao supervisor (fase B) |
+| `sales-notifications-api` | Avisos a vendedores e supervisores, com fluxo SSE |
 | `sales-contracts` | `.proto` e esquemas de eventos |
 | `sales-orchestration` | Helm, kind, ingress e Compose (fase D) |
 
@@ -87,7 +87,8 @@ Os testes das regras cobrem os casos de borda: desconto exatamente na alçada, p
 - Os caminhos de erro da tela do pedido foram exercitados com **falhas simuladas** (a chamada de rede foi interceptada na própria página): recusa do envio (422), falha de rede ao enviar (o reenvio usa o mesmo id e conclui) e cálculo indisponível (aviso, botão desabilitado, volta ao normal na edição seguinte). Contra o backend de verdade, a recusa só foi exercitada por testes e por chamadas à API.
 - Não há testes de componente do front; a lógica testada está no motor de regras, nos serviços, no store, nos utilitários e no BFF.
 - Os fluxos de CI (testes e publicação das imagens no GHCR) estão escritos, **mas nunca rodaram no GitHub**.
-- Os eventos do pedido são publicados, mas ainda **não há consumidores** (crédito, estatística de produtos, notificações), e a publicação não usa outbox: se o RabbitMQ estiver fora no envio, o evento se perde.
-- Aprovação pelo supervisor, crédito, histórico com "repetir pedido", modo offline e a orquestração com Helm são as fases B, C e D.
+- A publicação dos eventos não usa outbox: se o RabbitMQ estiver fora no envio, o evento se perde (e com ele um aviso ou uma confirmação de crédito, que a reserva só recupera pela expiração). O consumidor de estatística de produtos no catálogo ainda não existe.
+- Os avisos em tempo real (SSE) são difundidos no processo do notifications: com mais de uma réplica, precisariam de um corretor entre elas.
+- Modo offline e a orquestração com Helm são as fases C e D.
 
 **Fora do escopo do enunciado:** estoque, autenticação real, notificações externas, várias moedas.
