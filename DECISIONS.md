@@ -8,7 +8,7 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 - **Contexto:** O enunciado avalia as decisões e a justificativa, não a quantidade de funcionalidades. Antes de conhecer a stack final, defini como costumo estruturar serviços.
 - **Alternativas consideradas:** (a) um guia genérico de boas práticas; (b) decidir convenções caso a caso durante o desenvolvimento; (c) um ADR por arquivo.
-- **Escolha:** Um guia curto em `style-guide/` (arquitetura primeiro, linguagem depois) e este arquivo único, cronológico.
+- **Escolha:** Um guia curto em `repositories/documentation/style-guide/` (arquitetura primeiro, linguagem depois) e este arquivo único, cronológico.
 - **Por quê:** Um padrão escrito deixa o revisor julgar desvios contra um critério declarado, e um log único é rápido de ler.
 - **O que faria diferente:** Fixar o guia depois de ver o código pronto, para podar o que não foi usado.
 

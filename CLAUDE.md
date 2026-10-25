@@ -2,7 +2,7 @@
 
 ## What this is
 
-A technical challenge: an order-assembly module for external sellers who visit small retailers and often have poor connectivity. The raw brief is in `SCOPE.md` (Portuguese); the data is in `seed.json`. Use `seed.json` as is, with its imperfections. Never edit it.
+A technical challenge: an order-assembly module for external sellers who visit small retailers and often have poor connectivity. The raw brief is in `repositories/documentation/context/SCOPE.md` (Portuguese); the data is in `seed.json`. Use `seed.json` as is, with its imperfections. Never edit it.
 
 The reviewers will pick code at random and ask me to explain it, make a live change, and debug a defect they inject. **Everything must be code I can explain.** Prefer the simple, readable option and say why in `DECISIONS.md`.
 
@@ -17,7 +17,7 @@ The reviewers will pick code at random and ask me to explain it, make a live cha
 
 ## Architecture
 
-Full picture in `ARQUITETURA.md`; reasoning in `DECISIONS.md` D15–D21.
+Full picture in `repositories/documentation/architecture/ARCHITECTURE.md` (and where things are in the code: `CODE_MAP.md`); reasoning in `DECISIONS.md` D15–D21.
 
 - **Local layout today:** one git repo (the umbrella) with the services as folders under `repositories/`; each installs `contracts` with `file:../contracts` (build it first). They become separate repos and a submodule later (`DECISIONS.md` D9, D26).
 - **Services (one repo each, placeholder names):** `identity-api` (sellers, supervisor, clients, limits, credit used), `catalog-api` (products, price tables, search), `orders-api` (every order rule), `notifications-api` (supervisor notices), `web` (Nuxt UI + BFF), `contracts` (`.proto` + event schemas, used as a git submodule), plus an umbrella repo with the deliverable docs, `docker-compose.yml`, CI and submodules.
@@ -25,7 +25,7 @@ Full picture in `ARQUITETURA.md`; reasoning in `DECISIONS.md` D15–D21.
 - **Browser → web only.** The Nuxt server is the BFF: it owns the session (Redis + cookie), validates the seller/supervisor pick with identity, and calls the services over HTTP with an inner-auth secret plus the user id and role.
 - **orders → catalog / identity: gRPC**, batched, for both calculate and submit. **orders keeps no copies** of other services' data except price/product snapshots on order items.
 - **RabbitMQ (`@nestjs/microservices` RMQ):** only events published by orders (`order.placed` on creation, `order.submitted` when SUBMITTED is reached, `order.approved`, `order.rejected`). Consumers are idempotent: identity (confirms or releases the credit reservation; built) and notifications (a notice per order, person and kind, announced to open screens through SSE; built); catalog (units ordered per product, used only to break ties in search; built). Consumer queues are quorum queues with a delivery limit and a `.dlq` dead-letter queue; a message that fails its schema is dead-lettered at once.
-- **Credit is reserved synchronously.** At submit, orders calls identity `ReserveCredit` (gRPC) before saving the order, and `ReleaseCredit` if saving fails. identity locks the client row and holds the credit atomically, idempotent by order id; credit in use is *calculated* (already used + `CONFIRMED` + unexpired `PENDING` reservations), so an unconfirmed hold expires by itself (no job). `OrderSubmitted` confirms the hold, `OrderRejected` releases it. See `ARQUITETURA.md` "Reserva de crédito" and `DECISIONS.md` D40 to D43.
+- **Credit is reserved synchronously.** At submit, orders calls identity `ReserveCredit` (gRPC) before saving the order, and `ReleaseCredit` if saving fails. identity locks the client row and holds the credit atomically, idempotent by order id; credit in use is *calculated* (already used + `CONFIRMED` + unexpired `PENDING` reservations), so an unconfirmed hold expires by itself (no job). `OrderPlaced` confirms the hold, `OrderRejected` releases it. See `ARCHITECTURE.md` §5 and `DECISIONS.md` D40 to D43.
 - **Draft lives in the browser (Pinia).** After each edit the BFF asks orders to calculate; nothing is saved until submit.
 - **Seed:** each service imports its own slice of `seed.json` at startup, idempotently.
 - Phase A needs identity, catalog, orders and web; notifications arrived in phase B.
@@ -72,15 +72,31 @@ Every one of these is also written, with the reasoning, in `ASSUMPTIONS.md` / `D
 
 ## Documents
 
-| File | Language | Purpose |
+| File | Language | Read it for |
 |---|---|---|
-| `SCOPE.md` | pt-BR | The brief as received. Read-only |
-| `README.md` | pt-BR | How to run, test, and what was left out |
-| `ARQUITETURA.md` | pt-BR | Services, data ownership, calls, events, session |
-| `DECISIONS.md` | pt-BR | Decisions: context, alternatives, choice, why, what I would do differently |
-| `ASSUMPTIONS.md` | pt-BR | Every ambiguity and the interpretation adopted |
-| `AI_LOG.md` | pt-BR | 3–5 significant AI moments (including one where the AI was wrong) and the authorship map |
-| `style-guide/` | en | How I structure services; follow it unless `DECISIONS.md` says otherwise |
+| `README.md` | pt-BR | How to run, test, and what was left out (required by the brief, stays at the root) |
+| `DECISIONS.md` | pt-BR | Decisions: context, alternatives, choice, why, what I would do differently (required, root) |
+| `ASSUMPTIONS.md` | pt-BR | Every ambiguity and the interpretation adopted (required, root) |
+| `AI_LOG.md` | pt-BR | 3–5 significant AI moments (including one where the AI was wrong) and the authorship map (required, root) |
+| `repositories/documentation/README.md` | pt-BR | Index of the documentation repo and how it is organised |
+| `repositories/documentation/context/CONTEXT.md` | pt-BR | The problem, brief requirements and where each is met, phases, decisions by theme, glossary |
+| `repositories/documentation/context/SCOPE.md` | pt-BR | The brief as received. Read-only |
+| `repositories/documentation/architecture/ARCHITECTURE.md` | pt-BR | Services, data ownership, calls, life of an order, credit, events, notifications, session, offline, deployment, security |
+| `repositories/documentation/architecture/CODE_MAP.md` | pt-BR | Where to change each rule, a request traced through the code, routes, how to run one test |
+| `repositories/documentation/diagrams/` | pt-BR | Nine Mermaid diagrams, one per file |
+| `repositories/documentation/getting-started/GETTING_STARTED.md` | pt-BR | Running (Compose, Kubernetes), `.env`, common problems |
+| `repositories/documentation/testing/TESTING.md` | pt-BR | Test counts, how to run, mutation checks, what is not covered |
+| `repositories/documentation/operations/RUNBOOK.md` | pt-BR | Logs, database, queues and dead letters, reset, cluster failures |
+| `repositories/documentation/pendings/PENDINGS.md` | pt-BR | What is left to deliver, known limits, what I would do differently |
+| `repositories/documentation/style-guide/` | en | How I structure services; follow it unless `DECISIONS.md` says otherwise |
+
+Documentation rules (the pattern comes from an earlier project's documentation repo):
+
+- **A change of behaviour updates the matching document in the same commit** (ARCHITECTURE, CODE_MAP if a file moved, GETTING_STARTED if a command changed, TESTING if counts changed, PENDINGS if something was finished or discovered), and `DECISIONS.md` / `ASSUMPTIONS.md` as before.
+- The documentation is **Portuguese**, file names English `UPPER_SNAKE.md`, diagrams in Mermaid (one per file, Portuguese labels, a last line "Referenciado em ... §N"). The architecture text links to diagrams and never copies them. The style guide stays in English.
+- **Never write the total number of decisions or assumptions as a literal number** anywhere; it changes. Cite entries as D*n* / A*n*.
+- Links are relative today (to the root files with `../../`); they become GitHub links when the documentation is split into its own repo (see PENDINGS).
+- `CLAUDE.md` stays at the project root and is never renamed or split.
 
 Before proposing a design change, **check `DECISIONS.md` and `ASSUMPTIONS.md` first.** Most alternatives were already considered, and each entry says what would reopen it.
 

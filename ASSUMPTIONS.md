@@ -1,6 +1,6 @@
 # ASSUMPTIONS
 
-Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`) e a interpretação adotada. Quando eu mesmo decidi, está marcado como **Decisão minha**; quando houver resposta da equipe, ela será registrada como **Resposta recebida**.
+Cada ambiguidade encontrada no enunciado (`repositories/documentation/context/SCOPE.md`) ou nos dados (`seed.json`) e a interpretação adotada. Quando eu mesmo decidi, está marcado como **Decisão minha**; quando houver resposta da equipe, ela será registrada como **Resposta recebida**.
 
 ## Dados (`seed.json`)
 
@@ -31,7 +31,7 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A17 | Em que valor se mede o pedido mínimo de R$ 300,00? | No total líquido final (após descontos de item e de pedido). Exatamente R$ 300,00 pode ser enviado. Decisão minha |
 | A18 | Regra de arredondamento | Ver seção "Arredondamento" abaixo (método 1) |
 | A19 | O que significa "bloquear o envio"? | O botão fica desabilitado com a lista de motivos, e o servidor também recusa o envio (nunca confia no cliente) |
-| A20 | Limite de crédito (fase B): bloqueia ou alerta? | Bloqueia quando o total do pedido excede o crédito disponível (limite − utilizado). Pedidos "Enviado" e "Aguardando aprovação" contam. O envio reserva o crédito de forma atômica no `identity` (`ReserveCredit`), então duas submissões simultâneas não passam juntas. A reserva expira sozinha (sem job). Detalhes e limites em `ARQUITETURA.md` e `DECISIONS.md` D40 a D43. Decisão minha |
+| A20 | Limite de crédito (fase B): bloqueia ou alerta? | Bloqueia quando o total do pedido excede o crédito disponível (limite − utilizado). Pedidos "Enviado" e "Aguardando aprovação" contam. O envio reserva o crédito de forma atômica no `identity` (`ReserveCredit`), então duas submissões simultâneas não passam juntas. A reserva expira sozinha (sem job). Detalhes e limites em `repositories/documentation/architecture/ARCHITECTURE.md` §5 e `DECISIONS.md` D40 a D43. Decisão minha |
 | A21 | Fluxo do supervisor | Lista dos pedidos pendentes da equipe, tela de detalhe, aprovar (passa por "Aprovado" e termina em "Enviado") ou rejeitar com motivo. Detalhes em `DECISIONS.md` D44 e D45. Decisão minha |
 | A22 | Preço mudou entre montar e enviar | O preço é recalculado e gravado (snapshot) no envio; a resposta devolve os valores finais. Decisão minha |
 | A23 | Envio duplicado (clique duplo, reconexão) | O envio usa uma chave de idempotência gerada no cliente; repetir a chave devolve o mesmo pedido |
