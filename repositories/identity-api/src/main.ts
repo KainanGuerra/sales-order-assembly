@@ -6,7 +6,7 @@ import { SALES_IDENTITY_V1_PACKAGE_NAME } from 'contracts/identity';
 import { AppModule } from './app.module.js';
 import { loadEnv } from './config/env.js';
 import { DEAD_LETTER_EXCHANGE } from './shared/messaging/topology.js';
-import { assertDeadLetterTopology } from './shared/messaging/topology.js';
+import { assertDeadLetterTopology, retireBindings } from './shared/messaging/topology.js';
 
 async function bootstrap() {
   const env = loadEnv();
@@ -30,6 +30,8 @@ async function bootstrap() {
   // after CONSUMER_MAX_DELIVERIES attempts instead of looping forever.
   const queue = 'identity-api-order-events';
   await assertDeadLetterTopology(env.RABBITMQ_URL, queue);
+  // order.submitted used to be this queue's credit event; it is order.placed now.
+  await retireBindings(env.RABBITMQ_URL, queue, 'orders.events', ['order.submitted']);
   app.connectMicroservice({
     transport: Transport.RMQ,
     options: {

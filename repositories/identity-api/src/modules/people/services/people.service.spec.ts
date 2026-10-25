@@ -162,18 +162,18 @@ describe('PeopleService credit', () => {
     );
   });
 
-  it('confirms the hold of a submitted order with its total', async () => {
+  it('confirms the hold of a placed order with its total, also when it waits for approval', async () => {
     const { service, repository } = build();
-    await service.confirmSubmitted({
-      orderId: 'o1', clientId: 'C001', sellerId: 'V01', supervisorId: 'S01', status: 'SUBMITTED',
-      totalCents: 41_860, items: [{ productId: 'P1', quantity: 1 }], submittedAt: '2026-10-24T12:00:00.000Z',
+    await service.confirmPlaced({
+      orderId: 'o1', clientId: 'C001', sellerId: 'V01', supervisorId: 'S01', status: 'AWAITING_APPROVAL',
+      totalCents: 41_860, items: [{ productId: 'P1', quantity: 1 }], placedAt: '2026-10-24T12:00:00.000Z',
     });
     expect(repository.confirm).toHaveBeenCalledWith(expect.objectContaining({ orderId: 'o1', clientId: 'C001', amountCents: 41_860 }));
   });
 
   it('releases the hold of a rejected order', async () => {
     const { service, repository } = build();
-    await service.releaseRejected({ orderId: 'o1', rejectedBy: 'S01', rejectedAt: '2026-10-24T12:00:00.000Z' });
+    await service.releaseRejected({ orderId: 'o1', rejectedBy: 'S01', reasonCode: 'CREDIT_RISK', rejectedAt: '2026-10-24T12:00:00.000Z' });
     expect(repository.release).toHaveBeenCalledWith('o1');
   });
 });

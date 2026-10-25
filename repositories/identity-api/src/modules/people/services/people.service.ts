@@ -1,5 +1,5 @@
 import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import type { OrderRejectedEvent, OrderSubmittedEvent } from 'contracts';
+import type { OrderPlacedEvent, OrderRejectedEvent } from 'contracts';
 import { ENV, type Env } from '../../../config/env.js';
 import type { ClientView, LoginOptions, UserProfile, ValidatePick } from '../dto/people.dto.js';
 import { PeopleRepository, type ClientRow, type SellerRow } from '../repository/people.repository.js';
@@ -90,8 +90,9 @@ export class PeopleService {
     await this.repository.release(orderId);
   }
 
-  // OrderSubmitted: the order exists now, so its hold becomes permanent.
-  async confirmSubmitted(event: OrderSubmittedEvent): Promise<void> {
+  // OrderPlaced: the order exists now (sent, or waiting for a supervisor), so its
+  // hold becomes permanent until the order is rejected.
+  async confirmPlaced(event: OrderPlacedEvent): Promise<void> {
     await this.repository.confirm({
       orderId: event.orderId,
       clientId: event.clientId,
