@@ -28,11 +28,12 @@ const line = (productId: string, quantity: number, overrides: Partial<OrderLineI
 });
 const order = (items: OrderLineInput[], orderDiscountBp = 0): OrderInput => ({ items, orderDiscountBp });
 
-// Seller with a 5% limit, no global cap below it, and no minimum, unless a test says otherwise.
+// Seller with a 5% limit, no global cap below it, no minimum and plenty of credit, unless a test says otherwise.
 const policy = (overrides: Partial<OrderPolicy> = {}): OrderPolicy => ({
   sellerDiscountLimitBp: 500,
   maxDiscountBp: 10_000,
   minimumOrderCents: 0,
+  availableCreditCents: 100_000_000,
   ...overrides,
 });
 
@@ -135,6 +136,49 @@ describe('minimum order', () => {
   it('does not add BELOW_MINIMUM to an empty order', () => {
     const result = calculateOrder(order([]), products, minimum);
     expect(result.blockers).toEqual(['EMPTY_ORDER']);
+  });
+});
+
+describe('credit', () => {
+  const products = catalog(product({ productId: 'P', unitPriceCents: 35_000 }), product({ productId: 'Q', unitPriceCents: 100_000 }));
+
+  it('allows an order of exactly the credit that is left', () => {
+    const result = calculateOrder(order([line('P', 1)]), products, policy({ availableCreditCents: 35_000 }));
+    expect(result.blockers).toEqual([]);
+    expect(result.canSubmit).toBe(true);
+  });
+
+  it('blocks an order one cent over the credit that is left', () => {
+    const result = calculateOrder(order([line('P', 1)]), products, policy({ availableCreditCents: 34_999 }));
+    expect(result.blockers).toEqual(['CREDIT_EXCEEDED']);
+    expect(result.canSubmit).toBe(false);
+  });
+
+  it('is measured after the discounts, on what the client pays', () => {
+    // 1.000,00 with 5% off is 950,00: it fits in 950,00 of credit.
+    const result = calculateOrder(order([line('Q', 1, { discountBp: 500 })]), products, policy({ availableCreditCents: 95_000 }));
+    expect(result.totalCents).toBe(95_000);
+    expect(result.blockers).toEqual([]);
+  });
+
+  it('blocks a client who has no credit left', () => {
+    const result = calculateOrder(order([line('P', 1)]), products, policy({ availableCreditCents: 0 }));
+    expect(result.blockers).toContain('CREDIT_EXCEEDED');
+  });
+
+  it('reports the credit it checked against', () => {
+    const result = calculateOrder(order([line('P', 1)]), products, policy({ availableCreditCents: 50_000 }));
+    expect(result.availableCreditCents).toBe(50_000);
+  });
+
+  it('does not add CREDIT_EXCEEDED to an empty order', () => {
+    const result = calculateOrder(order([]), products, policy({ availableCreditCents: 0 }));
+    expect(result.blockers).toEqual(['EMPTY_ORDER']);
+  });
+
+  it('can be exceeded together with the minimum', () => {
+    const result = calculateOrder(order([line('P', 1)]), products, policy({ minimumOrderCents: 40_000, availableCreditCents: 10_000 }));
+    expect(result.blockers).toEqual(['BELOW_MINIMUM', 'CREDIT_EXCEEDED']);
   });
 });
 

@@ -10,6 +10,15 @@ export const IDENTITY_PACKAGE = Symbol('IDENTITY_PACKAGE');
 export interface IdentityGateway {
   getClient(clientId: string): Promise<Client | null>;
   getSeller(sellerId: string): Promise<Seller | null>;
+  // Holds credit for an order about to be saved (atomic in identity). The hold
+  // frees itself if the order is never confirmed.
+  reserveCredit(clientId: string, orderId: string, amountCents: number): Promise<CreditReservation>;
+  releaseCredit(orderId: string): Promise<void>;
+}
+
+export interface CreditReservation {
+  reserved: boolean;
+  availableCents: number;
 }
 export const IDENTITY_GATEWAY = Symbol('IDENTITY_GATEWAY');
 
@@ -40,5 +49,19 @@ export class GrpcIdentityClient implements IdentityGateway {
       this.env.GRPC_TIMEOUT_MS,
     );
     return response?.seller ?? null;
+  }
+
+  async reserveCredit(clientId: string, orderId: string, amountCents: number): Promise<CreditReservation> {
+    const response = await callUpstream(
+      'identity-api',
+      this.service.reserveCredit({ clientId, orderId, amountCents }, innerAuthMetadata(this.env.INNER_AUTH)),
+      this.env.GRPC_TIMEOUT_MS,
+    );
+    // NOT_FOUND means the client vanished between the two calls; nothing was held.
+    return { reserved: response?.reserved ?? false, availableCents: response?.availableCents ?? 0 };
+  }
+
+  async releaseCredit(orderId: string): Promise<void> {
+    await callUpstream('identity-api', this.service.releaseCredit({ orderId }, innerAuthMetadata(this.env.INNER_AUTH)), this.env.GRPC_TIMEOUT_MS);
   }
 }

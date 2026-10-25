@@ -11,6 +11,7 @@ Every rule about an order, and the order itself. Owns the `orders` Postgres sche
   - `POST /orders/calculate` - totals and reasons. Saves nothing. Always 200 for a well-formed body; rule problems are in the answer.
   - `POST /orders` - sends the order. The body carries a client-generated `orderId`; sending it again returns the same order. 422 with the calculation if a rule blocks it.
   - `GET /orders/:id` - the order, for the seller who sent it.
+- Credit: the engine blocks an order above the client's available credit (`CREDIT_EXCEEDED`, exactly what is left is allowed). The check in calculate is advisory; at submit the service reserves the credit in identity **before** saving (atomic there), and gives it back at once if saving fails.
 - Prices and product data are copied onto each order line at submit time.
 
 ## Money and units

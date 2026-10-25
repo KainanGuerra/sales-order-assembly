@@ -39,6 +39,9 @@ export interface OrderPolicy {
   maxDiscountBp: number;
   // Orders below this net total cannot be sent.
   minimumOrderCents: number;
+  // Credit the client still has: the limit minus what is spoken for. An order
+  // worth more than this cannot be sent.
+  availableCreditCents: number;
 }
 
 export type LineBlocker =
@@ -51,7 +54,7 @@ export type LineBlocker =
   | 'NOT_PACK_MULTIPLE'
   | 'INVALID_DISCOUNT';
 
-export type OrderBlocker = 'EMPTY_ORDER' | 'INVALID_ORDER_DISCOUNT' | 'BELOW_MINIMUM';
+export type OrderBlocker = 'EMPTY_ORDER' | 'INVALID_ORDER_DISCOUNT' | 'BELOW_MINIMUM' | 'CREDIT_EXCEEDED';
 
 export type ApprovalReason =
   | { code: 'LINE_DISCOUNT_ABOVE_LIMIT'; productId: string; discountBp: number }
@@ -82,6 +85,7 @@ export interface OrderCalculation {
   // What the client pays: subtotal minus the order discount.
   totalCents: number;
   minimumOrderCents: number;
+  availableCreditCents: number;
   effectiveDiscountLimitBp: number;
   blockers: OrderBlocker[];
   approvalReasons: ApprovalReason[];
@@ -132,6 +136,10 @@ export function calculateOrder(
   if (input.items.length > 0 && totalCents < policy.minimumOrderCents) {
     blockers.push('BELOW_MINIMUM');
   }
+  // Measured on what the client pays, like the minimum. Exactly the credit left is allowed.
+  if (input.items.length > 0 && totalCents > policy.availableCreditCents) {
+    blockers.push('CREDIT_EXCEEDED');
+  }
 
   const effectiveDiscountLimitBp = Math.min(policy.sellerDiscountLimitBp, policy.maxDiscountBp);
   const approvalReasons: ApprovalReason[] = [];
@@ -153,6 +161,7 @@ export function calculateOrder(
     orderDiscountCents,
     totalCents,
     minimumOrderCents: policy.minimumOrderCents,
+    availableCreditCents: policy.availableCreditCents,
     effectiveDiscountLimitBp,
     blockers,
     approvalReasons,

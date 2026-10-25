@@ -69,11 +69,13 @@ function build(overrides: { clients?: Record<string, Client>; quotes?: ProductQu
     ),
   );
   const publishSubmitted = vi.fn(async (_event: OrderSubmittedEvent) => undefined);
-  const identity: IdentityGateway = { getClient, getSeller };
+  const reserveCredit = vi.fn(async (_clientId: string, _orderId: string, _amountCents: number) => ({ reserved: true, availableCents: 100_000 }));
+  const releaseCredit = vi.fn(async (_orderId: string) => undefined);
+  const identity: IdentityGateway = { getClient, getSeller, reserveCredit, releaseCredit };
   const catalog: CatalogGateway = { getProducts };
   const publisher: OrderEventsPublisher = { publishSubmitted };
   const service = new OrdersService(repository as unknown as OrdersRepository, identity, catalog, publisher, env);
-  return { service, repository, getClient, getSeller, getProducts, publishSubmitted };
+  return { service, repository, getClient, getSeller, getProducts, publishSubmitted, reserveCredit, releaseCredit };
 }
 
 const draft = (overrides: Partial<CalculateOrderDto> = {}): CalculateOrderDto => ({
@@ -223,6 +225,63 @@ describe('OrdersService.submit', () => {
     await ctx.service.submit(seller, submission());
     const other: Actor = { role: 'SELLER', id: 'V02' };
     await expect(ctx.service.submit(other, submission())).rejects.toBeInstanceOf(NotFoundException);
+  });
+});
+
+describe('OrdersService credit', () => {
+  it('blocks an order that does not fit in the credit the client has left, when calculating', async () => {
+    // limit 5.000,00, used 4.900,00 -> 100,00 left; the order is 500,00.
+    const { service } = build({ clients: { C001: { ...c001, creditUsedCents: 490_000 } } });
+    const result = await service.calculate(seller, draft());
+    expect(result.availableCreditCents).toBe(10_000);
+    expect(result.blockers).toContain('CREDIT_EXCEEDED');
+    expect(result.canSubmit).toBe(false);
+  });
+
+  it('holds the credit for the order id, for the order total, before saving', async () => {
+    const ctx = build();
+    await ctx.service.submit(seller, submission());
+    expect(ctx.reserveCredit).toHaveBeenCalledWith('C001', ORDER_ID, 50_000);
+  });
+
+  it('refuses the order when identity says the credit does not fit, saving and publishing nothing', async () => {
+    const ctx = build();
+    ctx.reserveCredit.mockResolvedValue({ reserved: false, availableCents: 12_000 });
+    const error = await ctx.service.submit(seller, submission()).catch((e) => e);
+    expect(error).toBeInstanceOf(UnprocessableEntityException);
+    expect(error.getResponse().calculation).toMatchObject({ canSubmit: false, availableCreditCents: 12_000 });
+    expect(error.getResponse().calculation.blockers).toContain('CREDIT_EXCEEDED');
+    expect(ctx.repository.saved.size).toBe(0);
+    expect(ctx.publishSubmitted).not.toHaveBeenCalled();
+  });
+
+  it('does not hold credit for an order a rule already blocked', async () => {
+    const ctx = build();
+    const bad = submission({ items: [{ productId: 'P1', quantity: 2, unit: 'UNIT', discountBp: 0 }] });
+    await ctx.service.submit(seller, bad).catch(() => undefined);
+    expect(ctx.reserveCredit).not.toHaveBeenCalled();
+  });
+
+  it('gives the credit back at once when the order cannot be saved', async () => {
+    const ctx = build();
+    ctx.repository.insert = vi.fn().mockRejectedValue(new Error('database is down'));
+    await expect(ctx.service.submit(seller, submission())).rejects.toThrow('database is down');
+    expect(ctx.releaseCredit).toHaveBeenCalledWith(ORDER_ID);
+    expect(ctx.publishSubmitted).not.toHaveBeenCalled();
+  });
+
+  it('still reports the original failure when giving the credit back also fails', async () => {
+    const ctx = build();
+    ctx.repository.insert = vi.fn().mockRejectedValue(new Error('database is down'));
+    ctx.releaseCredit.mockRejectedValue(new Error('identity is down'));
+    await expect(ctx.service.submit(seller, submission())).rejects.toThrow('database is down');
+  });
+
+  it('does not hold credit again when the same order is sent again', async () => {
+    const ctx = build();
+    await ctx.service.submit(seller, submission());
+    await ctx.service.submit(seller, submission());
+    expect(ctx.reserveCredit).toHaveBeenCalledTimes(1);
   });
 });
 

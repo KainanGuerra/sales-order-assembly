@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -35,6 +36,8 @@ interface Prepared {
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     private readonly repository: OrdersRepository,
     @Inject(IDENTITY_GATEWAY) private readonly identity: IdentityGateway,
@@ -68,7 +71,29 @@ export class OrdersService {
       });
     }
 
-    const inserted = await this.repository.insert(
+    // Hold the credit before saving, in one atomic step in identity. The check
+    // in calculate was advisory; this is the one that two orders sent together
+    // cannot both pass. The order id is the key, so a retry holds nothing extra.
+    if (calculation.totalCents > 0) {
+      const reservation = await this.identity.reserveCredit(client.id, dto.orderId, calculation.totalCents);
+      if (!reservation.reserved) {
+        throw new UnprocessableEntityException({
+          statusCode: 422,
+          error: 'Unprocessable Entity',
+          code: 'ORDER_NOT_SUBMITTABLE',
+          message: 'The order does not fit in the credit available',
+          calculation: {
+            ...calculation,
+            blockers: [...calculation.blockers, 'CREDIT_EXCEEDED'],
+            availableCreditCents: reservation.availableCents,
+            canSubmit: false,
+            client,
+          },
+        });
+      }
+    }
+
+    const inserted = await this.saveOrReleaseCredit(dto.orderId, () => this.repository.insert(
       {
         id: dto.orderId,
         sellerId: actor.id,
@@ -95,7 +120,7 @@ export class OrdersService {
         grossCents: line.grossCents!,
         netCents: line.netCents!,
       })),
-    );
+    ));
 
     const saved = await this.repository.findById(dto.orderId);
     if (!saved) {
@@ -117,6 +142,19 @@ export class OrdersService {
       throw new NotFoundException(`Order ${orderId} not found`);
     }
     return toOrderView(found);
+  }
+
+  // If the order cannot be saved, the credit held for it goes back at once
+  // instead of waiting for the hold to expire.
+  private async saveOrReleaseCredit<T>(orderId: string, save: () => Promise<T>): Promise<T> {
+    try {
+      return await save();
+    } catch (error) {
+      await this.identity.releaseCredit(orderId).catch((releaseError) => {
+        this.logger.error(`Could not release the credit held for order ${orderId}; it will lapse by itself`, releaseError as Error);
+      });
+      throw error;
+    }
   }
 
   private replay(actor: Actor, found: OrderWithItems): OrderView {
@@ -163,6 +201,7 @@ export class OrdersService {
       sellerDiscountLimitBp: seller.discountLimitBp,
       maxDiscountBp: this.env.MAX_DISCOUNT_BP,
       minimumOrderCents: this.env.MIN_ORDER_CENTS,
+      availableCreditCents: Math.max(0, client.creditLimitCents - client.creditUsedCents),
     });
 
     return {
