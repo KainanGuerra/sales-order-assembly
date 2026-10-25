@@ -52,27 +52,30 @@ Infraestrutura: um PostgreSQL (um schema e um papel por serviço, **sem consulta
 
 | Evento | Publicado por | Consumidores | O que fazem |
 |---|---|---|---|
-| `OrderSubmitted` | orders | identity | confirma a reserva de crédito do pedido (de `pendente` para `confirmada`) |
+| `OrderSubmitted` | orders | identity | confirma a reserva de crédito do pedido (`PENDING` para `CONFIRMED`) |
 | | | catalog | incrementa a estatística de produtos mais pedidos |
 | | | notifications | cria aviso para o supervisor se o pedido aguarda aprovação |
 | `OrderApproved` | orders | identity | mantém o crédito reservado |
-| `OrderRejected` | orders | identity | libera o crédito reservado |
+| `OrderRejected` | orders | identity | libera o crédito (`RELEASED`) |
 
 Todo consumidor é idempotente (chave: id do pedido).
 
 ## Reserva de crédito
 
-O identity é dono do crédito. Na tabela `credit_reservations` (schema `identity`) cada reserva tem `order_id` (chave primária), `client_id`, `amount` e `status` (`pendente`, `confirmada`, `liberada`).
+O identity é dono do crédito. A tabela `credit_reservations` (schema `identity`) guarda, por pedido: `order_id` (chave primária), `client_id`, `amount_cents`, `status` (`PENDING`, `CONFIRMED`, `RELEASED`) e `expires_at`. O crédito comprometido de um cliente é calculado, não guardado em um contador:
 
-1. **Envio:** o orders gera o id do pedido e chama `ReserveCredit(clientId, orderId, amount)`.
-2. **Reserva atômica:** numa única transação o identity insere a reserva (a chave primária torna repetições idempotentes) e executa `UPDATE ... SET credit_used = credit_used + :amount WHERE limit_credit - credit_used >= :amount`. Zero linhas atualizadas significa crédito insuficiente e a reserva não é criada. Duas submissões simultâneas não passam juntas.
-3. **Gravação:** o orders grava o pedido. Se a gravação falhar, chama `ReleaseCredit` (melhor esforço).
-4. **Confirmação:** o orders publica `OrderSubmitted`; o identity marca a reserva como `confirmada`.
-5. **Rejeição:** `OrderRejected` libera a reserva (devolve o valor ao crédito disponível).
-6. **Limpeza:** um job no identity libera reservas `pendente` com mais de 15 minutos. Cobre a queda entre os passos 2 e 4.
-7. **Repetição:** repetir o envio com o mesmo id de pedido reaproveita a reserva existente e conclui a gravação.
+> em uso = crédito já usado (do seed) + reservas `CONFIRMED` + reservas `PENDING` que ainda não expiraram
+> disponível = limite − em uso
 
-Limitação conhecida: se o evento `OrderSubmitted` atrasar mais que o prazo de limpeza (por exemplo, com o RabbitMQ parado), uma reserva de pedido válido pode ser liberada indevidamente. A mitigação é um outbox transacional no orders, descrito como melhoria em `DECISIONS.md` D22.
+1. **Cálculo:** o orders consulta o cliente por gRPC e bloqueia com `CREDIT_EXCEEDED` se o total passar do disponível. É uma checagem de aviso, para a tela mostrar o motivo.
+2. **Envio:** o orders chama `ReserveCredit(clientId, orderId, amount)`. Numa transação, o identity trava a linha do cliente (`SELECT ... FOR UPDATE`), soma o que está em uso e grava a reserva `PENDING` com `expires_at = agora + TTL`, ou recusa. Duas reservas do mesmo cliente são decididas uma depois da outra.
+3. **Gravação:** o orders grava o pedido. Se falhar, chama `ReleaseCredit` (a reserva vira `RELEASED`).
+4. **Confirmação:** `OrderSubmitted` torna a reserva `CONFIRMED`. Se a reserva já tinha expirado, ou nem existia, o consumidor a cria como `CONFIRMED`, então o crédito sempre reflete os pedidos que existem.
+5. **Rejeição:** `OrderRejected` torna a reserva `RELEASED`; um evento repetido não a revive.
+6. **Expiração sem tarefa agendada:** uma reserva `PENDING` simplesmente deixa de contar quando `expires_at` passa. Não há job.
+7. **Repetição:** o mesmo `orderId` de novo devolve a reserva existente, sem reservar de novo.
+
+Consumidores (identity): fila `identity-api-order-events`, do tipo *quorum*, com limite de entregas; uma mensagem que não bate com o esquema vai direto para `identity-api-order-events.dlq`; uma que falha é reentregue com espera crescente (0,5 s, 1 s, 2 s, 4 s, 8 s) e, esgotado o limite, o broker a move para a fila de mensagens mortas. Ver `DECISIONS.md` D40 a D42.
 
 ## Quem faz o quê nas regras
 

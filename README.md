@@ -9,7 +9,7 @@ Módulo para vendedores que visitam pequenos varejistas (mercadinhos, minimercad
 | Fase | Conteúdo | Estado |
 |---|---|---|
 | A | Requisitos obrigatórios 1–6 | Pronta: backend (catálogo, identity, orders com regras e testes) e interface (Nuxt) |
-| B | Limite de crédito, histórico com "repetir pedido", aprovação do supervisor | Não iniciada |
+| B | Limite de crédito, aprovação do supervisor, histórico com "repetir pedido", notificações | Em andamento: crédito pronto; faltam aprovação, histórico e notificações |
 | C | Pedido offline com sincronização | Não iniciada |
 | D | Repositório de orquestração (Helm, kind, ingress), última fase | Não iniciada |
 

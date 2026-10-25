@@ -327,3 +327,36 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 - **Contexto:** O app precisa funcionar em contêiner sem acesso à internet para ícones e, depois, offline (fase C); e os dados em cache de uma pessoa não podem aparecer para a próxima.
 - **Escolha:** `ssr: false` (as páginas rodam no navegador; o servidor Nitro continua sendo o BFF). Os ícones vêm do pacote local `@iconify-json/lucide`, sem CDN. Uma sessão que termina (logout ou 401 no meio do pedido) esvazia o cache do TanStack Query; no 401 o visitante volta à tela de login e o rascunho continua guardado.
 - **O que faria diferente:** Ao implementar o modo offline, avaliar um service worker com `@vite-pwa/nuxt`.
+
+## D40. Reserva de crédito que expira sozinha, no Postgres (substitui a tarefa agendada do D22)
+
+- **Contexto:** O D22 previa um job que liberava reservas pendentes com mais de 15 minutos. Você propôs evitar o job e deixar a reserva expirar sozinha, com uma chave no Redis com TTL.
+- **Alternativas consideradas:** (a) chave no Redis com TTL; (b) linhas de reserva no Postgres com `expires_at`; (c) manter o job.
+- **Análise da opção (a):** expirar a chave só esquece a *reserva*; o crédito consumido por pedidos fica no Postgres, e nada o decrementa quando a chave some. Para funcionar, o "disponível" teria de ser calculado (limite − comprometido − soma das reservas vivas), com um script Lua atômico por cliente, e o identity ganharia uma dependência do Redis e dois armazenamentos que precisam concordar; um reinício do Redis esqueceria reservas pendentes e o crédito poderia ser vendido a mais.
+- **Escolha:** (b). A mesma ideia dentro do banco que já tem a transação: o crédito em uso é *calculado* como crédito já usado (do seed) + reservas `CONFIRMED` + reservas `PENDING` com `expires_at` no futuro. Uma reserva pendente que expira simplesmente deixa de contar; não há job nem segundo armazenamento.
+- **Por quê:** Uma única fonte de verdade, uma transação, e a expiração pedida.
+- **Limite assumido:** Se o evento `OrderSubmitted` se perder (sem outbox, D34) depois de o pedido ser salvo, a reserva continua `PENDING` e expira; o crédito de um pedido que existe volta a aparecer como livre. O consumidor cria a reserva `CONFIRMED` quando o evento chega, mas só se ele chegar.
+- **O que faria diferente:** O outbox no orders (D34) fecha esse limite; sem ele, uma verificação periódica compararia pedidos e reservas.
+
+## D41. A reserva trava a linha do cliente, e o teste de concorrência foi refeito porque passava por sorte
+
+- **Contexto:** Dois pedidos para o mesmo cliente enviados juntos não podem caber os dois num crédito que só cabe um (o caso do cliente C002, com R$ 350,00 disponíveis e dois pedidos de R$ 303,48).
+- **Escolha:** `ReserveCredit` abre uma transação, trava a linha do cliente (`SELECT ... FOR UPDATE`), soma o que está em uso e grava a reserva ou recusa. Reservas do mesmo cliente são decididas uma após a outra; clientes diferentes não se bloqueiam.
+- **Falha minha encontrada ao quebrar o código de propósito:** o primeiro teste ("dois pedidos ao mesmo tempo") continuou passando **sem o bloqueio**, em três execuções, porque a segunda conexão demorava a abrir e o primeiro pedido terminava antes de o segundo começar: o teste nunca provocava a disputa. Foi trocado por um teste determinístico: uma transação segura o bloqueio, uma reserva começa e precisa esperar (verificado por 400 ms), a primeira grava seu crédito e confirma, e só então a reserva termina, vendo o crédito já tomado. Sem o bloqueio, esse teste falha.
+- **Verificado de ponta a ponta:** dois pedidos reais enviados juntos pela aplicação web: um aceito, o outro recusado com `CREDIT_EXCEEDED` e R$ 46,52 disponíveis.
+- **O que faria diferente:** Um teste de carga com dezenas de pedidos simultâneos, e `SKIP LOCKED` se um dia houvesse muitos clientes disputando.
+
+## D42. Consumidores: fila quorum com limite de entregas, espera crescente e fila de mensagens mortas
+
+- **Contexto:** Você escolheu "tentar algumas vezes e depois enviar para uma fila de mensagens mortas".
+- **Alternativas consideradas:** filas de retentativa com TTL (mais peças, mais código); recolocar na fila sem fim; registrar e confirmar (perderia uma atualização de crédito sem rastro).
+- **Escolha:** Cada consumidor tem uma fila *quorum* própria (`identity-api-order-events`) com `x-delivery-limit` e uma fila de mensagens mortas (`....dlq`, ligada ao exchange `orders.events.dlx`). Uma mensagem que não bate com o esquema Zod é descartada para a fila de mortas **na hora** (nunca daria certo). Uma mensagem cujo tratamento falha espera um tempo crescente (0,5 s, 1 s, 2 s, 4 s, no máximo 8 s) e volta à fila; passado o limite, o próprio broker a move para a fila de mortas. Nada é descartado em silêncio.
+- **Verificado com mensagens reais:** uma mensagem malformada foi para a fila de mortas de imediato; um evento válido para um cliente inexistente foi tentado 6 vezes (a primeira entrega mais 5 reentregas: o limite do RabbitMQ conta reentregas, então `CONSUMER_MAX_DELIVERIES=5` significa 6 tentativas) e depois foi para a fila de mortas; um `OrderRejected` repetido não mudou nada.
+- **Custo assumido:** A espera acontece dentro do tratamento da mensagem e segura o consumidor (prefetch 1); com muito volume, filas de retentativa seriam melhores. A fila de mortas ainda não tem quem a reprocesse: é preciso inspecioná-la à mão.
+- **O que faria diferente:** Um painel ou comando para listar e reenviar mensagens mortas.
+
+## D43. Regras do crédito no pedido
+
+- **Escolha:** O motor de regras ganhou o bloqueio `CREDIT_EXCEEDED`: o total líquido do pedido (depois de todos os descontos) não pode passar do crédito disponível; exatamente o que sobra é permitido, um centavo a mais bloqueia. Ao calcular, o disponível vem do cliente (limite − comprometido, via gRPC) e serve para a tela mostrar o motivo. Ao enviar, o orders reserva o crédito *antes* de gravar o pedido; se a reserva for recusada, responde 422 com `CREDIT_EXCEEDED` e o disponível atual; se gravar falhar, devolve o crédito na hora (se isso também falhar, a reserva expira sozinha). Reenviar o mesmo pedido não reserva de novo, e um pedido que já quebrou outra regra nem chega a reservar.
+- **Por quê:** A checagem ao calcular é só aviso; quem decide, de forma atômica, é a reserva.
+- **O que faria diferente:** Mostrar na tela, além do disponível, o quanto está reservado por pedidos aguardando aprovação.

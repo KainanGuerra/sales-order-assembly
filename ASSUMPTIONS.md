@@ -31,7 +31,7 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A17 | Em que valor se mede o pedido mínimo de R$ 300,00? | No total líquido final (após descontos de item e de pedido). Exatamente R$ 300,00 pode ser enviado. Decisão minha |
 | A18 | Regra de arredondamento | Ver seção "Arredondamento" abaixo (método 1) |
 | A19 | O que significa "bloquear o envio"? | O botão fica desabilitado com a lista de motivos, e o servidor também recusa o envio (nunca confia no cliente) |
-| A20 | Limite de crédito (fase B): bloqueia ou alerta? | Bloqueia quando o total do pedido excede o crédito disponível (limite − utilizado). Pedidos "Enviado" e "Aguardando aprovação" contam. O envio reserva o crédito de forma atômica no `identity` (`ReserveCredit`), então duas submissões simultâneas não passam juntas. Detalhes e limitação conhecida em `ARQUITETURA.md` e `DECISIONS.md` D22. Decisão minha |
+| A20 | Limite de crédito (fase B): bloqueia ou alerta? | Bloqueia quando o total do pedido excede o crédito disponível (limite − utilizado). Pedidos "Enviado" e "Aguardando aprovação" contam. O envio reserva o crédito de forma atômica no `identity` (`ReserveCredit`), então duas submissões simultâneas não passam juntas. A reserva expira sozinha (sem job). Detalhes e limites em `ARQUITETURA.md` e `DECISIONS.md` D40 a D43. Decisão minha |
 | A21 | Fluxo do supervisor | Mínimo: listar pedidos pendentes de seus vendedores, aprovar (→ "Enviado") ou rejeitar. Decisão minha |
 | A22 | Preço mudou entre montar e enviar | O preço é recalculado e gravado (snapshot) no envio; a resposta devolve os valores finais. Decisão minha |
 | A23 | Envio duplicado (clique duplo, reconexão) | O envio usa uma chave de idempotência gerada no cliente; repetir a chave devolve o mesmo pedido |
@@ -48,6 +48,9 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A35 | Quantidade ao adicionar um produto | Uma unidade; uma embalagem se o produto só vende em múltiplos. A busca começa com 2 caracteres. Decisão minha |
 | A36 | O que o supervisor vê nesta versão | Uma página avisando que a aprovação ainda não está disponível; ele não abre as telas do vendedor. Decisão minha |
 | A37 | Duração da sessão | 8 horas, renovada a cada uso. Decisão minha |
+| A38 | Quanto tempo uma reserva de crédito vive sem confirmação | 15 minutos (`RESERVATION_TTL_SECONDS`); depois disso ela deixa de contar. Decisão minha |
+| A39 | O que conta como crédito comprometido | O crédito já usado do seed, mais os pedidos enviados e as reservas ainda vivas. Pedidos rejeitados não contam. Decisão minha |
+| A40 | Pedidos criados antes de existir reserva de crédito | Não contam (só existem em bancos de desenvolvimento, de antes desta funcionalidade). Decisão minha |
 | A25 | "Login" | Simulado: tela para escolher vendedor ou supervisor, com sessão por cookie no servidor |
 | A26 | Pedido offline (fase C) | Comportamento a decidir quando chegarmos à fase C; o backend continua sendo o dono das regras |
 
