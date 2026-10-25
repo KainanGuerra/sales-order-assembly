@@ -8,7 +8,7 @@ The reviewers will pick code at random and ask me to explain it, make a live cha
 
 ## Status
 
-`contracts`, `catalog-api`, `identity-api`, `orders-api` and `web` exist under `repositories/`, pass their tests and run in Docker Compose together with RabbitMQ (phase A backend is complete: calculate, submit with the status, the rules). `web` (Nuxt app and BFF) exists too, so the phase A requirements 1 to 6 are implemented end to end. Phase B: **credit and approval are done** (reservation, consumer, dead-letter queue; the supervisor's list, detail, approve and reject, with a status history). History with "repeat order", the catalog and notifications consumers, and phases C and D are not built. Delivery is phased:
+`contracts`, `catalog-api`, `identity-api`, `orders-api` and `web` exist under `repositories/`, pass their tests and run in Docker Compose together with RabbitMQ (phase A backend is complete: calculate, submit with the status, the rules). `web` (Nuxt app and BFF) exists too, so the phase A requirements 1 to 6 are implemented end to end. Phase B: **credit, approval and history with "repeat order" are done** (reservation and consumer; the supervisor's decisions with a status history; each client's history, which includes the seed's orders, and a draft that repeats an old order at today's prices). The catalog and notifications consumers, and phases C and D, are not built. Delivery is phased:
 
 - **Phase A:** mandatory requirements 1–6 (portfolio scoping, product search by name/EAN with the client's price table, order building, totals and blocking rules, submit with status, automated tests of the rules).
 - **Phase B:** credit limit, order history with "repeat order", minimal supervisor approve/reject.
@@ -86,7 +86,7 @@ Before proposing a design change, **check `DECISIONS.md` and `ASSUMPTIONS.md` fi
 
 ## The life of an order
 
-`AWAITING_APPROVAL → APPROVED → SUBMITTED`, or `REJECTED` (final); within the discount limit an order is `SUBMITTED` from the start. `APPROVED` is a step, never a resting state: the order row holds `AWAITING_APPROVAL`, `SUBMITTED` or `REJECTED`, and `order_status_history` records every step. The pure rules are in `repositories/orders-api/src/modules/orders/domain/order-status.ts`; the database applies a change with `UPDATE ... WHERE status = 'AWAITING_APPROVAL'`. Rejecting needs a reason from a fixed list ("Outro" needs a text). See `DECISIONS.md` D44 to D46.
+Two chains, six statuses, all real: `AWAITING_APPROVAL → APPROVED → SUBMITTED → INVOICED` and `AWAITING_APPROVAL → REJECTED → CANCELLED`. Within the discount limit an order is `SUBMITTED` from the start. A decision carries the order through the first two of its chain at once (approving: `APPROVED` then `SUBMITTED`; rejecting: `REJECTED` then `CANCELLED`), so afterwards it rests at `SUBMITTED` or `CANCELLED`; `order_status_history` records every hop. `INVOICED` ("Faturado") would be set by billing, which does not exist here: only the orders imported from the seed have it, and the seed's "Cancelado" is `CANCELLED`. The pure rules are in `repositories/orders-api/src/modules/orders/domain/order-status.ts`; the database applies a change with `UPDATE ... WHERE status = 'AWAITING_APPROVAL'`. Rejecting needs a reason from a fixed list ("Outro" needs a text). See `DECISIONS.md` D44 to D47.
 
 ## Where the rules live
 

@@ -20,7 +20,7 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A12 | Nomes com acento, caixa variada e erros de digitação | Busca insensível a acento e caixa, tolerante a erro de digitação (similaridade de palavra do `pg_trgm`). Consultas só com dígitos (8 a 14) ou no formato `SKU-n` são tratadas como código exato. Decisão minha |
 | A12b | Produtos de busca retornados por consulta | No máximo 50 por consulta (padrão 20); a ordem é descrição exata, mais próximo, id. Decisão minha |
 | A13 | Um único supervisor (S01), responsável pelos três vendedores | O supervisor vê apenas pedidos aguardando aprovação dos vendedores que supervisiona |
-| A14 | Pedidos do histórico têm status `Faturado` e `Cancelado` | São apenas leitura. Pedidos cancelados aparecem no histórico, mas não contam no crédito. Decisão minha |
+| A14 | Pedidos do histórico têm status `Faturado` e `Cancelado` | `Faturado` é `INVOICED` e `Cancelado` é `CANCELLED` (D47). São apenas leitura: ninguém os aprova nem rejeita. Aparecem no histórico do cliente, marcados como importados, e não geram reserva de crédito. Decisão minha |
 
 ## Regras do enunciado
 
@@ -54,6 +54,10 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A41 | Que motivos de rejeição existem | Desconto acima do aceito, risco de crédito, produto ou quantidade inadequados, dados do pedido incorretos, e "Outro" com texto (mínimo de 3 caracteres). A lista é minha; deve ser confirmada com a equipe. Decisão minha |
 | A42 | Quanto tempo um pedido pode esperar a decisão | Sem limite: o crédito fica reservado até alguém decidir. Decisão minha |
 | A43 | O supervisor pode decidir pedidos de outra equipe? | Não: só os dos vendedores que supervisiona; os demais respondem "não encontrado". Decisão minha |
+| A44 | O que "repetir pedido" copia | Produtos, quantidades e a unidade informada; descontos em zero; preços da tabela atual do cliente; produtos descontinuados, sem preço ou inexistentes ficam de fora e são listados. Decisão minha |
+| A45 | Quantos pedidos o histórico mostra | Os 10 últimos do cliente, só os do próprio vendedor (um vendedor que herda um cliente não vê os pedidos do anterior). Decisão minha |
+| A46 | Quem marca um pedido como faturado | Ninguém neste sistema: não há faturamento. Só os pedidos importados do seed têm `INVOICED`. Decisão minha |
+| A47 | Repetir com um pedido em andamento | Pergunta antes de substituir; cancelar não muda nada. Decisão minha |
 | A25 | "Login" | Simulado: tela para escolher vendedor ou supervisor, com sessão por cookie no servidor |
 | A26 | Pedido offline (fase C) | Comportamento a decidir quando chegarmos à fase C; o backend continua sendo o dono das regras |
 
