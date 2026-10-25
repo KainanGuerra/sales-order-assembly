@@ -52,11 +52,11 @@ Infraestrutura: um PostgreSQL (um schema e um papel por serviço, **sem consulta
 
 | Evento | Publicado por | Consumidores | O que fazem |
 |---|---|---|---|
-| `OrderSubmitted` | orders | identity | confirma a reserva de crédito do pedido (`PENDING` para `CONFIRMED`) |
-| | | catalog | incrementa a estatística de produtos mais pedidos |
+| `OrderPlaced` (`order.placed`) | orders | identity | confirma a reserva de crédito do pedido (`PENDING` para `CONFIRMED`) |
 | | | notifications | cria aviso para o supervisor se o pedido aguarda aprovação |
-| `OrderApproved` | orders | identity | mantém o crédito reservado |
-| `OrderRejected` | orders | identity | libera o crédito (`RELEASED`) |
+| `OrderSubmitted` (`order.submitted`) | orders | catalog | incrementa a estatística de produtos mais pedidos |
+| `OrderApproved` (`order.approved`) | orders | (ninguém ainda) | o crédito continua reservado; não há o que fazer |
+| `OrderRejected` (`order.rejected`) | orders | identity | libera o crédito (`RELEASED`); o orders também o libera por chamada direta |
 
 Todo consumidor é idempotente (chave: id do pedido).
 

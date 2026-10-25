@@ -360,3 +360,26 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 - **Escolha:** O motor de regras ganhou o bloqueio `CREDIT_EXCEEDED`: o total líquido do pedido (depois de todos os descontos) não pode passar do crédito disponível; exatamente o que sobra é permitido, um centavo a mais bloqueia. Ao calcular, o disponível vem do cliente (limite − comprometido, via gRPC) e serve para a tela mostrar o motivo. Ao enviar, o orders reserva o crédito *antes* de gravar o pedido; se a reserva for recusada, responde 422 com `CREDIT_EXCEEDED` e o disponível atual; se gravar falhar, devolve o crédito na hora (se isso também falhar, a reserva expira sozinha). Reenviar o mesmo pedido não reserva de novo, e um pedido que já quebrou outra regra nem chega a reservar.
 - **Por quê:** A checagem ao calcular é só aviso; quem decide, de forma atômica, é a reserva.
 - **O que faria diferente:** Mostrar na tela, além do disponível, o quanto está reservado por pedidos aguardando aprovação.
+
+## D44. A vida do pedido: AWAITING_APPROVAL → APPROVED → SUBMITTED, ou REJECTED, com histórico
+
+- **Contexto:** Você propôs que APPROVED e SUBMITTED fossem passos seguidos, em vez de a aprovação levar direto a "Enviado".
+- **Alternativas consideradas:** a mesma cadeia para todo pedido (com aprovação automática dentro da alçada); APPROVED como estado de repouso, com o envio feito depois por uma ação do vendedor; sem APPROVED (aprovar leva direto a SUBMITTED, guardando quem aprovou).
+- **Escolha:** Dentro da alçada o pedido nasce `SUBMITTED`. Fora dela nasce `AWAITING_APPROVAL`; **aprovar** registra `APPROVED` (pelo supervisor) e logo `SUBMITTED` (pelo sistema) numa única transação; **rejeitar** leva a `REJECTED`, que é final. `APPROVED` é um passo, nunca um estado de repouso: a linha do pedido guarda só `AWAITING_APPROVAL`, `SUBMITTED` ou `REJECTED`, e a tabela `order_status_history` guarda todos os passos (quem, quando e por quê, com um id serial para a ordem exata). As regras de transição são funções puras (`order-status.ts`); o banco aplica a mudança com um `UPDATE ... WHERE status = 'AWAITING_APPROVAL'`, então aprovar e rejeitar ao mesmo tempo não podem ganhar os dois.
+- **Repetições:** aprovar de novo um pedido aprovado, ou rejeitar de novo um rejeitado, devolve o mesmo resultado sem repetir efeitos. Aprovar um rejeitado, rejeitar um enviado e aprovar um pedido que nunca precisou de aprovação são recusados com 409 e um código.
+- **Eventos:** `order.placed` (sempre, na criação), `order.submitted` (quando o pedido chega a SUBMITTED), `order.approved` e `order.rejected`. O evento que antes se chamava `order.submitted` na criação passou a `order.placed`, porque o nome estava errado para um pedido que espera aprovação.
+- **Motivos de rejeição:** uma lista fixa (desconto acima do aceito, risco de crédito, produto ou quantidade inadequados, dados do pedido incorretos) e "Outro", que exige um texto de ao menos 3 caracteres.
+- **Quem pode o quê:** o vendedor vê o próprio pedido; o supervisor vê e decide os pedidos da sua equipe (o `supervisor_id` é gravado no pedido ao enviar, junto dos nomes do vendedor e do cliente, para a lista não precisar chamar outros serviços); qualquer outro recebe "não encontrado".
+- **O que faria diferente:** Um status "cancelado pelo vendedor" e o prazo para o supervisor decidir (um pedido esquecido hoje espera para sempre).
+
+## D45. Rejeitar devolve o crédito duas vezes: na hora, e pelo evento
+
+- **Contexto:** Um crédito que não volta é pior que um que volta tarde; o evento `order.rejected` pode atrasar ou se perder (D34, D40).
+- **Escolha:** Depois de gravar a rejeição, o orders chama `ReleaseCredit` no identity (idempotente) e também publica `order.rejected`; o consumidor do identity faz a mesma liberação. Se a chamada direta falhar, o evento libera; se o evento se perder, a chamada direta já liberou. Aprovar não mexe no crédito: a reserva continua confirmada.
+- **Verificado:** dois pedidos de R$ 303,43 reduziram o crédito de 2.177,20 para 1.570,34; depois de aprovar um e rejeitar o outro, ficou em 1.873,77 (só o aprovado consome crédito).
+
+## D46. Uma renomeação de evento deixa uma ligação antiga na fila, e foi isso que quebrou o "dead-letter"
+
+- **O que aconteceu:** A fila `identity-api-order-events` guarda suas ligações entre implantações e o Nest só adiciona ligações. Depois de renomear o evento de crédito, a ligação antiga com `order.submitted` continuou entregando esse evento (agora publicado para outro fim) a uma fila sem tratador, e cada mensagem foi parar na fila de mensagens mortas (3 mensagens apareceram ali sem nenhuma falha real).
+- **Escolha:** `retireBindings` remove, na partida, as ligações aposentadas (hoje `order.submitted`); se a fila ainda não existe, não faz nada. Testado com um corretor falso; verificado no corretor de verdade, onde a ligação sumiu e uma segunda reinicialização não causou nada.
+- **O que faria diferente:** Declarar as ligações de forma exata (removendo qualquer uma que não esteja na lista) em vez de listar as aposentadas.

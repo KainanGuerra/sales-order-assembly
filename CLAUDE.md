@@ -8,7 +8,7 @@ The reviewers will pick code at random and ask me to explain it, make a live cha
 
 ## Status
 
-`contracts`, `catalog-api`, `identity-api`, `orders-api` and `web` exist under `repositories/`, pass their tests and run in Docker Compose together with RabbitMQ (phase A backend is complete: calculate, submit with the status, the rules). `web` (Nuxt app and BFF) exists too, so the phase A requirements 1 to 6 are implemented end to end. Phase B has started: **credit is done** (reservation, consumer, dead-letter queue). Approval, history with "repeat order", the catalog and notifications consumers, and phases C and D are not built. Delivery is phased:
+`contracts`, `catalog-api`, `identity-api`, `orders-api` and `web` exist under `repositories/`, pass their tests and run in Docker Compose together with RabbitMQ (phase A backend is complete: calculate, submit with the status, the rules). `web` (Nuxt app and BFF) exists too, so the phase A requirements 1 to 6 are implemented end to end. Phase B: **credit and approval are done** (reservation, consumer, dead-letter queue; the supervisor's list, detail, approve and reject, with a status history). History with "repeat order", the catalog and notifications consumers, and phases C and D are not built. Delivery is phased:
 
 - **Phase A:** mandatory requirements 1–6 (portfolio scoping, product search by name/EAN with the client's price table, order building, totals and blocking rules, submit with status, automated tests of the rules).
 - **Phase B:** credit limit, order history with "repeat order", minimal supervisor approve/reject.
@@ -24,7 +24,7 @@ Full picture in `ARQUITETURA.md`; reasoning in `DECISIONS.md` D15–D21.
 - **Infra:** one PostgreSQL (one schema and one role per service, **no cross-schema queries**), RabbitMQ, Redis.
 - **Browser → web only.** The Nuxt server is the BFF: it owns the session (Redis + cookie), validates the seller/supervisor pick with identity, and calls the services over HTTP with an inner-auth secret plus the user id and role.
 - **orders → catalog / identity: gRPC**, batched, for both calculate and submit. **orders keeps no copies** of other services' data except price/product snapshots on order items.
-- **RabbitMQ (`@nestjs/microservices` RMQ):** only events published by orders (`OrderSubmitted`, `OrderApproved`, `OrderRejected`). Consumers are idempotent: identity (confirms or releases the credit reservation; built), catalog (product stats) and notifications (supervisor notice) are not built yet. Consumer queues are quorum queues with a delivery limit and a `.dlq` dead-letter queue; a message that fails its schema is dead-lettered at once.
+- **RabbitMQ (`@nestjs/microservices` RMQ):** only events published by orders (`order.placed` on creation, `order.submitted` when SUBMITTED is reached, `order.approved`, `order.rejected`). Consumers are idempotent: identity (confirms or releases the credit reservation; built), catalog (product stats) and notifications (supervisor notice) are not built yet. Consumer queues are quorum queues with a delivery limit and a `.dlq` dead-letter queue; a message that fails its schema is dead-lettered at once.
 - **Credit is reserved synchronously.** At submit, orders calls identity `ReserveCredit` (gRPC) before saving the order, and `ReleaseCredit` if saving fails. identity locks the client row and holds the credit atomically, idempotent by order id; credit in use is *calculated* (already used + `CONFIRMED` + unexpired `PENDING` reservations), so an unconfirmed hold expires by itself (no job). `OrderSubmitted` confirms the hold, `OrderRejected` releases it. See `ARQUITETURA.md` "Reserva de crédito" and `DECISIONS.md` D40 to D43.
 - **Draft lives in the browser (Pinia).** After each edit the BFF asks orders to calculate; nothing is saved until submit.
 - **Seed:** each service imports its own slice of `seed.json` at startup, idempotently.
@@ -83,6 +83,10 @@ Every one of these is also written, with the reasoning, in `ASSUMPTIONS.md` / `D
 | `style-guide/` | en | How I structure services; follow it unless `DECISIONS.md` says otherwise |
 
 Before proposing a design change, **check `DECISIONS.md` and `ASSUMPTIONS.md` first.** Most alternatives were already considered, and each entry says what would reopen it.
+
+## The life of an order
+
+`AWAITING_APPROVAL → APPROVED → SUBMITTED`, or `REJECTED` (final); within the discount limit an order is `SUBMITTED` from the start. `APPROVED` is a step, never a resting state: the order row holds `AWAITING_APPROVAL`, `SUBMITTED` or `REJECTED`, and `order_status_history` records every step. The pure rules are in `repositories/orders-api/src/modules/orders/domain/order-status.ts`; the database applies a change with `UPDATE ... WHERE status = 'AWAITING_APPROVAL'`. Rejecting needs a reason from a fixed list ("Outro" needs a text). See `DECISIONS.md` D44 to D46.
 
 ## Where the rules live
 

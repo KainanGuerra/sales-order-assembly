@@ -32,7 +32,7 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A18 | Regra de arredondamento | Ver seção "Arredondamento" abaixo (método 1) |
 | A19 | O que significa "bloquear o envio"? | O botão fica desabilitado com a lista de motivos, e o servidor também recusa o envio (nunca confia no cliente) |
 | A20 | Limite de crédito (fase B): bloqueia ou alerta? | Bloqueia quando o total do pedido excede o crédito disponível (limite − utilizado). Pedidos "Enviado" e "Aguardando aprovação" contam. O envio reserva o crédito de forma atômica no `identity` (`ReserveCredit`), então duas submissões simultâneas não passam juntas. A reserva expira sozinha (sem job). Detalhes e limites em `ARQUITETURA.md` e `DECISIONS.md` D40 a D43. Decisão minha |
-| A21 | Fluxo do supervisor | Mínimo: listar pedidos pendentes de seus vendedores, aprovar (→ "Enviado") ou rejeitar. Decisão minha |
+| A21 | Fluxo do supervisor | Lista dos pedidos pendentes da equipe, tela de detalhe, aprovar (passa por "Aprovado" e termina em "Enviado") ou rejeitar com motivo. Detalhes em `DECISIONS.md` D44 e D45. Decisão minha |
 | A22 | Preço mudou entre montar e enviar | O preço é recalculado e gravado (snapshot) no envio; a resposta devolve os valores finais. Decisão minha |
 | A23 | Envio duplicado (clique duplo, reconexão) | O envio usa uma chave de idempotência gerada no cliente; repetir a chave devolve o mesmo pedido |
 | A24 | Estoque | Não é modelado (não existe no enunciado nem no seed) |
@@ -51,6 +51,9 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A38 | Quanto tempo uma reserva de crédito vive sem confirmação | 15 minutos (`RESERVATION_TTL_SECONDS`); depois disso ela deixa de contar. Decisão minha |
 | A39 | O que conta como crédito comprometido | O crédito já usado do seed, mais os pedidos enviados e as reservas ainda vivas. Pedidos rejeitados não contam. Decisão minha |
 | A40 | Pedidos criados antes de existir reserva de crédito | Não contam (só existem em bancos de desenvolvimento, de antes desta funcionalidade). Decisão minha |
+| A41 | Que motivos de rejeição existem | Desconto acima do aceito, risco de crédito, produto ou quantidade inadequados, dados do pedido incorretos, e "Outro" com texto (mínimo de 3 caracteres). A lista é minha; deve ser confirmada com a equipe. Decisão minha |
+| A42 | Quanto tempo um pedido pode esperar a decisão | Sem limite: o crédito fica reservado até alguém decidir. Decisão minha |
+| A43 | O supervisor pode decidir pedidos de outra equipe? | Não: só os dos vendedores que supervisiona; os demais respondem "não encontrado". Decisão minha |
 | A25 | "Login" | Simulado: tela para escolher vendedor ou supervisor, com sessão por cookie no servidor |
 | A26 | Pedido offline (fase C) | Comportamento a decidir quando chegarmos à fase C; o backend continua sendo o dono das regras |
 
