@@ -1,6 +1,6 @@
 # Arquitetura
 
-Como o sistema foi construído: serviços, dados, chamadas, regras, eventos, sessão, modo offline e implantação. O porquê de cada escolha está em [`DECISIONS.md`](../../../DECISIONS.md) (citado como D*n*) e as interpretações do enunciado em [`ASSUMPTIONS.md`](../../../ASSUMPTIONS.md) (A*n*). Para saber **onde está cada coisa no código**, veja [`CODE_MAP.md`](CODE_MAP.md). Os diagramas estão em [`../diagrams/`](../diagrams/); este texto só aponta para eles.
+Como o sistema foi construído: serviços, dados, chamadas, regras, eventos, sessão, modo offline e implantação. O porquê de cada escolha está em [`DECISIONS.md`](../../../DECISIONS.md) (citado como D*n*) e as interpretações dos requisitos em [`ASSUMPTIONS.md`](../../../ASSUMPTIONS.md) (A*n*). Para saber **onde está cada coisa no código**, veja [`CODE_MAP.md`](CODE_MAP.md). Os diagramas estão em [`../diagrams/`](../diagrams/); este texto só aponta para eles.
 
 ## 1. Visão geral e serviços
 
@@ -16,7 +16,7 @@ Um frontend com BFF e quatro serviços, mais três peças de infraestrutura. Dia
 | `contracts` | Arquivos `.proto` e esquemas Zod dos eventos, instalado pelos serviços como pacote local (D26) | — | — | — |
 | `orchestration` | Gráficos Helm, cluster kind, scripts (seção 10) | — | — | — |
 
-Infraestrutura: **PostgreSQL** (um schema e um papel por serviço), **RabbitMQ** (eventos) e **Redis** (sessões). Hoje tudo é uma pasta de um repositório só; a divisão em repositórios por serviço, com este como guarda-chuva, está planejada (D9) e não foi feita.
+Infraestrutura: **PostgreSQL** (um schema e um papel por serviço), **RabbitMQ** (eventos) e **Redis** (sessões). Tudo mora em um repositório só, com os serviços como pastas (D60).
 
 ## 2. Dados
 

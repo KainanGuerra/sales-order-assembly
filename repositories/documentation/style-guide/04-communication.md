@@ -27,7 +27,7 @@ Every consumer tolerates the same message twice. Key on `OrderId` / `UserId` and
 - **Background work:** Hangfire (.NET) or Agenda (Node) on the existing store. Each run gets its own trace id and emits `job.started/finished/failed`. Interrupted jobs are reconciled at boot.
 
 ## gRPC for synchronous service-to-service calls
-- Use it for queries that must be exact at the moment of the call. Contracts live in a separate `.proto` repository included as a git submodule.
+- Use it for queries that must be exact at the moment of the call. Contracts live in a separate folder (`repositories/contracts`) with the `.proto` files, installed by each service as a local package.
 - Batch the lookups (one call for all items), set a deadline on every call, and map gRPC status codes to the same errors the HTTP clients use (`UpstreamError` for unavailable, a rejected error for a verdict).
 - Speed is not the justification: payloads are smaller and HTTP/2 helps, but the real gain is typed contracts. Measure before claiming a number.
 - A browser-facing BFF talks plain HTTP to services and holds the shared inner-auth secret server-side only.

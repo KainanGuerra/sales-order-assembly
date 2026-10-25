@@ -1,6 +1,6 @@
 # Primeiros passos
 
-Como rodar o sistema, conferir que funciona e entrar nele. Há dois jeitos: **Docker Compose** (o mais simples, o que o enunciado pede) e **Kubernetes local** (kind, Helm). Para entender o que você vai ver, comece por [`CONTEXT.md`](../context/CONTEXT.md) e [`ARCHITECTURE.md`](../architecture/ARCHITECTURE.md).
+Como rodar o sistema, conferir que funciona e entrar nele. Há dois jeitos: **Docker Compose** (o mais simples) e **Kubernetes local** (kind, Helm). Para entender o que você vai ver, comece por [`CONTEXT.md`](../context/CONTEXT.md) e [`ARCHITECTURE.md`](../architecture/ARCHITECTURE.md).
 
 ## Pré-requisitos
 
@@ -12,11 +12,11 @@ Como rodar o sistema, conferir que funciona e entrar nele. Há dois jeitos: **Do
 ## 1. Obter o código
 
 ```bash
-git clone <url-do-repositório>
-cd <pasta>
+git clone https://github.com/KainanGuerra/sales-order-assembly.git
+cd sales-order-assembly
 ```
 
-Hoje os serviços são pastas do próprio repositório (`repositories/`). A divisão em repositórios com submódulos está planejada e não foi feita (veja [`PENDINGS.md`](../pendings/PENDINGS.md)).
+Os serviços são pastas do próprio repositório (`repositories/`); não há submódulos (D60).
 
 ## 2. Criar o `.env`
 

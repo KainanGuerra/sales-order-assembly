@@ -1,6 +1,6 @@
 # ASSUMPTIONS
 
-Cada ambiguidade encontrada no enunciado (`repositories/documentation/context/SCOPE.md`) ou nos dados de exemplo e a interpretação adotada. Quando eu mesmo decidi, está marcado como **Decisão minha**; quando houver resposta da equipe, ela será registrada como **Resposta recebida**.
+Cada ambiguidade encontrada nos requisitos ou nos dados de exemplo e a interpretação adotada. Quando eu mesmo decidi, está marcado como **Decisão minha**.
 
 ## Dados de exemplo (o seed)
 
@@ -24,7 +24,7 @@ Cada serviço guarda a própria cópia da fatia que usa, em `seed/seed.json` (id
 | A13 | Um único supervisor (S01), responsável pelos três vendedores | O supervisor vê apenas pedidos aguardando aprovação dos vendedores que supervisiona |
 | A14 | Pedidos do histórico têm status `Faturado` e `Cancelado` | `Faturado` é `INVOICED` e `Cancelado` é `CANCELLED` (D47). São apenas leitura: ninguém os aprova nem rejeita. Aparecem no histórico do cliente, marcados como importados, e não geram reserva de crédito. Decisão minha |
 
-## Regras do enunciado
+## Regras dos requisitos
 
 | # | Ambiguidade | Interpretação adotada |
 |---|---|---|
@@ -37,7 +37,7 @@ Cada serviço guarda a própria cópia da fatia que usa, em `seed/seed.json` (id
 | A21 | Fluxo do supervisor | Lista dos pedidos pendentes da equipe, tela de detalhe, aprovar (passa por "Aprovado" e termina em "Enviado") ou rejeitar com motivo. Detalhes em `DECISIONS.md` D44 e D45. Decisão minha |
 | A22 | Preço mudou entre montar e enviar | O preço é recalculado e gravado (snapshot) no envio; a resposta devolve os valores finais. Decisão minha |
 | A23 | Envio duplicado (clique duplo, reconexão) | O envio usa uma chave de idempotência gerada no cliente; repetir a chave devolve o mesmo pedido |
-| A24 | Estoque | Não é modelado (não existe no enunciado nem no seed) |
+| A24 | Estoque | Não é modelado (não existe nos requisitos nem nos dados de exemplo) |
 | A25b | O vendedor tenta abrir a carteira ou o cliente de outro | A carteira alheia responde 403; um cliente alheio responde 404, igual a um cliente inexistente. Decisão minha |
 | A27 | Teto global de desconto (`MAX_DISCOUNT_BP`) | Padrão de 10%. A alçada efetiva é o menor entre a do vendedor e o teto. Pedido com desconto acima dela vai para aprovação, não é bloqueado. Decisão minha |
 | A28 | Arredondamento do desconto do pedido | O valor do desconto (soma das linhas × percentual) é arredondado uma vez, meio para cima, e subtraído da soma. Decisão minha |
@@ -72,10 +72,11 @@ Cada serviço guarda a própria cópia da fatia que usa, em `seed/seed.json` (id
 | A57 | Como o pedido guardado é enviado | Sozinho, quando o sinal volta (e a cada 15 s enquanto houver pedido esperando); a tela avisa o resultado. Decisão minha |
 | A58 | Pedido guardado que o servidor recusa | Fica em "Pedidos pendentes" com os motivos do servidor; o vendedor corrige (volta ao editor com id novo) ou descarta (dois toques). Decisão minha |
 | A59 | Pedidos guardados e troca de usuário | Pertencem ao vendedor que os fez: só ele os vê e envia. Ao entrar ou sair, o resto (cache do service worker, produtos vistos) é apagado; os pedidos guardados ficam. Decisão minha |
-| A60 | Onde roda a orquestração nesta entrega | Em um cluster kind local de um nó, com as imagens construídas na máquina (tag `local`) e carregadas no cluster; publicar no GHCR e dividir os repositórios ficam para depois. Decisão minha |
+| A60 | Onde roda a orquestração nesta entrega | Em um cluster kind local de um nó, com as imagens construídas na máquina (tag `local`) e carregadas no cluster; o CI publica as mesmas imagens no GHCR (`DECISIONS.md` D60). Decisão minha |
 | A61 | Senhas no cluster | Geradas ao acaso no primeiro `up.sh`, em um Secret; mantidas nas execuções seguintes, porque o banco guarda as senhas com que foi criado. Apagar o cluster apaga tudo. Decisão minha |
 | A62 | Réplicas | Uma de cada. O notifications guarda no processo quem está com o fluxo aberto (D50), então não deve ser escalado antes de mudar isso. Decisão minha |
 | A63 | Porta do computador | 8080 (a mesma do Compose); só um dos dois roda por vez. Decisão minha |
+| A64 | Como o código é publicado | Um único repositório público; os serviços são pastas de `repositories/` (o nome da pasta ficou por herança); as imagens vão para o GHCR pelo CI (`DECISIONS.md` D60). Decisão minha |
 | A25 | "Login" | Simulado: tela para escolher vendedor ou supervisor, com sessão por cookie no servidor |
 | A26 | Pedido offline (fase C) | Decidido: ver `DECISIONS.md` D54 a D56 e A53 a A59. O backend continua sendo o dono das regras |
 

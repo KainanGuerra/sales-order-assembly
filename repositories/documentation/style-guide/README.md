@@ -2,7 +2,7 @@
 
 How I design and build services. It describes architecture first and language second: I work in both .NET and TypeScript, and the same structure applies to either.
 
-This guide is the baseline for the technical challenge in this repository. Choices that deviate from it, or that involve a real trade-off, are recorded in [`../DECISIONS.md`](../../../DECISIONS.md).
+This guide is the baseline for the code in this repository. Choices that deviate from it, or that involve a real trade-off, are recorded in [`../DECISIONS.md`](../../../DECISIONS.md).
 
 ## Ten rules
 

@@ -74,7 +74,7 @@ The init containers that wait for dependencies run inside the pod, under the pod
 
 ## Not done here
 
-- The images are built on the machine and loaded into kind. Publishing them to a registry (GHCR) and splitting the services into their own repositories, with this one as a submodule, is a separate step.
+- `up.sh` builds the images on the machine and loads them into kind (tag `local`). The CI publishes the same images to GHCR; to use those instead, install the umbrella chart with `--set global.imageRegistry=ghcr.io/kainanguerra --set global.imageTag=latest`. That path has not been tried on a cluster.
 - One replica of everything. `notifications-api` keeps its list of open streams in the process (see `DECISIONS.md` D50), so it must not be scaled before that is changed.
 - No TLS, no autoscaling, no resource tuning (the requests and limits are modest guesses, not measurements), no backups of the database volume.
-- The charts are not linted in CI.
+- The CI lints and renders the charts (`helm lint`, `helm template`), but `scripts/verify.sh` does not run there.

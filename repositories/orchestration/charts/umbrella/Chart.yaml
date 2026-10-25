@@ -8,8 +8,7 @@ dependencies:
   - { name: postgres, version: 0.1.0, repository: "file://../postgres" }
   - { name: rabbitmq, version: 0.1.0, repository: "file://../rabbitmq" }
   - { name: redis, version: 0.1.0, repository: "file://../redis" }
-  # Each service keeps its chart in its own folder (k8s/). Once the services are
-  # separate repositories, these paths point into the submodules.
+  # Each service keeps its chart in its own folder (k8s/).
   - { name: identity-api, version: 0.1.0, repository: "file://../../../identity-api/k8s" }
   - { name: catalog-api, version: 0.1.0, repository: "file://../../../catalog-api/k8s" }
   - { name: orders-api, version: 0.1.0, repository: "file://../../../orders-api/k8s" }

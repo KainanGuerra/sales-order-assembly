@@ -2,25 +2,25 @@
 
 ## What this is
 
-A technical challenge: an order-assembly module for external sellers who visit small retailers and often have poor connectivity. The raw brief is in `repositories/documentation/context/SCOPE.md` (Portuguese); the sample data is split per service: each of `identity-api`, `catalog-api` and `orders-api` has its own `seed/seed.json` (the slice it imports at start). They are copies of the supplied data with its imperfections kept on purpose (duplicate EAN, a client without a price table, prices with a decimal comma): do not clean them.
+An order-assembly module for external sellers who visit small retailers and often have poor connectivity. The requirements are summarised in `repositories/documentation/context/CONTEXT.md`; the sample data is split per service: each of `identity-api`, `catalog-api` and `orders-api` has its own `seed/seed.json` (the slice it imports at start). They are copies of the supplied data with its imperfections kept on purpose (duplicate EAN, a client without a price table, prices with a decimal comma): do not clean them.
 
-The reviewers will pick code at random and ask me to explain it, make a live change, and debug a defect they inject. **Everything must be code I can explain.** Prefer the simple, readable option and say why in `DECISIONS.md`.
+**Everything in this repository must be code I can explain and defend.** Prefer the simple, readable option and say why in `DECISIONS.md`.
 
 ## Status
 
-`contracts`, `catalog-api`, `identity-api`, `orders-api` and `web` exist under `repositories/`, pass their tests and run in Docker Compose together with RabbitMQ (phase A backend is complete: calculate, submit with the status, the rules). `web` (Nuxt app and BFF) exists too, so the phase A requirements 1 to 6 are implemented end to end. Phase B is done: **credit, approval, history with "repeat order", notifications and the catalog's product statistic** (reservation and consumer; the supervisor's decisions with a status history; each client's history, which includes the seed's orders, and a draft that repeats an old order at today's prices). Phase C (offline) is done; phase D (Helm, kind with Calico, Traefik, network policies) runs on a local cluster, with the registry publishing and the repo split still to do. Delivery is phased:
+`contracts`, `catalog-api`, `identity-api`, `orders-api` and `web` exist under `repositories/`, pass their tests and run in Docker Compose together with RabbitMQ (phase A backend is complete: calculate, submit with the status, the rules). `web` (Nuxt app and BFF) exists too, so the phase A requirements 1 to 6 are implemented end to end. Phase B is done: **credit, approval, history with "repeat order", notifications and the catalog's product statistic** (reservation and consumer; the supervisor's decisions with a status history; each client's history, which includes the seed's orders, and a draft that repeats an old order at today's prices). Phase C (offline) is done; phase D (Helm, kind with Calico, Traefik, network policies) runs on a local cluster, with the CI publishing the images to GHCR; everything lives in one repository (`DECISIONS.md` D60). Delivery was phased:
 
 - **Phase A:** mandatory requirements 1–6 (portfolio scoping, product search by name/EAN with the client's price table, order building, totals and blocking rules, submit with status, automated tests of the rules).
 - **Phase B:** credit limit, order history with "repeat order", minimal supervisor approve/reject.
 - **Phase C (done):** offline drafting and sync: the app opens without signal (service worker), an order closed offline waits in the browser and is sent when the signal returns (`DECISIONS.md` D54 to D56).
-- **Phase D (done locally, `DECISIONS.md` D57 to D59; images are not published and the repos are not split yet):** the `orchestration` repo, like the earlier multi-repo work: umbrella Helm chart with a subchart per service, kind cluster with Calico, ingress, NetworkPolicies, Kubernetes getting-started guide. The compose file moves into it; the root keeps a thin `docker-compose.yml` that `include:`s it, so `docker compose up` still works. Do not start it before A–C are done (`DECISIONS.md` D29).
+- **Phase D (done, `DECISIONS.md` D57 to D59):** the `orchestration` folder: umbrella Helm chart with a chart per service, kind cluster with Calico, Traefik ingress, NetworkPolicies, Kubernetes getting-started guide. The compose file stays at the root (`DECISIONS.md` D60).
 
 ## Architecture
 
 Full picture in `repositories/documentation/architecture/ARCHITECTURE.md` (and where things are in the code: `CODE_MAP.md`); reasoning in `DECISIONS.md` D15–D21.
 
-- **Local layout today:** one git repo (the umbrella) with the services as folders under `repositories/`; each installs `contracts` with `file:../contracts` (build it first). They become separate repos and a submodule later (`DECISIONS.md` D9, D26).
-- **Services (one repo each, placeholder names):** `identity-api` (sellers, supervisor, clients, limits, credit used), `catalog-api` (products, price tables, search), `orders-api` (every order rule), `notifications-api` (supervisor notices), `web` (Nuxt UI + BFF), `contracts` (`.proto` + event schemas, used as a git submodule), plus an umbrella repo with the deliverable docs, `docker-compose.yml`, CI and submodules.
+- **Layout:** one git repo with the services as folders under `repositories/`; each installs `contracts` with `file:../contracts` (build it first) (`DECISIONS.md` D26, D60).
+- **Services (one folder each):** `identity-api` (sellers, supervisor, clients, limits, credit used), `catalog-api` (products, price tables, search), `orders-api` (every order rule), `notifications-api` (supervisor notices), `web` (Nuxt UI + BFF), `contracts` (`.proto` + event schemas), `orchestration` (Helm, kind) and `documentation`; the root has `docker-compose.yml`, the CI and the decision documents.
 - **Infra:** one PostgreSQL (one schema and one role per service, **no cross-schema queries**), RabbitMQ, Redis.
 - **Browser → web only.** The Nuxt server is the BFF: it owns the session (Redis + cookie), validates the seller/supervisor pick with identity, and calls the services over HTTP with an inner-auth secret plus the user id and role.
 - **orders → catalog / identity: gRPC**, batched, for both calculate and submit. **orders keeps no copies** of other services' data except price/product snapshots on order items.
@@ -47,7 +47,7 @@ Full picture in `repositories/documentation/architecture/ARCHITECTURE.md` (and w
 | Tests | Vitest everywhere |
 | Service calls | gRPC (sync), RabbitMQ via `@nestjs/microservices` (async) |
 | Session | Redis, owned by the Nuxt BFF |
-| Packaging | Docker, `docker compose up`, images on GHCR |
+| Packaging | Docker, `docker compose up` (pull the published images from GHCR, or `--build`) |
 | Package manager | pnpm 12 via corepack (install scripts denied; allow-list in `pnpm-workspace.yaml` `allowBuilds`) |
 
 Exact versions are pinned in the code phase after checking compatibility. Frontend API types: undecided (generated vs hand-written).
@@ -74,13 +74,12 @@ Every one of these is also written, with the reasoning, in `ASSUMPTIONS.md` / `D
 
 | File | Language | Read it for |
 |---|---|---|
-| `README.md` | pt-BR | How to run, test, and what was left out (required by the brief, stays at the root) |
-| `DECISIONS.md` | pt-BR | Decisions: context, alternatives, choice, why, what I would do differently (required, root) |
-| `ASSUMPTIONS.md` | pt-BR | Every ambiguity and the interpretation adopted (required, root) |
-| `AI_LOG.md` | pt-BR | 3–5 significant AI moments (including one where the AI was wrong) and the authorship map (required, root) |
+| `README.md` | pt-BR | How to run, test, and what was left out (root) |
+| `DECISIONS.md` | pt-BR | Decisions: context, alternatives, choice, why, what I would do differently (root) |
+| `ASSUMPTIONS.md` | pt-BR | Every ambiguity and the interpretation adopted (root) |
+| `AI_LOG.md` | pt-BR | 3–5 significant AI moments (including one where the AI was wrong) and the authorship map (root) |
 | `repositories/documentation/README.md` | pt-BR | Index of the documentation repo and how it is organised |
-| `repositories/documentation/context/CONTEXT.md` | pt-BR | The problem, brief requirements and where each is met, phases, decisions by theme, glossary |
-| `repositories/documentation/context/SCOPE.md` | pt-BR | The brief as received. Read-only |
+| `repositories/documentation/context/CONTEXT.md` | pt-BR | The problem, the requirements and where each is met, phases, decisions by theme, glossary |
 | `repositories/documentation/architecture/ARCHITECTURE.md` | pt-BR | Services, data ownership, calls, life of an order, credit, events, notifications, session, offline, deployment, security |
 | `repositories/documentation/architecture/CODE_MAP.md` | pt-BR | Where to change each rule, a request traced through the code, routes, how to run one test |
 | `repositories/documentation/diagrams/` | pt-BR | Nine Mermaid diagrams, one per file |
@@ -95,7 +94,7 @@ Documentation rules (the pattern comes from an earlier project's documentation r
 - **A change of behaviour updates the matching document in the same commit** (ARCHITECTURE, CODE_MAP if a file moved, GETTING_STARTED if a command changed, TESTING if counts changed, PENDINGS if something was finished or discovered), and `DECISIONS.md` / `ASSUMPTIONS.md` as before.
 - The documentation is **Portuguese**, file names English `UPPER_SNAKE.md`, diagrams in Mermaid (one per file, Portuguese labels, a last line "Referenciado em ... §N"). The architecture text links to diagrams and never copies them. The style guide stays in English.
 - **Never write the total number of decisions or assumptions as a literal number** anywhere; it changes. Cite entries as D*n* / A*n*.
-- Links are relative today (to the root files with `../../`); they become GitHub links when the documentation is split into its own repo (see PENDINGS).
+- Links are relative (to the root files with `../../`).
 - `CLAUDE.md` stays at the project root and is never renamed or split.
 
 Before proposing a design change, **check `DECISIONS.md` and `ASSUMPTIONS.md` first.** Most alternatives were already considered, and each entry says what would reopen it.
@@ -143,9 +142,9 @@ Keep `AI_LOG.md` current as work happens. When the AI gets something wrong, or I
 
 - Backend: `pnpm test` (Vitest) green and the app answering `GET /health`.
 - Frontend: lint and build pass; exercise the changed flow in the browser when UI changes.
-- Whole system: `docker compose up` from a clean clone (`--recurse-submodules`) works.
+- Whole system: `docker compose up --build` from a clean clone works (and `docker compose pull && docker compose up` once the images are published).
 
 ## Writing rules
 
 - No local filesystem paths, third-party company names, or credentials in any committed file.
-- Deliverable documents are in Portuguese (pt-BR); code, comments and commits are in English.
+- Documents are in Portuguese (pt-BR); code, comments and commits are in English.

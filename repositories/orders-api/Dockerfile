@@ -1,7 +1,5 @@
 # Build context is the repositories/ folder, because the service installs the
-# sibling "contracts" package. Once the services live in their own repos,
-# contracts becomes a git submodule inside this one and the paths below lose
-# their leading folder.
+# sibling "contracts" package.
 FROM node:24-alpine AS build
 RUN corepack enable
 WORKDIR /app

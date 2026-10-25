@@ -1,21 +1,15 @@
 # Pendências
 
-**Estado:** as fases A a D estão prontas e verificadas no ambiente local. Falta a **entrega** (dividir os repositórios, publicar as imagens, conferir a partir de um clone limpo) e há limites conhecidos, listados abaixo com honestidade. O que **seria feito diferente** com mais tempo está em cada decisão de [`DECISIONS.md`](../../../DECISIONS.md) e foi reunido na seção 4.
+**Estado:** as fases A a D estão prontas e verificadas no ambiente local, e o código está num repositório só (D60). Falta **publicar** e conferir o que só dá para conferir depois (o CI no GitHub e as imagens no GHCR); há também limites conhecidos, listados abaixo com honestidade. O que **seria feito diferente** com mais tempo está em cada decisão de [`DECISIONS.md`](../../../DECISIONS.md) e foi reunido na seção 4.
 
-## 1. Para entregar (em ordem)
+## 1. Para publicar (em ordem)
 
-1. **Dividir os repositórios e publicar as imagens** (D9, D26, D29). Uma organização nova no GitHub; um repositório por serviço; este como guarda-chuva, com os serviços como submódulos; as imagens no GHCR pelo CI de cada serviço. Hoje tudo é uma pasta de um repositório só e nada foi enviado a lugar nenhum. Ao dividir:
-   - o `docker-compose.yml` vai para o repositório de orquestração e a raiz mantém um arquivo fino com `include:` (D29);
-   - os caminhos `file://../../../<serviço>/k8s` do gráfico `umbrella` e `file://../../orchestration/charts/sales-lib` dos gráficos dos serviços passam a apontar para submódulos;
-   - a documentação vira repositório próprio, e os links relativos `../../../DECISIONS.md` (e os de `README.md`, `ASSUMPTIONS.md`, `AI_LOG.md`) viram links do GitHub;
-   - o CI roda pela **primeira vez** no GitHub (nunca rodou).
-2. **Passada final de entrega:**
-   - clone limpo + `docker compose up --build` funcionando (ainda não foi feito);
-   - procurar o segredo interno no pacote do navegador na versão do Compose (no Kubernetes isso já é conferido por `verify.sh`);
-   - procurar caminhos locais, nomes de empresas e credenciais nos arquivos versionados;
-   - `AI_LOG.md`: ler, escrever com as próprias palavras e resolver as duas marcas `_(confirmar)_` (quanto do código da interface foi lido; se os três métodos de arredondamento podem ser explicados);
-   - conferir que cada commit termina com a linha `IA:`.
-3. **Ver os diagramas desta documentação renderizados** (seção 3): a sintaxe foi conferida, a aparência não.
+1. **Criar o repositório público e enviar** (`KainanGuerra/sales-order-assembly`). O envio é feito uma vez, com o histórico como está (sem reescrever commits).
+2. **Primeira execução do CI** (nunca rodou no GitHub): conferir cada etapa (contratos, serviços, web, gráficos Helm) e corrigir o que falhar com novos commits.
+3. **Tornar públicos os cinco pacotes de imagem** no GHCR, se nascerem privados (não há como fazer por API): sem isso `docker compose pull` responde `denied` e vale a forma 2 (`docker compose up --build`).
+4. **Conferir a forma 1 sem login** (`docker logout ghcr.io`, `docker compose pull`, `docker compose up`) e só então escrever no `README.md` que ela funciona; hoje o texto diz como proceder se responder `denied`.
+5. **Passada final:** os dois `_(confirmar)_` do `AI_LOG.md` (quanto do código da interface foi lido; se os três métodos de arredondamento podem ser explicados) e a leitura do `AI_LOG.md` com as próprias palavras.
+6. **Ver os diagramas desta documentação renderizados** (seção 3): a sintaxe foi conferida, a aparência não.
 
 ## 2. Limites conhecidos (todos já escritos no `README.md`, "O que ficou de fora")
 
@@ -23,7 +17,7 @@
 - **Avisos em tempo real num processo só:** o difusor do `notifications` não funciona com mais de uma réplica (D50). A lista de avisos só cresce (D51).
 - **Nenhuma verificação em celular real nem com sinal fraco de verdade.** O limite de 8 s do modo offline é escolhido, não medido (D55). O envio da fila só acontece com o app aberto (D54). Os pedidos guardados ficam no `localStorage` (D56).
 - **Sem testes de componente do front nem testes ponta a ponta automatizados;** as passadas no navegador foram manuais.
-- **O CI nunca rodou** no GitHub, e `verify.sh` não está nele (D59).
+- **O CI foi escrito e seus comandos foram rodados na máquina; no GitHub só rodará no primeiro envio**, e `verify.sh` não está nele (D59).
 - **Kubernetes:** uma réplica de tudo, sem TLS (de propósito, D59), sem escala automática, limites de recursos chutados, sem cópia de segurança do volume do banco; imagens construídas na máquina; a interface não foi conferida no navegador dentro do cluster.
 - **Login simulado** (D11): escolher a pessoa; sem senha.
 - **Sem faturamento** (o status `INVOICED` só existe nos pedidos do seed, D47) e sem cancelamento pelo vendedor (D44).

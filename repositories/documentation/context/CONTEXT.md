@@ -1,12 +1,12 @@
 # Contexto
 
-Por que este sistema existe, o que o enunciado pede, onde cada pedido do enunciado foi atendido, como o trabalho foi conduzido e onde achar cada decisão. O enunciado original, intacto, está em [`SCOPE.md`](SCOPE.md).
+Por que este sistema existe, os requisitos, onde cada um foi atendido, como o trabalho foi conduzido e onde achar cada decisão.
 
 ## 1. O problema
 
-Um módulo de montagem de pedidos para **vendedores externos** que visitam pequenos varejistas (mercadinhos, minimercados, conveniências), consultam o catálogo e fecham o pedido no cliente, **muitas vezes com sinal de internet ruim**. É um desafio técnico: a avaliação pesa as decisões e a justificativa, e haverá uma conversa de 60 minutos para explicar o código, fazer uma alteração ao vivo e investigar um defeito introduzido antes da conversa. Por isso tudo precisa ser código que eu consiga explicar, e a opção simples e legível ganha (e o porquê fica em `DECISIONS.md`).
+Um módulo de montagem de pedidos para **vendedores externos** que visitam pequenos varejistas (mercadinhos, minimercados, conveniências), consultam o catálogo e fecham o pedido no cliente, **muitas vezes com sinal de internet ruim**. O que mais importa são as decisões e a justificativa de cada uma: por isso tudo precisa ser código que eu consiga explicar, e a opção simples e legível ganha (o porquê fica em `DECISIONS.md`).
 
-## 2. O que o enunciado pede e onde foi atendido
+## 2. Requisitos e onde foram atendidos
 
 | # | Pedido | Tipo | Onde está |
 |---|---|---|---|
@@ -24,14 +24,14 @@ Além do pedido, foram feitos a aprovação ou rejeição pelo supervisor, os av
 
 ## 3. Fases e estado
 
-A entrega foi planejada em fases (D10); todas estão prontas no ambiente local.
+O trabalho foi planejado em fases (D10); todas estão prontas.
 
 | Fase | Conteúdo | Estado |
 |---|---|---|
 | A | Requisitos 1 a 6 | pronta |
 | B | Crédito, histórico e repetir pedido, aprovação do supervisor, avisos, estatística no catálogo | pronta |
 | C | Pedido offline com sincronização | pronta; sem teste em celular real |
-| D | Helm, kind com Calico, ingress, políticas de rede | pronta no cluster local; imagens não publicadas, repositórios não divididos |
+| D | Helm, kind com Calico, ingress, políticas de rede | pronta no cluster local; o CI publica as imagens no GHCR |
 
 O que falta, e os limites que continuam, está em [`PENDINGS.md`](../pendings/PENDINGS.md).
 
@@ -52,7 +52,7 @@ O que falta, e os limites que continuam, está em [`PENDINGS.md`](../pendings/PE
 
 ## 6. Onde achar cada decisão
 
-As decisões (`DECISIONS.md`, D*n*) e as interpretações (`ASSUMPTIONS.md`, A*n*) ficam na raiz do repositório, porque o enunciado as exige lá. Por tema:
+As decisões (`DECISIONS.md`, D*n*) e as interpretações (`ASSUMPTIONS.md`, A*n*) ficam na raiz do repositório, junto do `README.md`. Por tema:
 
 | Tema | Decisões |
 |---|---|

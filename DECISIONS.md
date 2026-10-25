@@ -6,15 +6,15 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D1. Escrever as convenções de engenharia antes do código, e registrar as decisões aqui
 
-- **Contexto:** O enunciado avalia as decisões e a justificativa, não a quantidade de funcionalidades. Antes de conhecer a stack final, defini como costumo estruturar serviços.
+- **Contexto:** O que mais importa são as decisões e a justificativa, não a quantidade de funcionalidades. Antes de conhecer a stack final, defini como costumo estruturar serviços.
 - **Alternativas consideradas:** (a) um guia genérico de boas práticas; (b) decidir convenções caso a caso durante o desenvolvimento; (c) um ADR por arquivo.
 - **Escolha:** Um guia curto em `repositories/documentation/style-guide/` (arquitetura primeiro, linguagem depois) e este arquivo único, cronológico.
-- **Por quê:** Um padrão escrito deixa o revisor julgar desvios contra um critério declarado, e um log único é rápido de ler.
+- **Por quê:** Um padrão escrito deixa qualquer leitor julgar desvios contra um critério declarado, e um log único é rápido de ler.
 - **O que faria diferente:** Fixar o guia depois de ver o código pronto, para podar o que não foi usado.
 
 ## D2. Stack: Nuxt 4 (Vue 3) + NestJS + TypeScript + PostgreSQL
 
-- **Contexto:** O enunciado recomenda Vue 3, Node com TypeScript e PostgreSQL. Tenho experiência em TypeScript e .NET e foco em arquitetura de serviços.
+- **Contexto:** Os requisitos recomendam Vue 3, Node com TypeScript e PostgreSQL. Tenho experiência em TypeScript e .NET e foco em arquitetura de serviços.
 - **Alternativas consideradas:** Vue 3 puro (SPA) com Express/Fastify; .NET no backend (justificaria explicar o desvio da stack do time).
 - **Escolha:** Nuxt no frontend e NestJS no backend, ambos em TypeScript, com PostgreSQL. Versões exatas são fixadas na fase de código, depois de checar a compatibilidade entre elas.
 - **Por quê:** Fica dentro da stack recomendada. O NestJS impõe módulos, injeção de dependência e camadas, o que combina com a forma como organizo serviços.
@@ -25,7 +25,7 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 - **Contexto:** As regras do domínio são aritmética e junções (produto × tabela de preço × cliente). Eu nunca usei Drizzle, e quis experimentar uma tecnologia nova de forma consciente.
 - **Alternativas consideradas:** Prisma (mais conhecido, migrações mais maduras, linguagem de schema própria); TypeORM (integração nativa com Nest, tipagem mais fraca, `numeric` como string).
 - **Escolha:** Drizzle, com schema em TypeScript e `drizzle-kit` para migrações.
-- **Por quê:** Consultas próximas do SQL, sem etapa de geração de código, tipagem forte e um schema que o revisor lê como TypeScript. Dinheiro em centavos inteiros evita o problema do `numeric` virar string.
+- **Por quê:** Consultas próximas do SQL, sem etapa de geração de código, tipagem forte e um schema que se lê como TypeScript. Dinheiro em centavos inteiros evita o problema do `numeric` virar string.
 - **Contexto da tecnologia (fontes secundárias, valores aproximados):** lançamento público em julho de 2022 (v0.11.0), código desde 2021, criado por Andrii Sherman e Alex Blokh; adoção citada entre ~4 e ~19 milhões de downloads semanais no npm e ~35 mil estrelas no GitHub, dependendo da fonte; a versão 1.0 ainda estava em beta/RC no fim de setembro de 2026, então a versão exata é fixada.
 - **Riscos assumidos:** API jovem, migrações menos tolerantes que as do Prisma, menos exemplos com Nest.
 - **O que faria diferente:** Escrever os mesmos testes de repositório contra Prisma e comparar o custo real de cada um.
@@ -35,7 +35,7 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 - **Contexto:** O pedido envolve regras de preço, embalagem, desconto e crédito que não podem divergir entre cliente e servidor.
 - **Alternativas consideradas:** class-validator/class-transformer (padrão em Nest, só backend); Zod em pacote compartilhado entre Nest e Nuxt; Valibot.
 - **Escolha:** Zod no backend (a integração com o Nest mudou em D23: pipe nativo, sem `nestjs-zod`), e **o backend é dono de todas as regras**: o frontend só exibe e envia intenções.
-- **Por quê:** Uma única implementação das regras elimina a divergência de preço e é o que o teste automatizado cobre. O pacote compartilhado foi descartado por quebrar a separação em repositórios por serviço.
+- **Por quê:** Uma única implementação das regras elimina a divergência de preço e é o que o teste automatizado cobre. O pacote compartilhado foi descartado por quebrar a separação entre os serviços.
 - **O que faria diferente:** O modo offline (fase C) não consegue recalcular totais localmente; se ele for implementado, reavaliar um pacote de regras puras compartilhado.
 
 ## D5. Estado no frontend: Pinia + TanStack Query
@@ -56,7 +56,7 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D7. Testes com Vitest em todos os pacotes
 
-- **Contexto:** O enunciado exige testes automatizados das regras de negócio.
+- **Contexto:** Os requisitos exigem testes automatizados das regras de negócio.
 - **Alternativas consideradas:** Jest no backend e Vitest no frontend; Jest em tudo.
 - **Escolha:** Vitest em todos os repositórios.
 - **Por quê:** Um runner só, TypeScript e ESM sem configuração extra, e é o que o Nuxt usa.
@@ -72,15 +72,16 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D9. Um repositório por serviço, mais um repositório guarda-chuva com submódulos
 
-- **Contexto:** Quero seguir o padrão que já uso (uma organização, um repositório por serviço, imagens em um registry), mas o enunciado pede um único repositório Git com `docker compose up`, `README.md` e histórico completo.
+- **Estado:** substituída por D60 (um único repositório). O texto abaixo é o raciocínio original.
+- **Contexto:** Quero seguir o padrão que já uso (uma organização, um repositório por serviço, imagens em um registry), mas o projeto precisa ser clonável como um único repositório Git, com `docker compose up`, `README.md` e histórico completo.
 - **Alternativas consideradas:** monorepo; repositórios separados sem guarda-chuva; guarda-chuva só com imagens publicadas; perguntar à equipe.
 - **Escolha:** Uma organização nova no GitHub com um repositório por serviço, e um repositório guarda-chuva que contém os documentos de entrega, o `docker-compose.yml`, o CI e os serviços como submódulos Git. Imagens publicadas no GitHub Container Registry (GHCR) pelo CI de cada serviço. A divisão exata em serviços fica para a próxima fase.
 - **Por quê:** Preserva a arquitetura em que acredito e entrega um único repositório clonável com `--recurse-submodules`.
-- **O que faria diferente:** Se o revisor tiver atrito com submódulos, entregar um monorepo equivalente.
+- **O que faria diferente:** Se os submódulos atrapalhassem, entregar um monorepo equivalente (foi o que D60 fez).
 
 ## D10. Entrega em fases
 
-- **Contexto:** 4 a 6 horas esperadas; "não esperamos que você faça tudo".
+- **Contexto:** Pouco tempo e muito escopo possível: era preciso escolher o que fazer e explicar por quê.
 - **Alternativas consideradas:** só os obrigatórios; tudo de uma vez.
 - **Escolha:** Fase A: requisitos obrigatórios 1–6. Fase B: limite de crédito e histórico com "repetir pedido". Fase C: pedido offline com sincronização.
 - **Por quê:** Cada fase deixa o sistema funcionando e testado; o que não for concluído fica documentado como fora do escopo.
@@ -88,7 +89,7 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D11. Sessão por cookie no servidor, escolhendo o vendedor ou o supervisor
 
-- **Contexto:** O enunciado permite simular o login escolhendo o vendedor, mas o vendedor só pode ver a própria carteira.
+- **Contexto:** Os requisitos permitem simular o login escolhendo o vendedor, mas o vendedor só pode ver a própria carteira.
 - **Alternativas consideradas:** `X-Seller-Id` no cabeçalho (qualquer um altera); JWT.
 - **Escolha:** Tela única de seleção (vendedores e supervisor); o servidor guarda a sessão e entrega um cookie. Toda consulta é filtrada pelo vendedor da sessão no servidor.
 - **Por quê:** A restrição de carteira é imposta no servidor, não por confiança no cliente.
@@ -112,7 +113,7 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D14. Mensagens de commit terminam com o nível de uso de IA
 
-- **Contexto:** O enunciado exige a linha final `IA: nenhuma`, `IA: parcial` ou `IA: majoritária`.
+- **Contexto:** Cada commit declara o uso de IA numa linha final: `IA: nenhuma`, `IA: parcial` ou `IA: majoritária`.
 - **Alternativas consideradas:** acrescentar também um trailer `Co-Authored-By`.
 - **Escolha:** Assunto, corpo e, por último, a linha `IA: …`. Sem trailer adicional.
 - **Por quê:** A linha pedida é a declaração honesta e a última da mensagem.
@@ -120,7 +121,7 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D15. Backend em quatro serviços: identity, catalog, orders e notifications (mais web e contracts)
 
-- **Contexto:** Quero seguir o padrão de microsserviços que já uso. O enunciado pede 4 a 6 horas, então cada serviço extra tem custo real (imagem, CI, schema, chamadas entre serviços).
+- **Contexto:** Quero seguir o padrão de microsserviços que já uso. O escopo cabe em poucas horas, então cada serviço extra tem custo real (imagem, CI, schema, chamadas entre serviços).
 - **Alternativas consideradas:** um backend modular único; dois serviços (catalog e orders); três serviços (sem notifications).
 - **Escolha:** `identity` (vendedores, supervisor, clientes, limites), `catalog` (produtos, preços, busca), `orders` (todas as regras de pedido) e `notifications` (avisos ao supervisor), mais o `web` (Nuxt) e o repositório `contracts`.
 - **Por quê:** Cada serviço tem um dono claro dos dados e das regras, e o fluxo de eventos tem consumidores reais.
@@ -145,6 +146,7 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D18. Contratos em um repositório próprio, usado como submódulo
 
+- **Estado:** em parte substituída por D60: o `contracts` é uma pasta deste repositório, instalada como pacote local (D26), não um submódulo.
 - **Contexto:** Não há pacote compartilhado de código, mas os `.proto` e os esquemas de eventos precisam de uma fonte única.
 - **Alternativas consideradas:** cada serviço dono do seu `.proto` e os chamadores copiando; pacote publicado no GitHub Packages.
 - **Escolha:** Um repositório `contracts` incluído como submódulo Git em cada serviço.
@@ -198,9 +200,9 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 - **Contexto:** Com tipos escritos à mão, uma mudança no `.proto` passa despercebida pelo compilador e os testes com mocks continuam verdes.
 - **Alternativas consideradas:** carregar o `.proto` em tempo de execução com interfaces manuais; gerar os tipos em cada serviço.
-- **Escolha:** `buf` + `ts-proto` (com `nestJs=true`) rodam só no repositório `contracts`; o código gerado é versionado em `gen/ts`, e os serviços o leem pelo submódulo. O CI do contracts roda `buf lint`, falha se `gen/` estiver desatualizado e roda checagem de tipos e testes.
+- **Escolha:** `buf` + `ts-proto` (com `nestJs=true`) rodam só no repositório `contracts`; o código gerado é versionado em `gen/ts`, e os serviços o leem pelo pacote local (`file:../contracts`, D26). O CI do contracts roda `buf lint`, falha se `gen/` estiver desatualizado e roda checagem de tipos e testes.
 - **Por quê:** Renomear um campo do contrato vira erro de compilação nos serviços que o usam, e nenhum serviço precisa do gerador no build.
-- **Custo assumido:** Código gerado no Git e a necessidade de atualizar o ponteiro do submódulo em cada serviço.
+- **Custo assumido:** Código gerado no Git e a necessidade de regenerar e reinstalar nos serviços depois de uma mudança.
 - **O que faria diferente:** Publicar os tipos como pacote versionado se houvesse mais consumidores.
 
 ## D25. Convenções dos contratos: centavos, pontos-base, `sales.<serviço>.v1` e eventos em Zod
@@ -213,11 +215,11 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D26. Os serviços instalam o `contracts` como pacote local (`file:`), construído com `tsc`
 
-- **Contexto:** O `contracts` é um repositório à parte (D18), mas os serviços TypeScript precisam importar seus tipos gerados em tempo de execução. Com um vínculo simbólico (`link:`), o Node resolve as bibliotecas a partir da pasta do `contracts`, o que cria duas cópias de `@nestjs/microservices` e `zod` e não funciona numa imagem Docker.
+- **Contexto:** O `contracts` é um pacote à parte (D18), mas os serviços TypeScript precisam importar seus tipos gerados em tempo de execução. Com um vínculo simbólico (`link:`), o Node resolve as bibliotecas a partir da pasta do `contracts`, o que cria duas cópias de `@nestjs/microservices` e `zod` e não funciona numa imagem Docker.
 - **Alternativas consideradas:** `link:` para a pasta do `contracts`; compilar os `.ts` do `contracts` junto com cada serviço; publicar um pacote no registry.
 - **Escolha:** O `contracts` compila para JavaScript ESM (`pnpm build`), declara `zod` e `@bufbuild/protobuf` como dependências e `@nestjs/*`, `rxjs` e `@grpc/grpc-js` como dependências pares; os serviços o instalam com `file:../contracts`. O build do Docker usa a pasta `repositories/` como contexto: constrói o `contracts` e depois o serviço. Os caminhos dos `.proto` vêm de `CATALOG_PROTO_PATH` e `IDENTITY_PROTO_PATH`, porque o transporte gRPC do Nest ainda carrega o `.proto` em tempo de execução.
 - **Por quê:** Uma única cópia de cada biblioteca e uma imagem autossuficiente.
-- **Custo assumido:** Depois de mudar o contrato é preciso rodar o build do `contracts` e `pnpm install` nos serviços. Quando os serviços forem repositórios separados, o `contracts` entra como submódulo dentro de cada um e só os caminhos do Dockerfile mudam.
+- **Custo assumido:** Depois de mudar o contrato é preciso rodar o build do `contracts` e `pnpm install` nos serviços. Com um repositório único (D60) o `contracts` é só uma pasta ao lado das outras.
 - **O que faria diferente:** Publicar o pacote com versão semântica no GitHub Packages.
 
 ## D27. Catálogo: busca por similaridade de palavra, migrações no início da aplicação e testes no Postgres real
@@ -239,17 +241,18 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D29. Repositório de orquestração, na fase D (a última)
 
+- **Estado:** em parte substituída por D60: a orquestração é a pasta `repositories/orchestration` e o Compose fica na raiz.
 - **Contexto:** Nos meus projetos anteriores, um repositório de orquestração reúne o gráfico Helm "guarda-chuva", os subgráficos de cada serviço, o cluster local (kind), o ingress e as políticas de rede, com um guia de primeiros passos. Quero o mesmo padrão aqui, mas só depois que as funcionalidades estiverem prontas.
 - **Alternativas consideradas:** deixar só o Docker Compose; substituir o Compose por Kubernetes; incluir a orquestração antes da fase de modo offline.
 - **Escolha:** Um repositório `orchestration` na **fase D**, depois das fases A (obrigatórios), B (crédito, histórico, aprovação, notificações) e C (offline). Ele contém: o gráfico Helm guarda-chuva com um subgráfico por serviço (cada serviço mantém o seu em `/k8s`), a configuração do cluster kind sem CNI padrão e com Calico para que as NetworkPolicies sejam aplicadas, o ingress, um `Deployment` por serviço com `wait-for-postgres`, contexto de segurança não-root, probes em `/health`, Secrets e ConfigMaps, e o guia de primeiros passos com imagens baixadas do GHCR. **O arquivo do Docker Compose também passa a morar nele**, para haver um único lugar que define como tudo roda.
-- **Como atende ao enunciado:** o enunciado exige `docker compose up`. Até a fase D o compose fica na raiz; na fase D o repositório raiz mantém um `docker-compose.yml` fino que usa `include:` para o do `orchestration`, então o comando continua o mesmo.
-- **Por quê:** Mantém o padrão que já uso e deixa a infraestrutura de execução concentrada, sem atrasar as regras de negócio, que é o que a avaliação pesa.
-- **Risco assumido:** É a fase mais dispensável para o enunciado; se o tempo acabar, o Compose na raiz continua sendo uma entrega completa, e isso será dito no README.
+- **O `docker compose up`:** continua sendo o jeito simples de rodar. Esta decisão previa mover o compose para o `orchestration` e deixar na raiz um arquivo fino com `include:`; D60 manteve o arquivo na raiz.
+- **Por quê:** Mantém o padrão que já uso e deixa a infraestrutura de execução concentrada, sem atrasar as regras de negócio, que é o que mais importa.
+- **Risco assumido:** É a fase mais dispensável para os requisitos; se o tempo acabar, o Compose na raiz continua sendo uma entrega completa, e isso será dito no README.
 - **O que faria diferente:** Fazer a versão mínima do Helm (um subgráfico) junto da fase A, para validar a forma de implantação cedo.
 
 ## D30. Identity: quem pode ver o quê é decidido no servidor, com o usuário repassado pelo BFF
 
-- **Contexto:** O enunciado pede que o vendedor veja apenas os clientes da sua carteira, e o login é simulado (escolher o vendedor).
+- **Contexto:** Os requisitos pedem que o vendedor veja apenas os clientes da sua carteira, e o login é simulado (escolher o vendedor).
 - **Alternativas consideradas:** o BFF filtrar a carteira sozinho; o identity confiar no `sellerId` do caminho; o identity emitir tokens.
 - **Escolha:** O BFF valida a escolha com `POST /sessions/validate`, guarda a sessão e, em cada chamada, repassa `x-user-id` e `x-user-role` junto do segredo interno. O identity aplica a regra em uma função pura: um vendedor só acessa a própria carteira, e um supervisor só a dos vendedores que supervisiona. Um vendedor que pede o cliente de outro recebe a mesma resposta (404) de um cliente inexistente, e quem pede a carteira alheia recebe 403. As leituras entre serviços (gRPC) não passam por essa regra, porque o chamador é de confiança.
 - **Por quê:** A restrição vale mesmo que o BFF tenha um erro de filtro, e a regra tem testes diretos (quebrar a regra de propósito derrubou 3 testes em cada variação).
@@ -266,12 +269,12 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D32. Motor de regras puro: bloqueios e motivos de aprovação são coisas diferentes
 
-- **Contexto:** O enunciado separa "bloquear o envio" (regras não atendidas) de "aguardando aprovação" (desconto acima da alçada). A avaliação pede testes das regras de negócio.
+- **Contexto:** Os requisitos separam "bloquear o envio" (regras não atendidas) de "aguardando aprovação" (desconto acima da alçada). Os requisitos pedem testes das regras de negócio.
 - **Alternativas consideradas:** regras espalhadas pelo serviço e pelo controlador; lançar exceção no primeiro problema; regras no frontend.
 - **Escolha:** `calculateOrder(pedido, produtos, política)` é uma função pura em `order-rules.ts`: recebe dados simples e devolve dados simples. Ela devolve os totais, **todos** os bloqueios (por linha e do pedido) e todos os motivos de aprovação, de uma vez, para a tela mostrar tudo ao vendedor. Bloqueios: pedido vazio, abaixo do mínimo, produto desconhecido/inativo/sem preço, quantidade inválida, embalagem indisponível, quantidade que não é múltipla, linha repetida, desconto inválido. Aprovação: desconto de linha ou de pedido acima do limite efetivo (o menor entre a alçada do vendedor e o teto global `MAX_DISCOUNT_BP`, padrão 10%). A quantidade chega como `quantity` + `unit` (UNIT/PACK) e o backend converte; um produto aparece em uma linha só.
 - **Por quê:** Uma única implementação, sem I/O, que se testa com tabelas de exemplos. Os exemplos de arredondamento do `ASSUMPTIONS.md` e os casos de borda (desconto exatamente na alçada e um ponto-base acima, R$ 299,99 e R$ 300,00, quantidade fora do múltiplo) são testes. Quebrar de propósito sete linhas do motor derrubou testes em todos os casos.
 - **Custo assumido:** Linhas bloqueadas ficam fora do total exibido; o total só vale quando `canSubmit` é verdadeiro.
-- **O que faria diferente:** Tratar mais de uma moeda e tabelas de preço com vigência, que o enunciado não pede.
+- **O que faria diferente:** Tratar mais de uma moeda e tabelas de preço com vigência, que os requisitos não pedem.
 
 ## D33. Cálculo sem estado, envio idempotente pelo id do pedido
 
@@ -299,7 +302,7 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 - **Contexto:** O D16 previa a sessão no Redis, dona do BFF. Ao ler o código do `nuxt-auth-utils`, vi que ele guarda a sessão inteira num cookie criptografado e que seus ganchos (`fetch`, `clear`) só acrescentam dados ou registram; não há armazenamento externo plugável.
 - **Alternativas consideradas:** `nuxt-auth-utils` como é (sem Redis, sessão não revogável); `nuxt-auth-utils` guardando só um id e eu buscando o usuário no Redis (o módulo viraria só um criptografador de cookie).
 - **Escolha:** Código próprio e pequeno em `server/utils/session.ts`. O navegador guarda só um id aleatório de 256 bits num cookie `HttpOnly` e `SameSite=Lax`; o usuário fica no Redis com expiração deslizante (8 h, renovada a cada leitura); o logout apaga a chave; cada login gera um id novo (contra fixação de sessão). O `Secure` do cookie é ligado por variável de ambiente quando houver HTTPS.
-- **Por quê:** A sessão pode ser encerrada no servidor, nada sobre o usuário viaja no cookie, e o código cabe numa tela para explicar ao vivo. Isso mantém a decisão de usar Redis.
+- **Por quê:** A sessão pode ser encerrada no servidor, nada sobre o usuário viaja no cookie, e o código cabe numa tela e é fácil de explicar. Isso mantém a decisão de usar Redis.
 - **Verificado:** um cookie antigo depois do logout e um id inventado recebem 401; a resposta e o HTML entregue ao navegador não contêm o segredo interno nem URLs internas (busca textual).
 - **Falha encontrada na verificação:** um `POST` com corpo de formulário (`application/x-www-form-urlencoded`) fazia login, ao contrário do que um comentário meu afirmava. Agora toda requisição com corpo precisa ser JSON (415 caso contrário); há testes da regra.
 - **O que faria diferente:** Trocar o segredo compartilhado do BFF por tokens assinados por chamada (já anotado em D16) e adicionar limite de tentativas ao login quando ele deixar de ser simulado.
@@ -330,7 +333,7 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D40. Reserva de crédito que expira sozinha, no Postgres (substitui a tarefa agendada do D22)
 
-- **Contexto:** O D22 previa um job que liberava reservas pendentes com mais de 15 minutos. Você propôs evitar o job e deixar a reserva expirar sozinha, com uma chave no Redis com TTL.
+- **Contexto:** O D22 previa um job que liberava reservas pendentes com mais de 15 minutos. Propus evitar o job e deixar a reserva expirar sozinha, com uma chave no Redis com TTL.
 - **Alternativas consideradas:** (a) chave no Redis com TTL; (b) linhas de reserva no Postgres com `expires_at`; (c) manter o job.
 - **Análise da opção (a):** expirar a chave só esquece a *reserva*; o crédito consumido por pedidos fica no Postgres, e nada o decrementa quando a chave some. Para funcionar, o "disponível" teria de ser calculado (limite − comprometido − soma das reservas vivas), com um script Lua atômico por cliente, e o identity ganharia uma dependência do Redis e dois armazenamentos que precisam concordar; um reinício do Redis esqueceria reservas pendentes e o crédito poderia ser vendido a mais.
 - **Escolha:** (b). A mesma ideia dentro do banco que já tem a transação: o crédito em uso é *calculado* como crédito já usado (do seed) + reservas `CONFIRMED` + reservas `PENDING` com `expires_at` no futuro. Uma reserva pendente que expira simplesmente deixa de contar; não há job nem segundo armazenamento.
@@ -348,7 +351,7 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D42. Consumidores: fila quorum com limite de entregas, espera crescente e fila de mensagens mortas
 
-- **Contexto:** Você escolheu "tentar algumas vezes e depois enviar para uma fila de mensagens mortas".
+- **Contexto:** Escolhi "tentar algumas vezes e depois enviar para uma fila de mensagens mortas".
 - **Alternativas consideradas:** filas de retentativa com TTL (mais peças, mais código); recolocar na fila sem fim; registrar e confirmar (perderia uma atualização de crédito sem rastro).
 - **Escolha:** Cada consumidor tem uma fila *quorum* própria (`identity-api-order-events`) com `x-delivery-limit` e uma fila de mensagens mortas (`....dlq`, ligada ao exchange `orders.events.dlx`). Uma mensagem que não bate com o esquema Zod é descartada para a fila de mortas **na hora** (nunca daria certo). Uma mensagem cujo tratamento falha espera um tempo crescente (0,5 s, 1 s, 2 s, 4 s, no máximo 8 s) e volta à fila; passado o limite, o próprio broker a move para a fila de mortas. Nada é descartado em silêncio.
 - **Verificado com mensagens reais:** uma mensagem malformada foi para a fila de mortas de imediato; um evento válido para um cliente inexistente foi tentado 6 vezes (a primeira entrega mais 5 reentregas: o limite do RabbitMQ conta reentregas, então `CONSUMER_MAX_DELIVERIES=5` significa 6 tentativas) e depois foi para a fila de mortas; um `OrderRejected` repetido não mudou nada.
@@ -365,7 +368,7 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 > **Corrigido pelo D47:** `APPROVED` e `REJECTED` são status de verdade (não só "passos"), e a rejeição termina em `CANCELLED`; `INVOICED` vem depois de `SUBMITTED`. O restante deste registro vale.
 
-- **Contexto:** Você propôs que APPROVED e SUBMITTED fossem passos seguidos, em vez de a aprovação levar direto a "Enviado".
+- **Contexto:** Propus que APPROVED e SUBMITTED fossem passos seguidos, em vez de a aprovação levar direto a "Enviado".
 - **Alternativas consideradas:** a mesma cadeia para todo pedido (com aprovação automática dentro da alçada); APPROVED como estado de repouso, com o envio feito depois por uma ação do vendedor; sem APPROVED (aprovar leva direto a SUBMITTED, guardando quem aprovou).
 - **Escolha:** Dentro da alçada o pedido nasce `SUBMITTED`. Fora dela nasce `AWAITING_APPROVAL`; **aprovar** registra `APPROVED` (pelo supervisor) e logo `SUBMITTED` (pelo sistema) numa única transação; **rejeitar** leva a `REJECTED`, que é final. `APPROVED` é um passo, nunca um estado de repouso: a linha do pedido guarda só `AWAITING_APPROVAL`, `SUBMITTED` ou `REJECTED`, e a tabela `order_status_history` guarda todos os passos (quem, quando e por quê, com um id serial para a ordem exata). As regras de transição são funções puras (`order-status.ts`); o banco aplica a mudança com um `UPDATE ... WHERE status = 'AWAITING_APPROVAL'`, então aprovar e rejeitar ao mesmo tempo não podem ganhar os dois.
 - **Repetições:** aprovar de novo um pedido aprovado, ou rejeitar de novo um rejeitado, devolve o mesmo resultado sem repetir efeitos. Aprovar um rejeitado, rejeitar um enviado e aprovar um pedido que nunca precisou de aprovação são recusados com 409 e um código.
@@ -388,8 +391,8 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D47. Seis status, em duas cadeias, com o vocabulário do seed (corrige o D44)
 
-- **Contexto:** O D44 dizia que `APPROVED` e `REJECTED` eram "passos, nunca estados", e que um pedido enviado terminava em `SUBMITTED`. O seed, que traz dados reais, usa "Faturado" e "Cancelado" para os pedidos do histórico. Ao rastrear a origem dos nomes: `SUBMITTED` e `AWAITING_APPROVAL` vieram do enunciado ("Enviado", "Aguardando aprovação"), por escolha minha de nomes em inglês (D25); `REJECTED` apareceu no commit da aprovação (22:43 de 24/10) por uma opção que eu mesmo ofereci ("aprovar/rejeitar") e que foi aceita; o enunciado nunca fala em rejeição. Eu deveria ter reconciliado isso com o vocabulário do seed antes de construir a aprovação.
-- **Alternativas consideradas:** trocar `SUBMITTED` por `INVOICED` e `REJECTED` por `CANCELLED` (contradiz o requisito 5 do enunciado, que manda ficar "Enviado"); mapear "Faturado" e "Cancelado" para `SUBMITTED` e `REJECTED` (o significado fica errado); estados novos só para o histórico importado.
+- **Contexto:** O D44 dizia que `APPROVED` e `REJECTED` eram "passos, nunca estados", e que um pedido enviado terminava em `SUBMITTED`. O seed, que traz dados reais, usa "Faturado" e "Cancelado" para os pedidos do histórico. Ao rastrear a origem dos nomes: `SUBMITTED` e `AWAITING_APPROVAL` vieram dos requisitos ("Enviado", "Aguardando aprovação"), por escolha minha de nomes em inglês (D25); `REJECTED` apareceu no commit da aprovação (22:43 de 24/10) por uma opção que eu mesmo ofereci ("aprovar/rejeitar") e que foi aceita; os requisitos nunca falam em rejeição. Eu deveria ter reconciliado isso com o vocabulário do seed antes de construir a aprovação.
+- **Alternativas consideradas:** trocar `SUBMITTED` por `INVOICED` e `REJECTED` por `CANCELLED` (contradiz o requisito 5, que manda ficar "Enviado"); mapear "Faturado" e "Cancelado" para `SUBMITTED` e `REJECTED` (o significado fica errado); estados novos só para o histórico importado.
 - **Escolha:** Todos existem como status, em duas cadeias: `AWAITING_APPROVAL → APPROVED → SUBMITTED → INVOICED` e `AWAITING_APPROVAL → REJECTED → CANCELLED`. Uma decisão leva o pedido pelos dois primeiros degraus da cadeia de uma vez, na mesma transação, e cada degrau fica no histórico: aprovar registra `APPROVED` (pelo supervisor) e `SUBMITTED` (pelo sistema); rejeitar registra `REJECTED` (pelo supervisor, com o motivo) e `CANCELLED` (pelo sistema). Em repouso, o pedido fica em `SUBMITTED` ou `CANCELLED`. `INVOICED` ("Faturado") é definido pelo faturamento, que não existe aqui; só os pedidos importados do seed o têm, e o "Cancelado" do seed é `CANCELLED`.
 - **O que muda no D44:** o resto (histórico de passos, atualização condicional, eventos, motivos de rejeição) continua. O evento `order.rejected` segue sendo publicado na rejeição. Aprovar um pedido cancelado dá 409 com `ALREADY_REJECTED`, e rejeitar um pedido já enviado ou faturado dá 409 com `ALREADY_SUBMITTED`.
 - **O que faria diferente:** Uma ação para o faturamento marcar `INVOICED` (hoje só o seed chega lá) e o cancelamento pelo vendedor.
@@ -405,8 +408,8 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D49. Notificações: quem é avisado de quê, e como não avisar duas vezes
 
-- **Contexto:** Você pediu avisos "para todos, em todos os eventos". Lido ao pé da letra, o vendedor receberia dois avisos de "enviado" e o supervisor, um aviso de um pedido que ele mesmo acabou de decidir.
-- **Alternativas consideradas:** um aviso por evento para cada pessoa envolvida (duplicados); só o supervisor é avisado (o que o enunciado pede, e nada mais).
+- **Contexto:** Pedi avisos "para todos, em todos os eventos". Lido ao pé da letra, o vendedor receberia dois avisos de "enviado" e o supervisor, um aviso de um pedido que ele mesmo acabou de decidir.
+- **Alternativas consideradas:** um aviso por evento para cada pessoa envolvida (duplicados); só o supervisor é avisado (o que os requisitos pedem, e nada mais).
 - **Escolha:** Uma tabela explícita, em funções puras (`domain/plan.ts`), que diz quem recebe o quê:
 
   | Evento | Supervisor | Vendedor |
@@ -436,7 +439,7 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D52. Produtos mais pedidos: o que se conta e para que serve
 
-- **Contexto:** O catálogo deveria manter uma estatística de "mais pedidos" a partir de `order.submitted` (D21), mas o enunciado não diz para que ela serve. Você escolheu que ela mude a ordem da busca.
+- **Contexto:** O catálogo deveria manter uma estatística de "mais pedidos" a partir de `order.submitted` (D21), mas os requisitos não dizem para que ela serve. Escolhi que ela mude a ordem da busca.
 - **Alternativas consideradas:** só guardar o número (sem efeito na tela); mostrar um selo "mais pedido" (sem mudar a ordem); contar pedidos em vez de unidades; popularidade acima da qualidade da busca; agrupar combinações "parecidas" numa faixa de similaridade (um limite que eu teria que inventar e defender).
 - **Escolha:** Conta-se **unidades** (a soma das quantidades dos pedidos que chegaram a `SUBMITTED`, enviados direto ou depois de aprovados). Na busca, o total é só **desempate**: primeiro a descrição exata, depois a maior similaridade, **depois** o mais pedido, e por fim o id. Na busca por EAN/SKU (onde só há empate), o mais pedido vem antes do id; é o caso dos dois produtos com o mesmo EAN.
 - **Por quê:** A qualidade da correspondência continua mandando, então os testes de busca de antes mantêm o sentido e a regra cabe numa frase. Unidades combinam com a regra "quantidades são sempre em unidades".
@@ -453,8 +456,8 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D54. Offline: o app abre sem sinal e o pedido espera no aparelho
 
-- **Contexto:** O enunciado trata o modo offline como opcional (requisito 9) e lembra que o vendedor trabalha "muitas vezes com sinal de internet ruim". D4 e D20 já dizem que o navegador não recalcula nada, então offline não há totais novos. Você escolheu fazer: montar e fechar o pedido sem sinal, enviar quando voltar.
-- **Alternativas consideradas:** não fazer (permitido, mas era o ponto central do enunciado); só guardar o rascunho e exigir sinal para enviar; app que só funciona se a página já estava aberta; baixar o catálogo inteiro.
+- **Contexto:** Os requisitos tratam o modo offline como opcional (requisito 9) e lembram que o vendedor trabalha, muitas vezes, com sinal de internet ruim. D4 e D20 já dizem que o navegador não recalcula nada, então offline não há totais novos. Escolhi fazer: montar e fechar o pedido sem sinal, enviar quando voltar.
+- **Alternativas consideradas:** não fazer (permitido, mas era o ponto central do problema); só guardar o rascunho e exigir sinal para enviar; app que só funciona se a página já estava aberta; baixar o catálogo inteiro.
 - **Escolha:** Um service worker (`@vite-pwa/nuxt`, que D39 já sugeria) guarda os arquivos do app, para ele abrir sem sinal, e a última resposta de três leituras (quem está logado, a lista de clientes e o cliente), com rede primeiro e queda para o guardado após 5 s. Tudo mais vai direto para a rede. A página do app é pré-renderizada uma vez só para existir um `index.html` a guardar. Os pedidos fechados sem sinal ficam no `localStorage` (como o rascunho, A33), cada um com o id com que será enviado.
 - **Por quê:** O que muda é só onde o pedido espera; as regras continuam todas no servidor (D4), então não há segunda cópia delas no navegador. E o envio já era idempotente pelo id (D33): reenviar não duplica.
 - **Limites:** só funciona na versão de produção (a imagem Docker); o armazenamento do navegador pode ser apagado pelo usuário, e com ele os pedidos esperando; não há ícones, então o app não é "instalável" na tela inicial.
@@ -477,17 +480,18 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 ## D57. Como o Helm está organizado: biblioteca, um gráfico por serviço, guarda-chuva
 
-- **Contexto:** D29 pede um gráfico guarda-chuva com um subgráfico por serviço, cada serviço mantendo o seu em `k8s/`. Você escolheu um gráfico de biblioteca compartilhado e infraestrutura escrita à mão, e manter o Compose na raiz até a divisão dos repositórios.
+- **Estado:** atualizada por D60: o gráfico guarda-chuva aponta para as pastas dos serviços deste mesmo repositório.
+- **Contexto:** D29 pede um gráfico guarda-chuva com um subgráfico por serviço, cada serviço mantendo o seu em `k8s/`. Escolhi um gráfico de biblioteca compartilhado e infraestrutura escrita à mão, e manter o Compose na raiz.
 - **Alternativas consideradas:** cada gráfico de serviço autossuficiente (uns 100 linhas repetidas cinco vezes); gráficos prontos (Bitnami) para PostgreSQL, RabbitMQ e Redis (menos a escrever, mas não consigo explicá-los linha por linha, exigem internet na instalação e as imagens tiveram mudança de licença).
 - **Escolha:** `sales-lib` (biblioteca) tem os modelos de Deployment, Service e NetworkPolicy; o gráfico de cada serviço (`<serviço>/k8s`) é um `values.yaml` e três modelos de uma linha. PostgreSQL, RabbitMQ e Redis são gráficos pequenos escritos à mão, com as mesmas imagens do Compose. O `umbrella` instala tudo, mais o Ingress e a política de "negar tudo". Os recursos se chamam como o gráfico (`catalog-api`, `postgres`), não como a instalação, então os nomes que os serviços usam entre si são os mesmos do Compose. Segredos: um Secret com valores aleatórios, criado no primeiro `up.sh` e mantido nas execuções seguintes (o banco já tem aquelas senhas); o arquivo do seed e o script de criação dos esquemas têm uma cópia só no projeto e chegam ao cluster como ConfigMaps. As URLs com senha usam a substituição `$(NOME)` do Kubernetes, então a senha não aparece em nenhum arquivo.
 - **Por quê:** Uma correção de segurança ou de sonda vale para os cinco serviços de uma vez, e cada serviço novo é um arquivo de valores.
-- **Custo assumido:** o gráfico de um serviço depende da biblioteca, que mora no repositório de orquestração; depois da divisão em repositórios esse caminho passa a apontar para um submódulo.
+- **Custo assumido:** o gráfico de um serviço depende da biblioteca, que mora em `repositories/orchestration/charts/sales-lib`.
 - **O que faria diferente:** Publicar a biblioteca como pacote (OCI) e versioná-la.
 
 ## D58. Ingress: Traefik, porque o ingress-nginx foi aposentado
 
 - **Contexto:** D29 diz "ingress". O `ingress-nginx` era a escolha de sempre, mas o Kubernetes o [aposentou em março de 2026](https://www.kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/): sem novas versões e sem correções, nem de segurança. A [nota oficial](https://www.kubernetes.io/blog/2026/01/29/ingress-nginx-statement/) diz que nenhuma alternativa o substitui sem mudanças.
-- **Alternativas consideradas:** `ingress-nginx` mesmo assim (mais exemplos, mas um revisor pode perguntar por que um projeto aposentado); Gateway API com Envoy Gateway (o sucessor oficial, mas traz Gateway, HTTPRoute e GatewayClass, mais a escrever e a explicar).
+- **Alternativas consideradas:** `ingress-nginx` mesmo assim (mais exemplos, mas é um projeto aposentado); Gateway API com Envoy Gateway (o sucessor oficial, mas traz Gateway, HTTPRoute e GatewayClass, mais a escrever e a explicar).
 - **Escolha:** Traefik (gráfico 42.1.3, fixado no script), lendo o recurso `Ingress` comum, que continua simples. Os eventos enviados pelo servidor (SSE) passam sem nenhuma configuração de buffer: verificado abrindo o fluxo do supervisor por ele e vendo chegar um aviso no momento em que um pedido que exige aprovação foi enviado. O Calico (v3.31.0, fixado) é quem aplica as NetworkPolicies, porque a rede padrão do kind não aplica.
 - **Por quê:** Está mantido, funciona no kind e não muda o formato do que escrevemos.
 - **O que faria diferente:** Migrar para Gateway API quando o restante da equipe a adotar.
@@ -497,8 +501,17 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 - **Escolha:** O namespace nega tudo nos dois sentidos; o gráfico de cada carga acrescenta só o que ela precisa (o DNS sai sempre): o ingress só chega ao `web`; o `web` fala com os quatro serviços e o Redis; o `orders-api` fala com o catálogo e o identity **só por gRPC** (as portas HTTP deles ficam fechadas para ele); os quatro serviços falam com PostgreSQL e RabbitMQ; ninguém fala com o `web`. Segurança dos pods: usuário que não é root, `seccomp` padrão, sem capacidades, sistema de arquivos somente leitura (com um volume `/tmp`), **exceto o RabbitMQ**, cujo script de partida grava a configuração em `/etc/rabbitmq`.
 - **Defeito encontrado ao montar:** o contêiner que espera as dependências roda dentro do pod e obedece à política dele. Ele esperava o catálogo na porta HTTP, que a política do `orders-api` não permite, e esperaria para sempre; a espera passou a usar as portas gRPC.
 - **Verificado (`scripts/verify.sh`):** o sistema responde pelo ingress, um pedido é aceito (com catálogo, identity, orders e RabbitMQ participando), o mesmo id devolve o mesmo pedido, o fluxo SSE abre, o segredo interno não está nos arquivos que o navegador baixa e onze conexões reais de dentro dos pods: as permitidas funcionam e as proibidas expiram. **Quebra de propósito:** apagar as políticas faz os sete testes de "negado" falharem; com as nove de volta, todos passam.
-- **Limites:** uma réplica de tudo (o difusor de avisos mora no processo, D50); sem TLS, sem escala automática, limites de recursos chutados e não medidos, sem cópia de segurança do volume do banco; o navegador não foi usado neste cluster (a extensão estava desconectada), então a interface não foi conferida de novo nele; as imagens são construídas na máquina e carregadas no kind, sem passar pelo GHCR.
-- **Sem TLS, de propósito:** o enunciado não pede, e aqui o sistema roda numa máquina local, onde o tráfego não sai dela: um certificado autoassinado em `localhost` só traria o aviso do navegador, sem proteção real. Em produção o TLS terminaria no ingress, com certificado de verdade (cert-manager e um domínio, que não dá para testar num notebook), e a opção `NUXT_SESSION_COOKIE_SECURE` (marca o cookie de sessão como `Secure`) já existe para esse dia. Dentro do cluster o tráfego entre pods também é sem criptografia; as políticas de rede reduzem a exposição, pois só existem os caminhos listados.
+- **Limites:** uma réplica de tudo (o difusor de avisos mora no processo, D50); sem TLS, sem escala automática, limites de recursos chutados e não medidos, sem cópia de segurança do volume do banco; o navegador não foi usado neste cluster (a extensão estava desconectada), então a interface não foi conferida de novo nele; nesta verificação as imagens foram construídas na máquina e carregadas no kind (os gráficos aceitam `global.imageRegistry` para usar as imagens publicadas).
+- **Sem TLS, de propósito:** não é um requisito, e aqui o sistema roda numa máquina local, onde o tráfego não sai dela: um certificado autoassinado em `localhost` só traria o aviso do navegador, sem proteção real. Em produção o TLS terminaria no ingress, com certificado de verdade (cert-manager e um domínio, que não dá para testar num notebook), e a opção `NUXT_SESSION_COOKIE_SECURE` (marca o cookie de sessão como `Secure`) já existe para esse dia. Dentro do cluster o tráfego entre pods também é sem criptografia; as políticas de rede reduzem a exposição, pois só existem os caminhos listados.
 - **Exigência do ambiente:** o kind precisa de `fs.inotify.max_user_instances` maior que o padrão de 128 quando há outro cluster na máquina; sem isso o nó nunca fica pronto. Está no guia.
 - **O que faria diferente:** Rodar `verify.sh` no CI, em um cluster kind do próprio GitHub.
+
+## D60. Um único repositório no GitHub (substitui D9)
+
+- **Contexto:** D9 previa uma organização com um repositório por serviço, um guarda-chuva com submódulos e imagens publicadas pelo CI de cada serviço. Na hora de publicar, o que importa é que qualquer pessoa clone uma coisa só e rode com um comando.
+- **Alternativas consideradas:** manter a organização e os submódulos (D9); um monorepo sem imagens publicadas.
+- **Escolha:** **Um repositório público**, `sales-order-assembly`, com tudo dentro: os serviços como pastas de `repositories/`, o `docker-compose.yml`, a orquestração, a documentação e o CI. As imagens continuam publicadas no GHCR pelo CI (`ghcr.io/kainanguerra/sales-<serviço>`), e o Compose tem as duas formas de subir (baixar as imagens ou construí-las). O `contracts` continua instalado como `file:../contracts` (D26), sem a troca de caminhos que se previa; o Compose fica na raiz para sempre (o arquivo fino com `include:` de D29 deixa de valer); o gráfico guarda-chuva continua apontando para as pastas dos serviços. A pasta se chama `repositories/` por herança: renomeá-la mexeria em compose, Dockerfiles, CI e documentação, sem ganho.
+- **Por quê:** Um `git clone` e um comando; um só histórico, que mostra a evolução. Os serviços continuam isolados pelo que importa (cada um com o seu schema, o seu Dockerfile, os seus testes e o seu gráfico), e os limites entre eles são os de rede e de contrato, não os de repositório.
+- **Custo assumido:** o isolamento entre serviços passa a ser por convenção (um serviço poderia importar código de outro; hoje nenhum importa) e eles não têm histórico nem CI separados.
+- **O que faria diferente:** Se o time crescesse, voltar à ideia de D9: um repositório por serviço, com o `contracts` versionado como pacote.
 

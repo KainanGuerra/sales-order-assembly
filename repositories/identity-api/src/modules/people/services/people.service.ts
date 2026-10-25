@@ -13,7 +13,7 @@ export class PeopleService {
   ) {}
 
   // The login screen lists everyone the visitor can pick. No credentials: the
-  // challenge simulates the login by choosing a person.
+  // login is simulated by choosing a person (DECISIONS D11).
   async loginOptions(): Promise<LoginOptions> {
     const [supervisors, sellers] = await Promise.all([
       this.repository.listSupervisors(),

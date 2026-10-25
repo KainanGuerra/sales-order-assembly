@@ -1,8 +1,8 @@
 # Montagem de pedidos para vendedores externos
 
-Módulo para vendedores que visitam pequenos varejistas (mercadinhos, minimercados, conveniências), consultam o catálogo e fecham o pedido no cliente, muitas vezes com sinal ruim. O enunciado original está em [`repositories/documentation/context/SCOPE.md`](repositories/documentation/context/SCOPE.md).
+Módulo para vendedores que visitam pequenos varejistas (mercadinhos, minimercados, conveniências), consultam o catálogo e fecham o pedido no cliente, muitas vezes com sinal ruim.
 
-A documentação completa (contexto, arquitetura, diagramas, mapa do código, testes, operação, pendências) está em [`repositories/documentation/`](repositories/documentation/README.md). Este arquivo tem o que o enunciado pede: como rodar, como testar e o que ficou de fora.
+A documentação completa (contexto, arquitetura, diagramas, mapa do código, testes, operação, pendências) está em [`repositories/documentation/`](repositories/documentation/README.md). Este arquivo tem o essencial: como rodar, como testar e o que ficou de fora.
 
 ## Estado atual
 
@@ -13,7 +13,7 @@ Todas as fases estão prontas e funcionam em Docker Compose; a fase D também ro
 | A | Requisitos obrigatórios 1 a 6 | Pronta: catálogo, identity, orders (regras e testes) e interface (Nuxt) |
 | B | Crédito, aprovação do supervisor, histórico com "repetir pedido", avisos, estatística de mais pedidos | Pronta |
 | C | Pedido offline com sincronização | Pronta: o app abre sem sinal, o pedido fica guardado no aparelho e é enviado quando o sinal volta (`DECISIONS.md` D54 a D56) |
-| D | Orquestração (Helm, kind, ingress) | Pronta no cluster local (kind, Calico, Traefik, políticas de rede verificadas); falta publicar as imagens e dividir os repositórios (D57 a D59) |
+| D | Orquestração (Helm, kind, ingress) | Pronta no cluster local (kind, Calico, Traefik, políticas de rede verificadas); as imagens são publicadas pelo CI no GHCR (D57 a D60) |
 
 ## Como rodar
 
@@ -91,6 +91,10 @@ Os testes que usam o banco só rodam com `TEST_DATABASE_URL` apontando para o Po
 - Os avisos em tempo real (SSE) são difundidos no processo do notifications: com mais de uma réplica, precisariam de um corretor entre elas.
 - **Modo offline:** verificado em Chrome de computador, parando o servidor da interface para simular a falta de sinal; **não testado num celular real** nem com sinal fraco de verdade (a regra de 8 segundos tem teste de lógica, não medição). O service worker só existe na versão de produção (a imagem Docker). Os pedidos guardados ficam no `localStorage`, que o usuário pode apagar, e só são enviados com o app aberto. Não há ícones para instalar o app na tela inicial.
 - **Kubernetes:** as imagens são construídas na máquina e carregadas no kind (não passam por um registry); uma réplica de cada serviço; sem TLS (de propósito, D59), sem escala automática, sem cópia de segurança do volume do banco; os limites de recursos são estimativas. A interface não foi conferida no navegador dentro desse cluster (só pela API, incluindo o fluxo de avisos pelo ingress).
-- Hoje o sistema é um repositório com os serviços em pastas; a divisão em repositórios por serviço, com este como guarda-chuva e submódulos (D9), não foi feita.
+- Os serviços são pastas de um único repositório (D60): não têm histórico nem CI separados, e o isolamento entre eles é por convenção, de rede e de contrato.
 
-**Fora do escopo do enunciado:** estoque, autenticação real (o login é simulado), notificações externas, várias moedas, faturamento.
+**Fora do escopo:** estoque, autenticação real (o login é simulado), notificações externas, várias moedas, faturamento.
+
+## Licença
+
+MIT, em [`LICENSE`](LICENSE).
