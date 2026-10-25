@@ -79,7 +79,8 @@
     "INVALID_DISCOUNT": "Desconto inválido",
     "EMPTY_ORDER": "Adicione ao menos um item",
     "INVALID_ORDER_DISCOUNT": "Desconto do pedido inválido",
-    "BELOW_MINIMUM": "Pedido abaixo do mínimo de {minimum}"
+    "BELOW_MINIMUM": "Pedido abaixo do mínimo de {minimum}",
+    "CREDIT_EXCEEDED": "Pedido acima do crédito disponível ({credit})"
   },
   "approval": {
     "LINE_DISCOUNT_ABOVE_LIMIT": "Desconto de {discount} em {product} acima da alçada ({limit})",

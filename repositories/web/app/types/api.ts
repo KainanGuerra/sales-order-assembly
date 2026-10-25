@@ -60,7 +60,7 @@ export type LineBlocker =
   | 'NOT_PACK_MULTIPLE'
   | 'INVALID_DISCOUNT';
 
-export type OrderBlocker = 'EMPTY_ORDER' | 'INVALID_ORDER_DISCOUNT' | 'BELOW_MINIMUM';
+export type OrderBlocker = 'EMPTY_ORDER' | 'INVALID_ORDER_DISCOUNT' | 'BELOW_MINIMUM' | 'CREDIT_EXCEEDED';
 
 export type ApprovalReason =
   | { code: 'LINE_DISCOUNT_ABOVE_LIMIT'; productId: string; discountBp: number }
@@ -87,6 +87,7 @@ export interface Calculation {
   orderDiscountCents: number;
   totalCents: number;
   minimumOrderCents: number;
+  availableCreditCents: number;
   effectiveDiscountLimitBp: number;
   blockers: OrderBlocker[];
   approvalReasons: ApprovalReason[];

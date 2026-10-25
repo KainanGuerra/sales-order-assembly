@@ -68,7 +68,8 @@ async function send() {
       <div class="min-w-0">
         <h1 class="truncate text-xl font-semibold">{{ client?.tradeName }}</h1>
         <p class="text-xs text-neutral-500">
-          {{ t('clients.priceTable') }} {{ client?.priceTableId }}
+          {{ t('clients.priceTable') }} {{ client?.priceTableId }} ·
+          {{ t('clients.credit') }}: <strong data-testid="credit">{{ formatCents(calculation.data.value?.availableCreditCents ?? client?.creditAvailableCents ?? 0) }}</strong>
           <UBadge v-if="client?.priceTableFallback" color="warning" variant="subtle" size="sm">{{ t('clients.fallback') }}</UBadge>
         </p>
       </div>

@@ -6,7 +6,7 @@ import type { ApprovalReason, Calculation } from '~/types/api';
 const props = defineProps<{ calculation: Calculation; descriptions: Record<string, string> }>();
 const { t } = useI18n();
 
-const blockers = computed(() => props.calculation.blockers.map((code) => t(`blockers.${code}`, { minimum: formatCents(props.calculation.minimumOrderCents) })));
+const blockers = computed(() => props.calculation.blockers.map((code) => t(`blockers.${code}`, { minimum: formatCents(props.calculation.minimumOrderCents), credit: formatCents(props.calculation.availableCreditCents) })));
 
 function approvalText(reason: ApprovalReason): string {
   const limit = formatBasisPoints(props.calculation.effectiveDiscountLimitBp);
