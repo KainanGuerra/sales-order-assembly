@@ -117,6 +117,25 @@ services:
       timeout: 3s
       retries: 6
 
+  notifications-api:
+    build:
+      context: ./repositories
+      dockerfile: notifications-api/Dockerfile
+    environment:
+      DATABASE_URL: postgres://notifications_role:${NOTIFICATIONS_DB_PASSWORD}@postgres:5432/sales
+      INNER_AUTH: ${INNER_AUTH:?INNER_AUTH must be set}
+      RABBITMQ_URL: amqp://sales:${RABBITMQ_PASSWORD}@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3004/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+
   web:
     build:
       context: ./repositories/web
@@ -125,6 +144,7 @@ services:
       NUXT_IDENTITY_URL: http://identity-api:3001
       NUXT_CATALOG_URL: http://catalog-api:3002
       NUXT_ORDERS_URL: http://orders-api:3003
+      NUXT_NOTIFICATIONS_URL: http://notifications-api:3004
       NUXT_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       # Turn on when the app is served over HTTPS.
       NUXT_SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
@@ -139,6 +159,8 @@ services:
       catalog-api:
         condition: service_healthy
       orders-api:
+        condition: service_healthy
+      notifications-api:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]

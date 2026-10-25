@@ -15,6 +15,9 @@ services:
   orders-api:
     ports:
       - "127.0.0.1:13003:3003"
+  notifications-api:
+    ports:
+      - "127.0.0.1:13004:3004"
   rabbitmq:
     ports:
       - "127.0.0.1:15672:15672"
