@@ -1,0 +1,106 @@
+{
+  "app": {
+    "title": "Pedidos",
+    "logout": "Sair",
+    "back": "Voltar"
+  },
+  "login": {
+    "title": "Quem é você?",
+    "subtitle": "Escolha seu nome para entrar. Não há senha: o login é simulado.",
+    "sellers": "Vendedores",
+    "supervisors": "Supervisores",
+    "failed": "Não foi possível entrar. Tente de novo."
+  },
+  "supervisor": {
+    "title": "Aprovações",
+    "body": "A aprovação de pedidos ainda não está disponível nesta versão."
+  },
+  "clients": {
+    "title": "Meus clientes",
+    "empty": "Nenhum cliente na sua carteira.",
+    "credit": "Crédito disponível",
+    "priceTable": "Tabela de preço",
+    "fallback": "Tabela padrão (cliente sem tabela)",
+    "newOrder": "Novo pedido"
+  },
+  "order": {
+    "title": "Novo pedido",
+    "searchPlaceholder": "Buscar produto por nome ou código de barras",
+    "searchHint": "Digite ao menos 2 letras ou o código de barras.",
+    "noResults": "Nenhum produto encontrado.",
+    "add": "Adicionar",
+    "added": "No pedido",
+    "lines": "Itens do pedido",
+    "emptyLines": "Nenhum item ainda. Busque um produto para começar.",
+    "remove": "Remover",
+    "quantity": "Quantidade",
+    "unit": "Unidade",
+    "unitOptions": {
+      "UNIT": "Unidade",
+      "PACK": "Embalagem ({n} un.)"
+    },
+    "discount": "Desconto (%)",
+    "discountInvalid": "Número inválido",
+    "orderDiscount": "Desconto do pedido (%)",
+    "unitsInfo": "{n} un. a {price}",
+    "packOnly": "Vendido em múltiplos de {n} un.",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "minimum": "Pedido mínimo",
+    "limit": "Alçada de desconto",
+    "calculating": "Calculando…",
+    "calcFailed": "Não foi possível calcular agora. Verifique a conexão; seu pedido continua guardado.",
+    "send": "Enviar pedido",
+    "sending": "Enviando…",
+    "sendFailed": "Não foi possível enviar. Seu pedido continua guardado; tente de novo.",
+    "refused": "O pedido não foi enviado porque alguma regra não foi atendida.",
+    "status": {
+      "SUBMITTED": "Enviado",
+      "AWAITING_APPROVAL": "Aguardando aprovação"
+    },
+    "statusHint": {
+      "SUBMITTED": "Será enviado direto.",
+      "AWAITING_APPROVAL": "Vai para aprovação do supervisor."
+    },
+    "clientNotFound": "Cliente não encontrado na sua carteira."
+  },
+  "availability": {
+    "DISCONTINUED": "Descontinuado",
+    "NO_PRICE_IN_TABLE": "Sem preço nesta tabela"
+  },
+  "blockers": {
+    "UNKNOWN_PRODUCT": "Produto não encontrado",
+    "PRODUCT_INACTIVE": "Produto descontinuado",
+    "NO_PRICE": "Produto sem preço na tabela deste cliente",
+    "DUPLICATE_PRODUCT": "Produto repetido no pedido",
+    "INVALID_QUANTITY": "Quantidade inválida",
+    "PACK_NOT_AVAILABLE": "Este produto não é vendido por embalagem",
+    "NOT_PACK_MULTIPLE": "A quantidade deve ser múltipla da embalagem ({n} un.)",
+    "INVALID_DISCOUNT": "Desconto inválido",
+    "EMPTY_ORDER": "Adicione ao menos um item",
+    "INVALID_ORDER_DISCOUNT": "Desconto do pedido inválido",
+    "BELOW_MINIMUM": "Pedido abaixo do mínimo de {minimum}"
+  },
+  "approval": {
+    "LINE_DISCOUNT_ABOVE_LIMIT": "Desconto de {discount} em {product} acima da alçada ({limit})",
+    "ORDER_DISCOUNT_ABOVE_LIMIT": "Desconto do pedido ({discount}) acima da alçada ({limit})"
+  },
+  "done": {
+    "title": "Pedido registrado",
+    "number": "Pedido",
+    "newOrder": "Novo pedido",
+    "toClients": "Voltar aos clientes",
+    "items": "Itens"
+  },
+  "errors": {
+    "generic": "Algo deu errado. Tente de novo.",
+    "unavailable": "Serviço indisponível. Tente em instantes.",
+    "notFound": "Página não encontrada",
+    "notFoundBody": "O endereço não existe ou você não tem acesso a ele.",
+    "toStart": "Voltar ao início"
+  },
+  "approvalSaved": {
+    "LINE_DISCOUNT_ABOVE_LIMIT": "Desconto de {discount} em {product} acima da alçada",
+    "ORDER_DISCOUNT_ABOVE_LIMIT": "Desconto do pedido ({discount}) acima da alçada"
+  }
+}

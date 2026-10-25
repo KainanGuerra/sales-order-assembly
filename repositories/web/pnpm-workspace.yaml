@@ -1,0 +1,6 @@
+# Install scripts are denied by default; the allow-list lists what the build needs.
+allowBuilds:
+  esbuild: true
+  '@parcel/watcher': true
+  vue-demi: false
+  unrs-resolver: false

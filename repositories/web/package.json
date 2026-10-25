@@ -1,0 +1,38 @@
+{
+  "name": "web",
+  "type": "module",
+  "private": true,
+  "description": "Seller web app (Nuxt UI) and the BFF the browser talks to: session, calls to the backend services.",
+  "packageManager": "pnpm@12.15.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.147",
+    "@nuxt/ui": "4.12.0",
+    "@nuxtjs/i18n": "10.6.0",
+    "@pinia/nuxt": "1.0.3",
+    "@tanstack/vue-query": "5.104.5",
+    "ioredis": "5.8.2",
+    "nuxt": "4.6.2",
+    "pinia": "3.0.4",
+    "tailwindcss": "^4.1.0",
+    "vue": "^3.5.44",
+    "vue-router": "^5.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.12",
+    "vue-tsc": "3.3.13"
+  }
+}
