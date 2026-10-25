@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [catalog-api, identity-api]
+        service: [catalog-api, identity-api, orders-api]
     services:
       postgres:
         image: postgres:17-alpine
@@ -66,7 +66,7 @@ jobs:
       - name: Install, lint, test
         working-directory: repositories/${{ matrix.service }}
         run: |
-          # catalog-api -> catalog_role / ci-catalog, identity-api -> identity_role / ci-identity
+          # <name>-api -> <name>_role / ci-<name> (catalog, identity, orders)
           name="${{ matrix.service }}"; name="${name%-api}"
           export TEST_DATABASE_URL="postgres://${name}_role:ci-${name}@127.0.0.1:5432/sales"
           pnpm install --frozen-lockfile
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [catalog-api, identity-api]
+        service: [catalog-api, identity-api, orders-api]
     permissions:
       contents: read
       packages: write

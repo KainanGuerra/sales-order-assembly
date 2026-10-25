@@ -42,3 +42,4 @@ SQL
 
 create_test_schema identity
 create_test_schema catalog
+create_test_schema orders

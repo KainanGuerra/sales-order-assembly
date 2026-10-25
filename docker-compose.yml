@@ -19,6 +19,17 @@ services:
       timeout: 3s
       retries: 10
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: sales
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set - run sh scripts/init-env.sh}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   catalog-api:
     build:
       context: ./repositories
@@ -55,6 +66,33 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+
+  orders-api:
+    build:
+      context: ./repositories
+      dockerfile: orders-api/Dockerfile
+    environment:
+      DATABASE_URL: postgres://orders_role:${ORDERS_DB_PASSWORD}@postgres:5432/sales
+      INNER_AUTH: ${INNER_AUTH:?INNER_AUTH must be set}
+      CATALOG_GRPC_URL: catalog-api:50052
+      IDENTITY_GRPC_URL: identity-api:50051
+      RABBITMQ_URL: amqp://sales:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      MIN_ORDER_CENTS: ${MIN_ORDER_CENTS:-30000}
+      MAX_DISCOUNT_BP: ${MAX_DISCOUNT_BP:-1000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      catalog-api:
+        condition: service_healthy
+      identity-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3003/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 10s
       timeout: 3s
       retries: 6
