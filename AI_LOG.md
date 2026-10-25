@@ -79,6 +79,10 @@ Registro do meu uso de IA neste projeto. Ferramenta: Claude Code, do começo ao 
 | Pacotes e versões | npm | Perguntei por que pnpm e não npm; a IA explicou; escolhi pnpm via corepack. Pedi para instalar o Node 24 com nvm. Aceitei o TypeScript 7, que a IA teve de recuar no front (6.0.3, porque o `vue-tsc` não roda no 7, D37) |
 | Tipos do gRPC | — | Pedi para conversar só sobre isso; escolhi gerar no `contracts` e versionar a saída |
 
+Na marca (D61), a primeira versão da IA (uma caixa com asas) não me agradou; pedi três propostas diferentes, comparei numa página e escolhi o avião de papel, a que melhor combina com enviar o pedido sem sinal.
+
+Na casca da interface (D61), eu pedi o menu "como no retail/v2"; a primeira versão da IA era uma gaveta sobre a página inteira, o que cobria o cabeçalho, e eu corrigi ("o hambúrguer não pode passar do cabeçalho"): o menu passou a nascer abaixo dele e a ficar aberto em tela larga.
+
 ## Onde a IA errou (resumo)
 
 1. Conta de arredondamento errada, dentro da pergunta que me fez (momento 5).
@@ -93,6 +97,7 @@ Registro do meu uso de IA neste projeto. Ferramenta: Claude Code, do começo ao 
 10. O consumidor de eventos do catálogo quebrava ao iniciar por faltar uma dependência do transporte RabbitMQ, e os testes não mostravam isso; só apareceu ao subir o sistema de verdade (D52, D53).
 11. No Kubernetes, o contêiner que espera as dependências esperava uma porta que a política de rede do próprio pod bloqueia (esperaria para sempre); e duas configurações do ingress estavam no lugar errado do gráfico, e a instalação ficou esperando um endereço que nunca vem (D58, D59).
 12. Um diagrama da documentação tinha um `;` dentro de uma mensagem, que o Mermaid trata como separador de comando; o analisador de verdade pegou, a leitura não.
+13. Pôs o `INVOICED` no desenho, como pedi, mas sem nenhum caminho para um pedido novo chegar a ele (só o seed), e a explicação não deixava isso claro até eu perguntar por que ele não aparecia depois do `SUBMITTED`. Decidi manter assim e escrever o motivo (D47).
 
 ## Mapa de autoria
 

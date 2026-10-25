@@ -30,9 +30,11 @@ export interface OrderItemView {
   netCents: number;
 }
 
-// One line of a client's history.
+// One line of a seller's history.
 export interface OrderSummaryView {
   id: string;
+  clientId: string;
+  clientTradeName: string;
   status: OrderStatus;
   origin: 'SYSTEM' | 'IMPORTED';
   totalCents: number;

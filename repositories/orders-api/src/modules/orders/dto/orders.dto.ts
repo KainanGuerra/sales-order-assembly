@@ -27,9 +27,10 @@ export type SubmitOrderDto = z.infer<typeof SubmitOrderSchema>;
 
 export const OrderIdSchema = z.uuid();
 
-// A client's history: the latest orders, newest first.
+// The seller's history: the latest orders, newest first, of one client or,
+// without a client, of all of them.
 export const ListOrdersQuerySchema = z.object({
-  clientId: z.string().trim().min(1).max(40),
+  clientId: z.string().trim().min(1).max(40).optional(),
   limit: z.coerce.number().int().min(1).max(50).default(10),
 });
 export type ListOrdersQuery = z.infer<typeof ListOrdersQuerySchema>;

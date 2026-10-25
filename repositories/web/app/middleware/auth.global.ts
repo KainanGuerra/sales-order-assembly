@@ -1,7 +1,7 @@
 import type { SessionUser } from '~/types/api';
 
 export function homeFor(user: SessionUser): string {
-  return user.role === 'SELLER' ? '/clients' : '/supervisor';
+  return '/home';
 }
 
 // undefined = not asked yet, null = nobody is logged in.
@@ -22,13 +22,13 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!user.value) {
     return navigateTo('/');
   }
-  // Each role only opens its own pages.
-  const sellerPage = to.path.startsWith('/clients') || to.path.startsWith('/orders');
+  // Each role only opens its own pages; /home, /catalog and /notifications are for both.
+  const sellerPage = to.path.startsWith('/clients') || to.path.startsWith('/orders') || to.path.startsWith('/pending');
   const supervisorPage = to.path.startsWith('/supervisor') || to.path.startsWith('/approvals');
   if (user.value.role === 'SUPERVISOR' && sellerPage) {
-    return navigateTo('/supervisor');
+    return navigateTo('/home');
   }
   if (user.value.role === 'SELLER' && supervisorPage) {
-    return navigateTo('/clients');
+    return navigateTo('/home');
   }
 });

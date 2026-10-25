@@ -31,6 +31,7 @@ Cada serviço é dono de um schema e de um papel (`<serviço>_role`) que só enx
 
 Diagrama do envio: [Envio de um pedido](../diagrams/submit-order-flow.md).
 
+- **A casca da tela:** cabeçalho com hambúrguer, menu lateral (coluna em tela larga, gaveta em tela estreita, sempre abaixo do cabeçalho), botão de tema de três modos e rodapé; os itens vêm de uma lista só, filtrada pelo papel (`DECISIONS.md` D61, `CODE_MAP.md`).
 - **Navegador → web:** só o BFF recebe o navegador. Cookie de sessão opaco; a sessão fica no Redis (seção 8).
 - **BFF → serviços:** HTTP/JSON. Cada chamada leva o segredo interno (`x-inner-auth`) e o usuário e o papel da sessão (`x-user-id`, `x-user-role`). Os serviços só aceitam chamadas com o segredo.
 - **orders → catalog e identity:** gRPC, em lote, para o que precisa estar correto na hora (preço e regras de embalagem; cliente, vendedor, limites e crédito). O cálculo e o envio usam as mesmas chamadas.
@@ -44,7 +45,7 @@ Seis status em duas cadeias. Diagrama: [Ciclo de vida do pedido](../diagrams/ord
 
 - **Dentro da alçada** o pedido nasce `SUBMITTED` ("Enviado"); **fora**, `AWAITING_APPROVAL` ("Aguardando aprovação").
 - **Aprovar** leva `AWAITING_APPROVAL → APPROVED → SUBMITTED` em uma transação; **rejeitar** leva `AWAITING_APPROVAL → REJECTED → CANCELLED`. `order_status_history` guarda cada passo.
-- `INVOICED` ("Faturado") seria posto por um faturamento que não existe aqui: só os pedidos importados do seed o têm (D47).
+- `INVOICED` ("Faturado") existe para guardar o status do seed: só os pedidos importados o têm, e **nenhum pedido novo chega a ele** (faturar seria ação de um sistema de faturamento que não existe aqui; D47). O pedido novo descansa em `SUBMITTED` ("Enviado").
 - As decisões são funções puras em `order-status.ts` (`decideApprove`, `decideReject`); o banco aplica a mudança com `UPDATE ... WHERE status = 'AWAITING_APPROVAL'`, então duas decisões simultâneas resultam em uma.
 - **Rejeitar exige um motivo** de uma lista fixa (`DISCOUNT_TOO_HIGH`, `CREDIT_RISK`, `PRODUCT_OR_QUANTITY`, `ORDER_DATA_WRONG`, `OTHER`); `OTHER` exige um texto (D44).
 - **Alçada:** o limite do vendedor é conferido em cada linha e no pedido; o efetivo é o menor entre o do vendedor e `MAX_DISCOUNT_BP` (D32).

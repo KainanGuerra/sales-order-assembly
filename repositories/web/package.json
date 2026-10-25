@@ -1,5 +1,6 @@
 {
   "name": "web",
+  "version": "1.0.0",
   "type": "module",
   "private": true,
   "description": "Seller web app (Nuxt UI) and the BFF the browser talks to: session, calls to the backend services.",

@@ -169,16 +169,18 @@ export class OrdersService {
     return toOrderView(found);
   }
 
-  // The latest orders a seller made for one client, newest first. Orders of
-  // someone else are never in it.
-  async listClientOrders(actor: Actor, clientId: string, limit: number): Promise<OrderSummaryView[]> {
+  // The latest orders a seller made, for one client or (no client) for all,
+  // newest first. Orders of someone else are never in it.
+  async listClientOrders(actor: Actor, clientId: string | undefined, limit: number): Promise<OrderSummaryView[]> {
     if (actor.role !== 'SELLER') {
       throw new ForbiddenException('Only a seller has a client history');
     }
-    const rows = await this.repository.listByClient(actor.id, clientId, limit);
+    const rows = await (clientId === undefined ? this.repository.listBySeller(actor.id, limit) : this.repository.listByClient(actor.id, clientId, limit));
     const counts = await this.repository.itemCounts(rows.map((row) => row.id));
     return rows.map((row) => ({
       id: row.id,
+      clientId: row.clientId,
+      clientTradeName: row.clientTradeName,
       status: row.status as OrderStatus,
       origin: row.origin as 'SYSTEM' | 'IMPORTED',
       totalCents: row.totalCents,

@@ -1,3 +1,5 @@
+import pkg from './package.json' with { type: 'json' };
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -6,6 +8,17 @@ export default defineNuxtConfig({
   // The app is a single-page client: the seller works on a phone and later
   // offline. The Nitro server stays: it is the BFF (session and backend calls).
   ssr: false,
+
+  app: {
+    head: {
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico', sizes: 'any' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+      ],
+      meta: [{ name: 'theme-color', content: '#0f766e' }],
+    },
+  },
 
   modules: ['@nuxt/ui', '@pinia/nuxt', '@nuxtjs/i18n', '@vite-pwa/nuxt'],
   css: ['~/assets/css/main.css'],
@@ -28,13 +41,18 @@ export default defineNuxtConfig({
   pwa: {
     registerType: 'autoUpdate',
     manifest: {
-      name: 'Pedidos',
-      short_name: 'Pedidos',
+      name: 'Hermes',
+      short_name: 'Hermes',
       lang: 'pt-BR',
       display: 'standalone',
       start_url: '/',
       background_color: '#ffffff',
-      theme_color: '#ffffff',
+      theme_color: '#0f766e',
+      icons: [
+        { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+        { src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      ],
     },
     workbox: {
       globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
@@ -66,6 +84,10 @@ export default defineNuxtConfig({
     ordersUrl: 'http://orders-api:3003',
     notificationsUrl: 'http://notifications-api:3004',
     redisUrl: 'redis://redis:6379',
+    // The price table of the catalog page when no client is chosen (the same one identity falls back to).
+    defaultPriceTableId: 'TP01',
+    // Shown in the header and the menu; the one value here that the browser may read.
+    public: { appVersion: pkg.version },
     session: {
       ttlSeconds: 8 * 60 * 60,
       // Turn on when the app is served over HTTPS.

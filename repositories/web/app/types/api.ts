@@ -131,6 +131,8 @@ export interface HistoryStep {
 
 export interface OrderSummary {
   id: string;
+  clientId: string;
+  clientTradeName: string;
   status: OrderStatus;
   origin: 'SYSTEM' | 'IMPORTED';
   totalCents: number;

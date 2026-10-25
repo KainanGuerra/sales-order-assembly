@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import { DB, type Database } from '../../../db/database.module.js';
 import { priceTableItems, productStats, products } from '../../../db/schema.js';
 import { isExactCodeQuery, type ProductRow } from '../search-rules.js';
@@ -74,6 +74,24 @@ export class ProductsRepository {
         asc(products.id),
       )
       .limit(limit);
+  }
+
+  // The active products by name, a page at a time. Without the flag, products
+  // missing from the table are left out here (not after the page is cut), so
+  // pages stay full.
+  async browse(priceTableId: string | null, includeUnpriced: boolean, limit: number, offset: number): Promise<ProductRow[]> {
+    const priced = this.db
+      .select(columns)
+      .from(products)
+      .leftJoin(
+        priceTableItems,
+        and(eq(priceTableItems.productId, products.id), eq(priceTableItems.priceTableId, priceTableId ?? '')),
+      );
+    return priced
+      .where(includeUnpriced ? eq(products.active, true) : and(eq(products.active, true), isNotNull(priceTableItems.unitPriceCents)))
+      .orderBy(asc(normalizedDescription), asc(products.id))
+      .limit(limit)
+      .offset(offset);
   }
 
   async findByIds(ids: string[], priceTableId: string): Promise<ProductRow[]> {

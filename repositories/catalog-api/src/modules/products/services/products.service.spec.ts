@@ -18,7 +18,7 @@ const row = (overrides: Partial<ProductRow>): ProductRow => ({
 });
 
 function build(rows: ProductRow[], showUnavailable = true) {
-  const repository = { search: vi.fn().mockResolvedValue(rows), findByIds: vi.fn().mockResolvedValue(rows) };
+  const repository = { search: vi.fn().mockResolvedValue(rows), browse: vi.fn().mockResolvedValue(rows), findByIds: vi.fn().mockResolvedValue(rows) };
   const env = { SHOW_UNAVAILABLE_PRODUCTS: showUnavailable } as Env;
   return { service: new ProductsService(repository as unknown as ProductsRepository, env), repository };
 }
@@ -72,5 +72,26 @@ describe('ProductsService.findQuotes', () => {
     const result = await service.findQuotes(['P001', 'P999'], 'TP01');
     expect(result.unknownProductIds).toEqual(['P999']);
     expect(result.products).toHaveLength(1);
+  });
+});
+
+describe('ProductsService.browse', () => {
+  it('lists an available product with its price, without any search text', async () => {
+    const { service, repository } = build([row({})]);
+    const [item] = await service.browse({ priceTableId: 'TP01', limit: 20, offset: 40 });
+    expect(item).toMatchObject({ id: 'P001', availability: 'AVAILABLE', unitPriceCents: 2690 });
+    expect(repository.browse).toHaveBeenCalledWith('TP01', true, 20, 40);
+  });
+
+  it('asks the repository to leave out products without a price when the flag is off', async () => {
+    const { service, repository } = build([], false);
+    await service.browse({ priceTableId: 'TP01', limit: 20, offset: 0 });
+    expect(repository.browse).toHaveBeenCalledWith('TP01', false, 20, 0);
+  });
+
+  it('shows an active product without a price as disabled, with the reason', async () => {
+    const { service } = build([row({ unitPriceCents: null })]);
+    const [item] = await service.browse({ priceTableId: 'TP03', limit: 20, offset: 0 });
+    expect(item).toMatchObject({ availability: 'NO_PRICE', unitPriceCents: null, reason: 'NO_PRICE_IN_TABLE' });
   });
 });

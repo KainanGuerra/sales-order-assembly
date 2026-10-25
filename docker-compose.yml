@@ -150,6 +150,7 @@ services:
       NUXT_CATALOG_URL: http://catalog-api:3002
       NUXT_ORDERS_URL: http://orders-api:3003
       NUXT_NOTIFICATIONS_URL: http://notifications-api:3004
+      NUXT_DEFAULT_PRICE_TABLE_ID: ${DEFAULT_PRICE_TABLE_ID:-TP01}
       NUXT_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       # Turn on when the app is served over HTTPS.
       NUXT_SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}

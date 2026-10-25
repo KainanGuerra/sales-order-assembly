@@ -58,7 +58,7 @@ Cada serviço guarda a própria cópia da fatia que usa, em `seed/seed.json` (id
 | A43 | O supervisor pode decidir pedidos de outra equipe? | Não: só os dos vendedores que supervisiona; os demais respondem "não encontrado". Decisão minha |
 | A44 | O que "repetir pedido" copia | Produtos, quantidades e a unidade informada; descontos em zero; preços da tabela atual do cliente; produtos descontinuados, sem preço ou inexistentes ficam de fora e são listados. Decisão minha |
 | A45 | Quantos pedidos o histórico mostra | Os 10 últimos do cliente, só os do próprio vendedor (um vendedor que herda um cliente não vê os pedidos do anterior). Decisão minha |
-| A46 | Quem marca um pedido como faturado | Ninguém neste sistema: não há faturamento. Só os pedidos importados do seed têm `INVOICED`. Decisão minha |
+| A46 | Quem marca um pedido como faturado | Ninguém neste sistema: não há faturamento. O `INVOICED` existe para guardar o "Faturado" do seed; só os pedidos importados o têm, e nenhum pedido novo chega a ele. Decisão minha |
 | A47 | Repetir com um pedido em andamento | Pergunta antes de substituir; cancelar não muda nada. Decisão minha |
 | A48 | Quem é avisado de quê | Ver a tabela em `DECISIONS.md` D49: o supervisor é avisado de pedidos que esperam decisão e dos enviados; o vendedor, de tudo o que acontece com os seus pedidos. Pedido dentro da alçada só gera o aviso de "enviado". Decisão minha |
 | A49 | Quando o aviso conta como lido | Ao abrir (clicar), ou em "marcar todas". O toast na tela não conta como leitura. Decisão minha |
@@ -78,6 +78,8 @@ Cada serviço guarda a própria cópia da fatia que usa, em `seed/seed.json` (id
 | A63 | Porta do computador | 8080 (a mesma do Compose); só um dos dois roda por vez. Decisão minha |
 | A64 | Como o código é publicado | Um único repositório público; os serviços são pastas de `repositories/` (o nome da pasta ficou por herança); as imagens vão para o GHCR pelo CI (`DECISIONS.md` D60). Decisão minha |
 | A25 | "Login" | Simulado: tela para escolher vendedor ou supervisor, com sessão por cookie no servidor |
+| A65 | Catálogo sem cliente escolhido | Mostra os preços da tabela padrão (TP01), e o supervisor, que não tem carteira, só vê assim. Lista só produtos ativos, por nome; um ativo sem preço na tabela aparece desabilitado, como na busca, se a variável de ambiente permitir (`DECISIONS.md` D61). Decisão minha |
+| A66 | "Pedidos" do vendedor | Todos os pedidos dele, de todos os clientes, os mais recentes primeiro (até 50); o filtro de situação só esconde linhas já recebidas. Decisão minha |
 | A26 | Pedido offline (fase C) | Decidido: ver `DECISIONS.md` D54 a D56 e A53 a A59. O backend continua sendo o dono das regras |
 
 ## Arredondamento (método 1 — arredondar cada linha, meio para cima)

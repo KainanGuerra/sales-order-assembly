@@ -23,7 +23,12 @@ async function pick(role: Role, id: string) {
 </script>
 
 <template>
-  <div class="mx-auto max-w-md space-y-6 pt-6">
+  <!-- The height is the screen minus the header (3.5rem), the footer (2.75rem) and the
+       page padding (2rem), so the login screen needs no scrolling. -->
+  <div class="mx-auto flex h-[calc(100dvh-8.25rem)] max-w-md flex-col justify-center gap-4">
+    <div class="flex justify-center text-teal-800 dark:text-teal-200" data-testid="login-logo">
+      <AppLogo stacked :size="80" />
+    </div>
     <div>
       <h1 class="text-2xl font-semibold">{{ t('login.title') }}</h1>
       <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-300">{{ t('login.subtitle') }}</p>
@@ -31,13 +36,13 @@ async function pick(role: Role, id: string) {
 
     <UAlert v-if="failed || optionsError" color="error" variant="subtle" icon="i-lucide-triangle-alert" :title="t('login.failed')" />
 
-    <section v-if="options" class="space-y-2">
+    <section v-if="options" class="space-y-1.5">
       <h2 class="text-sm font-medium text-neutral-500">{{ t('login.sellers') }}</h2>
       <UButton
         v-for="seller in options.sellers"
         :key="seller.id"
         block
-        size="xl"
+        size="lg"
         color="neutral"
         variant="outline"
         icon="i-lucide-user"
@@ -48,13 +53,13 @@ async function pick(role: Role, id: string) {
       />
     </section>
 
-    <section v-if="options?.supervisors.length" class="space-y-2">
+    <section v-if="options?.supervisors.length" class="space-y-1.5">
       <h2 class="text-sm font-medium text-neutral-500">{{ t('login.supervisors') }}</h2>
       <UButton
         v-for="supervisor in options.supervisors"
         :key="supervisor.id"
         block
-        size="xl"
+        size="lg"
         color="neutral"
         variant="outline"
         icon="i-lucide-shield-check"

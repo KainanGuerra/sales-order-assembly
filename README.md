@@ -1,4 +1,4 @@
-# Montagem de pedidos para vendedores externos
+# Hermes: montagem de pedidos para vendedores externos
 
 Módulo para vendedores que visitam pequenos varejistas (mercadinhos, minimercados, conveniências), consultam o catálogo e fecham o pedido no cliente, muitas vezes com sinal ruim.
 
@@ -39,6 +39,8 @@ docker compose up
 ```bash
 docker compose up --build
 ```
+
+**Porta ocupada?** `scripts/up.sh` libera toda porta que o compose publica (para os contêineres que a seguram e encerra qualquer outro processo que a use) e então roda `docker compose up`; aceita os mesmos argumentos (`scripts/up.sh --build`). Para incluir as portas de desenvolvimento: `COMPOSE_FILE=docker-compose.yml:docker-compose.dev.yml scripts/up.sh`. Atenção: ele encerra o que estiver na porta, inclusive o cluster kind da fase D (`docker start` o religa).
 
 As imagens publicadas são públicas e o `docker compose pull` funciona sem login (conferido, veja abaixo). Se um dia responder `denied`, use a forma 2. O `docker compose up` sozinho usa a imagem que já estiver na máquina; se não houver, tenta baixar e, não conseguindo, constrói. Para fixar uma versão publicada, ponha `IMAGE_TAG=<sha do commit>` no `.env`.
 
@@ -89,6 +91,7 @@ Os testes que usam o banco só rodam com `TEST_DATABASE_URL` apontando para o Po
 **Sistema**
 
 - A publicação dos eventos não usa outbox: se o RabbitMQ estiver fora no envio, o evento se perde (e com ele um aviso ou uma confirmação de crédito, que a reserva só recupera pela expiração). Não há ferramenta para reprocessar mensagens mortas.
+- O status `INVOICED` ("Faturado") só existe nos pedidos importados do seed: nenhum pedido criado no sistema chega a ele, porque o faturamento é externo (D47). Já a rejeição é completa: `REJECTED` e em seguida `CANCELLED`.
 - Os avisos em tempo real (SSE) são difundidos no processo do notifications: com mais de uma réplica, precisariam de um corretor entre elas.
 - **Modo offline:** verificado em Chrome de computador, parando o servidor da interface para simular a falta de sinal; **não testado num celular real** nem com sinal fraco de verdade (a regra de 8 segundos tem teste de lógica, não medição). O service worker só existe na versão de produção (a imagem Docker). Os pedidos guardados ficam no `localStorage`, que o usuário pode apagar, e só são enviados com o app aberto. Não há ícones para instalar o app na tela inicial.
 - **Kubernetes:** as imagens são construídas na máquina e carregadas no kind (não passam por um registry); uma réplica de cada serviço; sem TLS (de propósito, D59), sem escala automática, sem cópia de segurança do volume do banco; os limites de recursos são estimativas. A interface não foi conferida no navegador dentro desse cluster (só pela API, incluindo o fluxo de avisos pelo ingress).

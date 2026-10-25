@@ -163,7 +163,7 @@ async function send() {
       <UAlert v-if="submitProblem === 'refused'" role="alert" color="error" variant="subtle" icon="i-lucide-octagon-alert" :title="t('order.refused')" />
       <UAlert v-if="submitProblem === 'failed'" role="alert" color="error" variant="subtle" icon="i-lucide-wifi-off" :title="t('order.sendFailed')" />
 
-      <footer class="fixed inset-x-0 bottom-0 z-20 border-t border-neutral-200 bg-white p-3 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+      <footer class="fixed inset-x-0 bottom-11 z-20 border-t border-neutral-200 bg-white p-3 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
         <UContainer class="space-y-2 p-0">
           <div class="flex items-end justify-between gap-3">
             <UFormField :label="t('order.orderDiscount')" :error="orderDiscountInvalid ? t('order.discountInvalid') : undefined" class="w-40">

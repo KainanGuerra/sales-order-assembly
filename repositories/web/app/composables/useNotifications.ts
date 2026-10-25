@@ -15,10 +15,13 @@ export function useNotifications() {
     queryKey: [...NOTIFICATIONS_KEY, 'count'],
     queryFn: () => api<{ count: number }>('/api/notifications/unread-count'),
     select: (data) => data.count,
+    // The layout reads this on the login screen too, where nobody is logged in.
+    enabled: computed(() => !!user.value),
   });
   const list = useQuery({
     queryKey: [...NOTIFICATIONS_KEY, 'list'],
     queryFn: () => api<NotificationView[]>('/api/notifications'),
+    enabled: computed(() => !!user.value),
   });
 
   const refresh = () => $queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_KEY });

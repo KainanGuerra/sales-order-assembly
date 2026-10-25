@@ -14,7 +14,7 @@ export class ProductsService {
     @Inject(ENV) private readonly env: Env,
   ) {}
 
-  async search({ q, priceTableId, limit }: SearchProductsQuery): Promise<ProductSearchItem[]> {
+  async search({ q, priceTableId, limit }: Pick<SearchProductsQuery, 'priceTableId' | 'limit'> & { q: string }): Promise<ProductSearchItem[]> {
     const rows = await this.repository.search(q, priceTableId ?? null, CANDIDATE_LIMIT);
     const exactCode = isExactCodeQuery(q);
 
@@ -25,6 +25,14 @@ export class ProductsService {
       )
       .slice(0, limit)
       .map(({ row, availability }) => toSearchItem(row, availability));
+  }
+
+  // The catalog by name, one page at a time. Inactive products are not listed
+  // (they only show for an exact EAN/SKU); an active product missing from the
+  // table is listed, disabled, only when the flag is on, like in a search.
+  async browse({ priceTableId, limit, offset }: Pick<SearchProductsQuery, 'priceTableId' | 'limit' | 'offset'>): Promise<ProductSearchItem[]> {
+    const rows = await this.repository.browse(priceTableId ?? null, this.env.SHOW_UNAVAILABLE_PRODUCTS, limit, offset);
+    return rows.map((row) => toSearchItem(row, classify(row)));
   }
 
   async findQuotes(productIds: string[], priceTableId: string) {

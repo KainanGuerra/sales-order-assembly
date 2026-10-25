@@ -8,9 +8,11 @@ import { ProductsService } from '../services/products.service.js';
 export class ProductsController {
   constructor(private readonly service: ProductsService) {}
 
-  // Search by name (fuzzy, accent-insensitive) or by exact EAN/SKU.
+  // Search by name (fuzzy, accent-insensitive) or by exact EAN/SKU; without
+  // text, browse the catalog by name.
   @Get()
   async search(@Query({ schema: SearchProductsQuerySchema }) query: SearchProductsQuery) {
-    return { items: await this.service.search(query) };
+    const { q, ...rest } = query;
+    return { items: await (q === undefined ? this.service.browse(rest) : this.service.search({ ...rest, q })) };
   }
 }

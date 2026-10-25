@@ -31,8 +31,8 @@ describe('OrderIdSchema', () => {
 });
 
 describe('ListOrdersQuerySchema', () => {
-  it('needs a client, and defaults to the latest 10', () => {
-    expect(ListOrdersQuerySchema.safeParse({}).success).toBe(false);
+  it('defaults to the latest 10, with or without a client', () => {
+    expect(ListOrdersQuerySchema.parse({})).toEqual({ limit: 10 });
     expect(ListOrdersQuerySchema.parse({ clientId: 'C001' })).toEqual({ clientId: 'C001', limit: 10 });
   });
 

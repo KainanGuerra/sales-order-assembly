@@ -15,4 +15,4 @@ stateDiagram-v2
     CANCELLED --> [*]
 ```
 
-Na tela: Enviado (`SUBMITTED`), Aguardando aprovação, Aprovado, Rejeitado, Faturado, Cancelado. Referenciado em `../architecture/ARCHITECTURE.md` §4.
+O `INVOICED` existe para guardar o "Faturado" do seed: nenhum pedido novo chega a ele, e o pedido novo descansa em `SUBMITTED`. Na tela: Enviado (`SUBMITTED`), Aguardando aprovação, Aprovado, Rejeitado, Faturado, Cancelado. Referenciado em `../architecture/ARCHITECTURE.md` §4.

@@ -65,6 +65,13 @@ class FakeOrdersRepository {
     });
     return true;
   }
+  async listBySeller(sellerId: string, limit: number) {
+    return [...this.saved.values()]
+      .map((o) => o.order)
+      .filter((o) => o.sellerId === sellerId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, limit);
+  }
   async listByClient(sellerId: string, clientId: string, limit: number) {
     return [...this.saved.values()]
       .map((o) => o.order)
@@ -532,7 +539,7 @@ describe('OrdersService.listClientOrders', () => {
     const { service } = build();
     await service.submit(seller, submission());
     const [row] = await service.listClientOrders(seller, 'C001', 10);
-    expect(row).toEqual({ id: ORDER_ID, status: 'SUBMITTED', origin: 'SYSTEM', totalCents: 50_000, itemCount: 1, createdAt: '2026-10-24T12:00:00.000Z' });
+    expect(row).toMatchObject({ id: ORDER_ID, clientId: 'C001', status: 'SUBMITTED', origin: 'SYSTEM', totalCents: 50_000, itemCount: 1, createdAt: '2026-10-24T12:00:00.000Z' });
   });
 
   it("never lists another seller's orders, or another client's", async () => {
@@ -540,6 +547,15 @@ describe('OrdersService.listClientOrders', () => {
     await service.submit(seller, submission());
     expect(await service.listClientOrders({ role: 'SELLER', id: 'V02' }, 'C001', 10)).toEqual([]);
     expect(await service.listClientOrders(seller, 'C002', 10)).toEqual([]);
+  });
+
+  it('lists the orders of every client of the seller when no client is given, and never another seller\'s', async () => {
+    const { service } = build();
+    await service.submit(seller, submission());
+    const rows = await service.listClientOrders(seller, undefined, 10);
+    expect(rows.map((r) => r.id)).toEqual([ORDER_ID]);
+    expect(rows[0]).toMatchObject({ clientId: 'C001' });
+    expect(await service.listClientOrders({ role: 'SELLER', id: 'V02' }, undefined, 10)).toEqual([]);
   });
 
   it('respects the limit', async () => {

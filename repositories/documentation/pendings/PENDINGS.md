@@ -15,6 +15,8 @@
 
 **Falta:**
 
+0. A nova casca da interface (menu, tema, catálogo, lista de pedidos; `DECISIONS.md` D61) foi conferida à mão no Chrome (desktop; o celular, num iframe de 420 px) e não tem teste de ponta a ponta. A versão (`version` do `package.json` do `web`, lida por `runtimeConfig.public.appVersion`) é escrita à mão e aparece no cabeçalho (sem login) e no fim do menu (com login); nada a atualiza sozinho. O gráfico Helm do `web` não passa `NUXT_DEFAULT_PRICE_TABLE_ID`; vale o padrão `TP01`.
+
 7. Ler o código das regras (`order-rules.ts`, `order-status.ts`, `plan.ts`, as regras do crédito) e entender os três métodos de arredondamento (`ASSUMPTIONS.md`, seção "Arredondamento"). Hoje nada disso foi lido linha a linha (`AI_LOG.md`).
 8. Ver os diagramas desta documentação renderizados (seção 3): a sintaxe foi conferida, a aparência não (o GitHub os renderiza).
 

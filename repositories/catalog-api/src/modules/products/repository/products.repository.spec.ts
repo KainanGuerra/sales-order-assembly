@@ -57,6 +57,22 @@ describe.skipIf(!url)('ProductsRepository (real Postgres)', () => {
     expect(count).toBe(68);
   });
 
+  it('browses the active products by name, a page at a time', async () => {
+    const first = await repository.browse('TP01', true, 5, 0);
+    const second = await repository.browse('TP01', true, 5, 5);
+    const names = [...first, ...second].map((r) => r.description.toLowerCase());
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'pt-BR')));
+    expect(new Set([...first, ...second].map((r) => r.id)).size).toBe(10);
+    expect([...first, ...second].every((r) => r.active)).toBe(true);
+  });
+
+  it('browse leaves out products missing from the table when asked to', async () => {
+    const withUnpriced = await repository.browse('TP03', true, 50, 0);
+    const pricedOnly = await repository.browse('TP03', false, 50, 0);
+    expect(pricedOnly.every((r) => r.unitPriceCents !== null)).toBe(true);
+    expect(withUnpriced.length).toBeGreaterThanOrEqual(pricedOnly.length);
+  });
+
   it('finds a product ignoring accents and case', async () => {
     const rows = await repository.search('ACUCAR', 'TP01', 10);
     expect(rows.map((r) => r.id)).toEqual(['P003']);

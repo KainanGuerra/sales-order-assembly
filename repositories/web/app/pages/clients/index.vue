@@ -11,8 +11,6 @@ const { data, error, status } = await useFetch<{ items: ClientView[] }>('/api/cl
   <div class="space-y-3 pt-2">
     <h1 class="text-2xl font-semibold">{{ t('clients.title') }}</h1>
 
-    <PendingOrders />
-
     <UAlert v-if="error" color="error" variant="subtle" icon="i-lucide-triangle-alert" :title="t('errors.unavailable')" />
     <p v-else-if="status === 'success' && !data?.items.length" class="text-neutral-500">{{ t('clients.empty') }}</p>
 
@@ -36,6 +34,7 @@ const { data, error, status } = await useFetch<{ items: ClientView[] }>('/api/cl
         </div>
         <div class="flex flex-col items-end gap-2">
           <UButton :to="`/orders/new/${client.id}`" icon="i-lucide-shopping-cart" :label="t('clients.newOrder')" :data-testid="`order-${client.id}`" />
+          <UButton :to="{ path: '/catalog', query: { clientId: client.id } }" color="neutral" variant="outline" size="sm" icon="i-lucide-package-search" :label="t('clients.viewProducts')" :data-testid="`products-${client.id}`" />
           <UButton :to="`/clients/${client.id}/orders`" color="neutral" variant="outline" size="sm" icon="i-lucide-history" :label="t('history.open')" :data-testid="`history-${client.id}`" />
         </div>
       </div>

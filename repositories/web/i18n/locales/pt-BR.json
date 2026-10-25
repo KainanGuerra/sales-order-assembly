@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Pedidos",
+    "title": "Hermes",
     "logout": "Sair",
     "back": "Voltar"
   },
@@ -27,7 +27,8 @@
     "credit": "Crédito disponível",
     "priceTable": "Tabela de preço",
     "fallback": "Tabela padrão (cliente sem tabela)",
-    "newOrder": "Novo pedido"
+    "newOrder": "Novo pedido",
+    "viewProducts": "Ver produtos"
   },
   "order": {
     "title": "Novo pedido",
@@ -216,5 +217,68 @@
     "sent": "Pedido de {client} enviado: {status}.",
     "refusedToast": "O pedido de {client} foi recusado. Veja os motivos em Pedidos pendentes.",
     "queued": "Sem sinal: o pedido ficou guardado e será enviado quando o sinal voltar."
+  },
+  "nav": {
+    "open": "Abrir menu",
+    "description": "Navegação do aplicativo",
+    "clients": "Clientes",
+    "approvals": "Aprovações",
+    "notifications": "Notificações",
+    "home": "Início",
+    "catalog": "Catálogo",
+    "orders": "Pedidos",
+    "pending": "Pendentes offline",
+    "close": "Fechar menu"
+  },
+  "theme": {
+    "light": "Tema claro",
+    "mixed": "Tema misto (menu escuro, página clara)",
+    "dark": "Tema escuro"
+  },
+  "footer": {
+    "online": "Conectado",
+    "offline": "Sem sinal",
+    "github": "GitHub",
+    "linkedin": "LinkedIn",
+    "madeBy": "Feito por Kainan Guerra"
+  },
+  "home": {
+    "title": "Início",
+    "greeting": "Olá, {name}",
+    "subtitle": "Atalhos e um resumo do que precisa da sua atenção.",
+    "clients": "Clientes na carteira",
+    "pending": "Pedidos pendentes (offline)",
+    "approvals": "Aguardando aprovação",
+    "unread": "Notificações não lidas",
+    "catalog": "Catálogo de produtos",
+    "orders": "Meus pedidos",
+    "open": "Abrir",
+    "unavailable": "indisponível"
+  },
+  "catalog": {
+    "title": "Catálogo",
+    "subtitle": "Produtos e preços. Escolha um cliente para ver a tabela dele; sem cliente, vale a tabela padrão.",
+    "client": "Cliente",
+    "allClients": "Nenhum (tabela padrão)",
+    "search": "Buscar por nome, SKU ou código de barras",
+    "empty": "Nenhum produto encontrado.",
+    "failed": "Não foi possível carregar o catálogo.",
+    "more": "Carregar mais",
+    "priceTable": "Preços da tabela de {name}",
+    "standardTable": "Preços da tabela padrão",
+    "newOrder": "Novo pedido para este cliente"
+  },
+  "ordersList": {
+    "title": "Pedidos",
+    "subtitle": "Os pedidos que você fez, de todos os clientes.",
+    "status": "Situação",
+    "allStatuses": "Todas",
+    "empty": "Nenhum pedido encontrado.",
+    "failed": "Não foi possível carregar os pedidos."
+  },
+  "pendingPage": {
+    "title": "Pedidos pendentes",
+    "subtitle": "Pedidos fechados sem sinal, esperando para serem enviados.",
+    "empty": "Nenhum pedido pendente."
   }
 }

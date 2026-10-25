@@ -21,6 +21,12 @@ Para achar rápido onde está cada coisa: onde mudar uma regra, como seguir um p
 | A carteira do vendedor | `identity-api/src/modules/people/rules.ts` (`canAccessPortfolio`) e `identity-api/src/modules/people/services/people.service.ts` | |
 | O que a tela mostra de um status | `web/app/components/StatusBadge.vue`, `web/i18n/locales/pt-BR.json` | |
 | O reenvio do modo offline | decisão do que fazer com cada falha: `web/app/utils/connectivity.ts` (`classifyFailure`); a rodada de envio: `web/app/stores/pending.ts` (`flush`); quando tentar: `web/app/composables/usePendingSync.ts` (a cada 15 s) | tempo limite: `REQUEST_TIMEOUT_MS` (8 s) no mesmo `connectivity.ts` |
+| Os itens do menu e quem os vê | `web/app/utils/navigation.ts` (`NAV_ITEMS`, `navFor`, `isActive`); os rótulos em `web/i18n/locales/pt-BR.json` (`nav.*`) | |
+| A casca (cabeçalho, menu, rodapé) | `web/app/layouts/default.vue`, `web/app/components/AppMenu.vue`, `AppLogo.vue` | |
+| A versão e os contatos do autor | `web/package.json` (`version`), `web/nuxt.config.ts` (`runtimeConfig.public.appVersion`), `web/app/utils/contact.ts` | |
+| O tema (claro, escuro, misto) | `web/app/utils/theme.ts` (regras puras), `web/app/composables/useAppTheme.ts`, `web/app/plugins/theme.client.ts`; cores em `web/app/app.config.ts` | |
+| Quais páginas cada papel abre | `web/app/middleware/auth.global.ts` | |
+| O catálogo sem texto (navegar) | `catalog-api/src/modules/products/services/products.service.ts` (`browse`), `repository/products.repository.ts` | `web/server/api/catalog/index.get.ts` |
 | Quando o app se considera sem sinal | `web/app/composables/useApi.ts` (hooks), `useConnectivity.ts`, `web/app/plugins/offline.client.ts` (sonda a cada 5 s) | |
 | O que o service worker guarda | `web/nuxt.config.ts` (bloco `pwa`) | |
 | A tabela de rede (quem fala com quem) | `<serviço>/k8s/values.yaml` (`networkPolicy`) | `orchestration/charts/sales-lib/templates/_networkpolicy.tpl` |
@@ -63,7 +69,7 @@ Rotas por serviço:
 | `catalog-api` | `GET /products`; gRPC `GetProducts` |
 | `notifications-api` | `GET /notifications`, `GET /notifications/unread-count`, `GET /notifications/stream` (SSE), `POST /notifications/read-all`, `POST /notifications/:id/read` |
 | todos | `GET /health` |
-| `web` (BFF, `server/api`) | `auth/{options,login,logout,me}`, `clients`, `clients/:id`, `clients/:id/products`, `clients/:id/orders`, `orders/calculate`, `orders` (POST), `orders/:id`, `orders/:id/repeat`, `orders/:id/{approve,reject}`, `approvals`, `notifications/*` (inclui o fluxo), `health` |
+| `web` (BFF, `server/api`) | `auth/{options,login,logout,me}`, `clients`, `clients/:id`, `clients/:id/products`, `clients/:id/orders`, `catalog`, `orders/calculate`, `orders` (GET e POST), `orders/:id`, `orders/:id/repeat`, `orders/:id/{approve,reject}`, `approvals`, `notifications/*` (inclui o fluxo), `health` |
 
 ## 4. Rodar um teste
 
