@@ -1,4 +1,4 @@
-import { index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, integer, jsonb, pgTable, primaryKey, serial, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 // Tables are unqualified on purpose: the connection's search_path decides the
 // schema ("orders" in the service, "orders_test" in tests).
@@ -12,8 +12,17 @@ export const orders = pgTable(
     sellerId: text('seller_id').notNull(),
     clientId: text('client_id').notNull(),
     priceTableId: text('price_table_id').notNull(),
-    // SUBMITTED | AWAITING_APPROVAL
+    // Who must approve it, and the names as they were when the order was sent
+    // (so a list needs no calls to other services).
+    supervisorId: text('supervisor_id').notNull().default(''),
+    sellerName: text('seller_name').notNull().default(''),
+    clientTradeName: text('client_trade_name').notNull().default(''),
+    // AWAITING_APPROVAL | SUBMITTED | REJECTED. APPROVED is a step on the way to
+    // SUBMITTED, so it only appears in the history.
     status: text('status').notNull(),
+    // Set when a supervisor rejects the order.
+    rejectionReasonCode: text('rejection_reason_code'),
+    rejectionReasonText: text('rejection_reason_text'),
     subtotalCents: integer('subtotal_cents').notNull(),
     orderDiscountBp: integer('order_discount_bp').notNull(),
     orderDiscountCents: integer('order_discount_cents').notNull(),
@@ -25,7 +34,29 @@ export const orders = pgTable(
   (table) => [
     index('orders_seller_created_idx').on(table.sellerId, table.createdAt),
     index('orders_client_created_idx').on(table.clientId, table.createdAt),
+    // The supervisor's list: pending orders of their sellers, oldest first.
+    index('orders_supervisor_status_idx').on(table.supervisorId, table.status, table.createdAt),
   ],
+);
+
+// Every step an order went through: who did it, when, and why. The serial id
+// gives the order of the steps even when two share the same instant (approving
+// records APPROVED and SUBMITTED together).
+export const orderStatusHistory = pgTable(
+  'order_status_history',
+  {
+    id: serial('id').primaryKey(),
+    orderId: uuid('order_id')
+      .notNull()
+      .references(() => orders.id),
+    status: text('status').notNull(),
+    // user:<id> or system:<name>
+    actor: text('actor').notNull(),
+    reasonCode: text('reason_code'),
+    reasonText: text('reason_text'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('order_status_history_order_idx').on(table.orderId, table.id)],
 );
 
 // What was sold, as it was at submit time: product data and prices are copied,

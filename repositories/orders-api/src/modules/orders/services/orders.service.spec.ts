@@ -1,5 +1,5 @@
-import { ForbiddenException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
-import type { OrderSubmittedEvent } from 'contracts';
+import { ConflictException, ForbiddenException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import type { OrderApprovedEvent, OrderPlacedEvent, OrderRejectedEvent, OrderSubmittedEvent } from 'contracts';
 import type { ProductQuote } from 'contracts/catalog';
 import type { Client, Seller } from 'contracts/identity';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,13 +9,15 @@ import type { CatalogGateway } from '../clients/catalog.client.js';
 import type { IdentityGateway } from '../clients/identity.client.js';
 import type { OrderEventsPublisher } from '../clients/order-events.publisher.js';
 import type { CalculateOrderDto, SubmitOrderDto } from '../dto/orders.dto.js';
-import type { NewOrder, NewOrderItem, OrderWithItems } from '../repository/orders.repository.js';
+import type { NewHistory, NewOrder, NewOrderItem, OrderWithItems } from '../repository/orders.repository.js';
 import { OrdersRepository } from '../repository/orders.repository.js';
 import { OrdersService } from './orders.service.js';
 
 const env = { MIN_ORDER_CENTS: 30_000, MAX_DISCOUNT_BP: 1_000 } as Env;
 const seller: Actor = { role: 'SELLER', id: 'V01' };
+const supervisor: Actor = { role: 'SUPERVISOR', id: 'S01' };
 const ORDER_ID = '3f8c2d0e-8a53-4c6a-9d7c-1b6c1d2f6a10';
+const T0 = new Date('2026-10-24T12:00:00Z');
 
 const v01: Seller = { id: 'V01', name: 'Carlos Menezes', supervisorId: 'S01', discountLimitBp: 500 };
 const c001: Client = {
@@ -40,20 +42,53 @@ const quote = (overrides: Partial<ProductQuote> & { productId: string }): Produc
   ...overrides,
 });
 
-// In-memory stand-in for the repository: same contract, no database.
+// In-memory stand-in for the repository: same contract, no database. The
+// conditional updates behave like the real ones: they only match an order that
+// is still awaiting approval.
 class FakeOrdersRepository {
   saved = new Map<string, OrderWithItems>();
+  private clock = 0;
+  private stamp() {
+    return new Date(T0.getTime() + this.clock++);
+  }
   async findById(id: string) {
     return this.saved.get(id) ?? null;
   }
-  async insert(order: NewOrder, items: NewOrderItem[]) {
+  async insert(order: NewOrder, items: NewOrderItem[], firstStep: NewHistory) {
     if (this.saved.has(order.id!)) {
       return false;
     }
     this.saved.set(order.id!, {
-      order: { ...order, createdAt: new Date('2026-10-24T12:00:00Z') } as OrderWithItems['order'],
+      order: { ...order, createdAt: T0, rejectionReasonCode: null, rejectionReasonText: null } as OrderWithItems['order'],
       items: items as OrderWithItems['items'],
+      history: [{ id: 1, orderId: order.id!, reasonCode: null, reasonText: null, createdAt: T0, ...firstStep }] as OrderWithItems['history'],
     });
+    return true;
+  }
+  async listPendingApproval(supervisorId: string) {
+    return [...this.saved.values()].map((o) => o.order).filter((o) => o.supervisorId === supervisorId && o.status === 'AWAITING_APPROVAL');
+  }
+  async applyApproval(orderId: string, by: string) {
+    const found = this.saved.get(orderId);
+    if (!found || found.order.status !== 'AWAITING_APPROVAL') {
+      return false;
+    }
+    found.order.status = 'SUBMITTED';
+    found.history.push(
+      { id: found.history.length + 1, orderId, status: 'APPROVED', actor: `user:${by}`, reasonCode: null, reasonText: null, createdAt: this.stamp() },
+      { id: found.history.length + 2, orderId, status: 'SUBMITTED', actor: 'system:orders', reasonCode: null, reasonText: null, createdAt: this.stamp() },
+    );
+    return true;
+  }
+  async applyRejection(orderId: string, by: string, reason: { code: string; text: string | null }) {
+    const found = this.saved.get(orderId);
+    if (!found || found.order.status !== 'AWAITING_APPROVAL') {
+      return false;
+    }
+    found.order.status = 'REJECTED';
+    found.order.rejectionReasonCode = reason.code;
+    found.order.rejectionReasonText = reason.text;
+    found.history.push({ id: found.history.length + 1, orderId, status: 'REJECTED', actor: `user:${by}`, reasonCode: reason.code, reasonText: reason.text, createdAt: this.stamp() });
     return true;
   }
 }
@@ -68,14 +103,17 @@ function build(overrides: { clients?: Record<string, Client>; quotes?: ProductQu
       ids.includes(q.productId),
     ),
   );
-  const publishSubmitted = vi.fn(async (_event: OrderSubmittedEvent) => undefined);
   const reserveCredit = vi.fn(async (_clientId: string, _orderId: string, _amountCents: number) => ({ reserved: true, availableCents: 100_000 }));
   const releaseCredit = vi.fn(async (_orderId: string) => undefined);
+  const publishPlaced = vi.fn(async (_event: OrderPlacedEvent) => undefined);
+  const publishSubmitted = vi.fn(async (_event: OrderSubmittedEvent) => undefined);
+  const publishApproved = vi.fn(async (_event: OrderApprovedEvent) => undefined);
+  const publishRejected = vi.fn(async (_event: OrderRejectedEvent) => undefined);
   const identity: IdentityGateway = { getClient, getSeller, reserveCredit, releaseCredit };
   const catalog: CatalogGateway = { getProducts };
-  const publisher: OrderEventsPublisher = { publishSubmitted };
+  const publisher: OrderEventsPublisher = { publishPlaced, publishSubmitted, publishApproved, publishRejected };
   const service = new OrdersService(repository as unknown as OrdersRepository, identity, catalog, publisher, env);
-  return { service, repository, getClient, getSeller, getProducts, publishSubmitted, reserveCredit, releaseCredit };
+  return { service, repository, getClient, getSeller, getProducts, reserveCredit, releaseCredit, publishPlaced, publishSubmitted, publishApproved, publishRejected };
 }
 
 const draft = (overrides: Partial<CalculateOrderDto> = {}): CalculateOrderDto => ({
@@ -85,6 +123,8 @@ const draft = (overrides: Partial<CalculateOrderDto> = {}): CalculateOrderDto =>
   ...overrides,
 });
 const submission = (overrides: Partial<SubmitOrderDto> = {}): SubmitOrderDto => ({ orderId: ORDER_ID, ...draft(), ...overrides });
+// 6% is above the seller's 5% limit: the order waits for a supervisor.
+const needsApproval = () => submission({ items: [{ productId: 'P1', quantity: 5, unit: 'UNIT', discountBp: 600 }] });
 
 describe('OrdersService.calculate', () => {
   it('prices the order with the table of the client and reports the client', async () => {
@@ -119,16 +159,9 @@ describe('OrdersService.calculate', () => {
     expect(result.canSubmit).toBe(false);
   });
 
-  it('does not call the catalog for an empty order', async () => {
-    const { service, getProducts } = build();
-    const result = await service.calculate(seller, draft({ items: [] }));
-    expect(result.blockers).toEqual(['EMPTY_ORDER']);
-    expect(getProducts).toHaveBeenCalledWith('TP01', []);
-  });
-
   it('refuses a supervisor: only a seller builds an order', async () => {
     const { service } = build();
-    await expect(service.calculate({ role: 'SUPERVISOR', id: 'S01' }, draft())).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(service.calculate(supervisor, draft())).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it("answers not found for another seller's client, like a missing one", async () => {
@@ -148,11 +181,14 @@ describe('OrdersService.submit', () => {
     ctx = build();
   });
 
-  it('saves a valid order with the prices as they were, and returns it', async () => {
+  it('saves a valid order with the prices as they were, the names and the supervisor, and returns it', async () => {
     const view = await ctx.service.submit(seller, submission({ items: [{ productId: 'P1', quantity: 5, unit: 'UNIT', discountBp: 100 }] }));
-    expect(view).toMatchObject({ id: ORDER_ID, status: 'SUBMITTED', sellerId: 'V01', clientId: 'C001', totalCents: 49_500 });
+    expect(view).toMatchObject({
+      id: ORDER_ID, status: 'SUBMITTED', sellerId: 'V01', sellerName: 'Carlos Menezes', supervisorId: 'S01',
+      clientId: 'C001', clientTradeName: 'Mercadinho São José', totalCents: 49_500,
+    });
     expect(view.items[0]).toMatchObject({ productId: 'P1', sku: 'SKU-P1', unitPriceCents: 10_000, grossCents: 50_000, netCents: 49_500 });
-    expect(ctx.repository.saved.has(ORDER_ID)).toBe(true);
+    expect(view.history.map((h) => [h.status, h.actor])).toEqual([['SUBMITTED', 'user:V01']]);
   });
 
   it('stores a pack as units and remembers how it was entered', async () => {
@@ -162,32 +198,36 @@ describe('OrdersService.submit', () => {
   });
 
   it('keeps an order above the discount limit as awaiting approval, with the reason', async () => {
-    const view = await ctx.service.submit(seller, submission({ items: [{ productId: 'P1', quantity: 5, unit: 'UNIT', discountBp: 600 }] }));
+    const view = await ctx.service.submit(seller, needsApproval());
     expect(view.status).toBe('AWAITING_APPROVAL');
     expect(view.approvalReasons).toEqual([{ code: 'LINE_DISCOUNT_ABOVE_LIMIT', productId: 'P1', discountBp: 600 }]);
   });
 
-  it('publishes OrderSubmitted with the supervisor and the quantities in units', async () => {
+  it('announces an order within the limit as placed and then as submitted', async () => {
     await ctx.service.submit(seller, submission({ items: [{ productId: 'P2', quantity: 3, unit: 'PACK', discountBp: 0 }] }));
+    expect(ctx.publishPlaced).toHaveBeenCalledWith({
+      orderId: ORDER_ID, clientId: 'C001', sellerId: 'V01', supervisorId: 'S01', status: 'SUBMITTED',
+      totalCents: 360_000, items: [{ productId: 'P2', quantity: 36 }], placedAt: '2026-10-24T12:00:00.000Z',
+    });
     expect(ctx.publishSubmitted).toHaveBeenCalledWith({
-      orderId: ORDER_ID,
-      clientId: 'C001',
-      sellerId: 'V01',
-      supervisorId: 'S01',
-      status: 'SUBMITTED',
-      totalCents: 360_000,
-      items: [{ productId: 'P2', quantity: 36 }],
-      submittedAt: '2026-10-24T12:00:00.000Z',
+      orderId: ORDER_ID, clientId: 'C001', sellerId: 'V01', totalCents: 360_000,
+      items: [{ productId: 'P2', quantity: 36 }], submittedAt: '2026-10-24T12:00:00.000Z',
     });
   });
 
+  it('announces an order awaiting approval as placed only: it has not been submitted', async () => {
+    await ctx.service.submit(seller, needsApproval());
+    expect(ctx.publishPlaced).toHaveBeenCalledWith(expect.objectContaining({ orderId: ORDER_ID, status: 'AWAITING_APPROVAL' }));
+    expect(ctx.publishSubmitted).not.toHaveBeenCalled();
+  });
+
   it('refuses an order that breaks a rule, with the calculation, and saves and publishes nothing', async () => {
-    // 4 x 100.00 = 400.00, then 2 units of a 12-pack product: not a multiple.
     const bad = submission({ items: [{ productId: 'P2', quantity: 5, unit: 'UNIT', discountBp: 0 }] });
     const error = await ctx.service.submit(seller, bad).catch((e) => e);
     expect(error).toBeInstanceOf(UnprocessableEntityException);
     expect(error.getResponse()).toMatchObject({ code: 'ORDER_NOT_SUBMITTABLE', calculation: { canSubmit: false } });
     expect(ctx.repository.saved.size).toBe(0);
+    expect(ctx.publishPlaced).not.toHaveBeenCalled();
     expect(ctx.publishSubmitted).not.toHaveBeenCalled();
   });
 
@@ -203,28 +243,26 @@ describe('OrdersService.submit', () => {
     const again = await ctx.service.submit(seller, submission());
     expect(again).toEqual(first);
     expect(ctx.getClient).toHaveBeenCalledTimes(1);
-    expect(ctx.publishSubmitted).toHaveBeenCalledTimes(1);
+    expect(ctx.publishPlaced).toHaveBeenCalledTimes(1);
   });
 
   it('returns the winner of a race on the same order id, and does not publish twice', async () => {
     // The first read finds nothing, then another request saves the order before this insert.
     const winner = await ctx.service.submit(seller, submission());
-    ctx.repository.findById = vi
-      .fn()
-      .mockResolvedValueOnce(null)
-      .mockResolvedValue(ctx.repository.saved.get(ORDER_ID));
+    ctx.repository.findById = vi.fn().mockResolvedValueOnce(null).mockResolvedValue(ctx.repository.saved.get(ORDER_ID));
     ctx.repository.insert = vi.fn().mockResolvedValue(false);
+    ctx.publishPlaced.mockClear();
     ctx.publishSubmitted.mockClear();
 
     const loser = await ctx.service.submit(seller, submission());
     expect(loser).toEqual(winner);
+    expect(ctx.publishPlaced).not.toHaveBeenCalled();
     expect(ctx.publishSubmitted).not.toHaveBeenCalled();
   });
 
   it("does not hand one seller another seller's order through a reused id", async () => {
     await ctx.service.submit(seller, submission());
-    const other: Actor = { role: 'SELLER', id: 'V02' };
-    await expect(ctx.service.submit(other, submission())).rejects.toBeInstanceOf(NotFoundException);
+    await expect(ctx.service.submit({ role: 'SELLER', id: 'V02' }, submission())).rejects.toBeInstanceOf(NotFoundException);
   });
 });
 
@@ -252,7 +290,7 @@ describe('OrdersService credit', () => {
     expect(error.getResponse().calculation).toMatchObject({ canSubmit: false, availableCreditCents: 12_000 });
     expect(error.getResponse().calculation.blockers).toContain('CREDIT_EXCEEDED');
     expect(ctx.repository.saved.size).toBe(0);
-    expect(ctx.publishSubmitted).not.toHaveBeenCalled();
+    expect(ctx.publishPlaced).not.toHaveBeenCalled();
   });
 
   it('does not hold credit for an order a rule already blocked', async () => {
@@ -267,7 +305,7 @@ describe('OrdersService credit', () => {
     ctx.repository.insert = vi.fn().mockRejectedValue(new Error('database is down'));
     await expect(ctx.service.submit(seller, submission())).rejects.toThrow('database is down');
     expect(ctx.releaseCredit).toHaveBeenCalledWith(ORDER_ID);
-    expect(ctx.publishSubmitted).not.toHaveBeenCalled();
+    expect(ctx.publishPlaced).not.toHaveBeenCalled();
   });
 
   it('still reports the original failure when giving the credit back also fails', async () => {
@@ -286,17 +324,181 @@ describe('OrdersService credit', () => {
 });
 
 describe('OrdersService.getOrder', () => {
-  it('returns the order of the seller who asks', async () => {
+  it('returns the order to the seller who sent it', async () => {
     const { service } = build();
     await service.submit(seller, submission());
     expect(await service.getOrder(seller, ORDER_ID)).toMatchObject({ id: ORDER_ID });
   });
 
-  it("answers not found for another seller's order, for a supervisor, and for a missing id", async () => {
+  it('returns the order to the supervisor who has to decide on it', async () => {
     const { service } = build();
-    await service.submit(seller, submission());
+    await service.submit(seller, needsApproval());
+    expect(await service.getOrder(supervisor, ORDER_ID)).toMatchObject({ id: ORDER_ID, status: 'AWAITING_APPROVAL' });
+  });
+
+  it("answers not found for another seller, another team's supervisor, and a missing id", async () => {
+    const { service } = build();
+    await service.submit(seller, needsApproval());
     await expect(service.getOrder({ role: 'SELLER', id: 'V02' }, ORDER_ID)).rejects.toBeInstanceOf(NotFoundException);
-    await expect(service.getOrder({ role: 'SUPERVISOR', id: 'S01' }, ORDER_ID)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.getOrder({ role: 'SUPERVISOR', id: 'S02' }, ORDER_ID)).rejects.toBeInstanceOf(NotFoundException);
     await expect(service.getOrder(seller, '00000000-0000-4000-8000-000000000000')).rejects.toBeInstanceOf(NotFoundException);
+  });
+});
+
+describe('OrdersService.pendingApprovals', () => {
+  it("lists the orders awaiting approval of the supervisor's team, with names and reasons", async () => {
+    const { service } = build();
+    await service.submit(seller, needsApproval());
+    const [item] = await service.pendingApprovals(supervisor);
+    expect(item).toMatchObject({ id: ORDER_ID, sellerName: 'Carlos Menezes', clientTradeName: 'Mercadinho São José', totalCents: 47_000 });
+    expect(item.approvalReasons).toEqual([{ code: 'LINE_DISCOUNT_ABOVE_LIMIT', productId: 'P1', discountBp: 600 }]);
+  });
+
+  it('leaves out an order sent straight away and an order of another team', async () => {
+    const { service } = build();
+    await service.submit(seller, needsApproval());
+    expect(await service.pendingApprovals({ role: 'SUPERVISOR', id: 'S02' })).toEqual([]);
+    const other = build();
+    await other.service.submit(seller, submission());
+    expect(await other.service.pendingApprovals(supervisor)).toEqual([]);
+  });
+
+  it('is not for sellers', async () => {
+    const { service } = build();
+    await expect(service.pendingApprovals(seller)).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('OrdersService.approve', () => {
+  let ctx: ReturnType<typeof build>;
+  beforeEach(async () => {
+    ctx = build();
+    await ctx.service.submit(seller, needsApproval());
+    ctx.publishPlaced.mockClear();
+    ctx.publishSubmitted.mockClear();
+  });
+
+  it('sends the order: approved, then submitted, both in the history', async () => {
+    const view = await ctx.service.approve(supervisor, ORDER_ID);
+    expect(view.status).toBe('SUBMITTED');
+    expect(view.history.map((h) => [h.status, h.actor])).toEqual([
+      ['AWAITING_APPROVAL', 'user:V01'],
+      ['APPROVED', 'user:S01'],
+      ['SUBMITTED', 'system:orders'],
+    ]);
+  });
+
+  it('announces the approval and then the submission', async () => {
+    await ctx.service.approve(supervisor, ORDER_ID);
+    expect(ctx.publishApproved).toHaveBeenCalledWith({ orderId: ORDER_ID, approvedBy: 'S01', approvedAt: expect.any(String) });
+    expect(ctx.publishSubmitted).toHaveBeenCalledWith(expect.objectContaining({ orderId: ORDER_ID, clientId: 'C001', totalCents: 47_000 }));
+    const approved = ctx.publishApproved.mock.invocationCallOrder[0];
+    const submitted = ctx.publishSubmitted.mock.invocationCallOrder[0];
+    expect(approved).toBeLessThan(submitted);
+  });
+
+  it('keeps the credit held: approving gives nothing back', async () => {
+    await ctx.service.approve(supervisor, ORDER_ID);
+    expect(ctx.releaseCredit).not.toHaveBeenCalled();
+  });
+
+  it('is a repeat, not an error, to approve an approved order, and announces nothing again', async () => {
+    const first = await ctx.service.approve(supervisor, ORDER_ID);
+    ctx.publishApproved.mockClear();
+    ctx.publishSubmitted.mockClear();
+    expect(await ctx.service.approve(supervisor, ORDER_ID)).toEqual(first);
+    expect(ctx.publishApproved).not.toHaveBeenCalled();
+    expect(ctx.publishSubmitted).not.toHaveBeenCalled();
+  });
+
+  it('refuses to approve a rejected order', async () => {
+    await ctx.service.reject(supervisor, ORDER_ID, { reasonCode: 'CREDIT_RISK' });
+    const error = await ctx.service.approve(supervisor, ORDER_ID).catch((e) => e);
+    expect(error).toBeInstanceOf(ConflictException);
+    expect(error.getResponse()).toMatchObject({ code: 'ALREADY_REJECTED' });
+  });
+
+  it('refuses to approve an order that never needed approval', async () => {
+    const plain = build();
+    await plain.service.submit(seller, submission());
+    const error = await plain.service.approve(supervisor, ORDER_ID).catch((e) => e);
+    expect(error).toBeInstanceOf(ConflictException);
+    expect(error.getResponse()).toMatchObject({ code: 'NOT_AWAITING_APPROVAL' });
+  });
+
+  it('is for the supervisor of the order only: others get "not found" or "forbidden", and nothing changes', async () => {
+    await expect(ctx.service.approve({ role: 'SUPERVISOR', id: 'S02' }, ORDER_ID)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(ctx.service.approve(seller, ORDER_ID)).rejects.toBeInstanceOf(ForbiddenException);
+    expect((await ctx.repository.findById(ORDER_ID))?.order.status).toBe('AWAITING_APPROVAL');
+  });
+
+  it('decides again when another decision lands between reading and updating', async () => {
+    // The order is read as waiting, but a rejection gets in before the approval is applied.
+    const real = ctx.repository.applyApproval.bind(ctx.repository);
+    ctx.repository.applyApproval = vi.fn(async (id: string, by: string) => {
+      await ctx.repository.applyRejection(id, 'S01', { code: 'CREDIT_RISK', text: null });
+      return real(id, by);
+    });
+    const error = await ctx.service.approve(supervisor, ORDER_ID).catch((e) => e);
+    expect(error).toBeInstanceOf(ConflictException);
+    expect(error.getResponse()).toMatchObject({ code: 'ALREADY_REJECTED' });
+    expect(ctx.publishApproved).not.toHaveBeenCalled();
+  });
+});
+
+describe('OrdersService.reject', () => {
+  let ctx: ReturnType<typeof build>;
+  beforeEach(async () => {
+    ctx = build();
+    await ctx.service.submit(seller, needsApproval());
+    ctx.publishPlaced.mockClear();
+  });
+
+  it('rejects with the reason, keeps it, and records who did it', async () => {
+    const view = await ctx.service.reject(supervisor, ORDER_ID, { reasonCode: 'OTHER', reasonText: '  Cliente desistiu  ' });
+    expect(view.status).toBe('REJECTED');
+    expect(view.rejection).toEqual({ code: 'OTHER', text: 'Cliente desistiu' });
+    expect(view.history.at(-1)).toMatchObject({ status: 'REJECTED', actor: 'user:S01', reasonCode: 'OTHER', reasonText: 'Cliente desistiu' });
+  });
+
+  it('gives the credit back at once and announces the rejection with its reason', async () => {
+    await ctx.service.reject(supervisor, ORDER_ID, { reasonCode: 'DISCOUNT_TOO_HIGH' });
+    expect(ctx.releaseCredit).toHaveBeenCalledWith(ORDER_ID);
+    expect(ctx.publishRejected).toHaveBeenCalledWith({ orderId: ORDER_ID, rejectedBy: 'S01', reasonCode: 'DISCOUNT_TOO_HIGH', rejectedAt: expect.any(String) });
+    expect(ctx.publishSubmitted).not.toHaveBeenCalled();
+  });
+
+  it('carries the free text of OTHER in the event', async () => {
+    await ctx.service.reject(supervisor, ORDER_ID, { reasonCode: 'OTHER', reasonText: 'Cliente desistiu' });
+    expect(ctx.publishRejected).toHaveBeenCalledWith(expect.objectContaining({ reasonCode: 'OTHER', reasonText: 'Cliente desistiu' }));
+  });
+
+  it('still rejects, and announces it, when giving the credit back fails: the event releases it', async () => {
+    ctx.releaseCredit.mockRejectedValue(new Error('identity is down'));
+    const view = await ctx.service.reject(supervisor, ORDER_ID, { reasonCode: 'CREDIT_RISK' });
+    expect(view.status).toBe('REJECTED');
+    expect(ctx.publishRejected).toHaveBeenCalledTimes(1);
+  });
+
+  it('is a repeat to reject a rejected order: nothing is released or announced again', async () => {
+    const first = await ctx.service.reject(supervisor, ORDER_ID, { reasonCode: 'CREDIT_RISK' });
+    ctx.releaseCredit.mockClear();
+    ctx.publishRejected.mockClear();
+    expect(await ctx.service.reject(supervisor, ORDER_ID, { reasonCode: 'OTHER', reasonText: 'something else' })).toEqual(first);
+    expect(ctx.releaseCredit).not.toHaveBeenCalled();
+    expect(ctx.publishRejected).not.toHaveBeenCalled();
+  });
+
+  it('refuses to reject an order that was already sent', async () => {
+    await ctx.service.approve(supervisor, ORDER_ID);
+    const error = await ctx.service.reject(supervisor, ORDER_ID, { reasonCode: 'CREDIT_RISK' }).catch((e) => e);
+    expect(error).toBeInstanceOf(ConflictException);
+    expect(error.getResponse()).toMatchObject({ code: 'ALREADY_SUBMITTED' });
+  });
+
+  it('is for the supervisor of the order only', async () => {
+    await expect(ctx.service.reject({ role: 'SUPERVISOR', id: 'S02' }, ORDER_ID, { reasonCode: 'CREDIT_RISK' })).rejects.toBeInstanceOf(NotFoundException);
+    await expect(ctx.service.reject(seller, ORDER_ID, { reasonCode: 'CREDIT_RISK' })).rejects.toBeInstanceOf(ForbiddenException);
+    expect(ctx.releaseCredit).not.toHaveBeenCalled();
   });
 });

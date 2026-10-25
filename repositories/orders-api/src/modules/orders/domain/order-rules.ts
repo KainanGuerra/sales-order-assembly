@@ -8,7 +8,8 @@
 //  - quantities are integer units (a pack is converted using its pack factor).
 
 export type QuantityUnit = 'UNIT' | 'PACK';
-export type OrderStatus = 'SUBMITTED' | 'AWAITING_APPROVAL';
+// Where an order goes the moment it is created. What happens next is in order-status.ts.
+export type InitialOrderStatus = 'SUBMITTED' | 'AWAITING_APPROVAL';
 
 export interface CatalogProduct {
   productId: string;
@@ -90,7 +91,7 @@ export interface OrderCalculation {
   blockers: OrderBlocker[];
   approvalReasons: ApprovalReason[];
   // Where the order would go if it were sent.
-  status: OrderStatus;
+  status: InitialOrderStatus;
   canSubmit: boolean;
 }
 

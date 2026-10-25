@@ -1,3 +1,4 @@
+import { RejectionReasonCodeSchema } from 'contracts';
 import { z } from 'zod';
 
 // Shape checks only. Whether a quantity or a discount is acceptable is a
@@ -23,3 +24,17 @@ export const SubmitOrderSchema = CalculateOrderSchema.extend({
   orderId: z.uuid(),
 });
 export type SubmitOrderDto = z.infer<typeof SubmitOrderSchema>;
+
+export const OrderIdSchema = z.uuid();
+
+// A supervisor rejects with one of the listed reasons; "other" needs a text.
+export const RejectOrderSchema = z
+  .object({
+    reasonCode: RejectionReasonCodeSchema,
+    reasonText: z.string().trim().max(500).optional(),
+  })
+  .refine((value) => value.reasonCode !== 'OTHER' || (value.reasonText?.length ?? 0) >= 3, {
+    message: 'Describe the reason (at least 3 characters)',
+    path: ['reasonText'],
+  });
+export type RejectOrderDto = z.infer<typeof RejectOrderSchema>;

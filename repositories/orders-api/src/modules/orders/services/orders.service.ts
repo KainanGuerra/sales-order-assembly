@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -6,7 +7,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import type { OrderSubmittedEvent } from 'contracts';
+import type { OrderPlacedEvent, OrderSubmittedEvent, RejectionReasonCode } from 'contracts';
 import { ENV, type Env } from '../../../config/env.js';
 import type { Actor } from '../../../shared/actor.js';
 import { CATALOG_GATEWAY, type CatalogGateway } from '../clients/catalog.client.js';
@@ -16,12 +17,19 @@ import {
   calculateOrder,
   type ApprovalReason,
   type CatalogProduct,
+  type InitialOrderStatus,
   type OrderCalculation,
-  type OrderStatus,
 } from '../domain/order-rules.js';
-import type { CalculateOrderDto, SubmitOrderDto } from '../dto/orders.dto.js';
-import type { CalculationView, OrderItemView, OrderView } from '../dto/orders.view.js';
-import { OrdersRepository, type OrderWithItems } from '../repository/orders.repository.js';
+import { decideApprove, decideReject, type OrderStatus, type StoredStatus } from '../domain/order-status.js';
+import type { CalculateOrderDto, RejectOrderDto, SubmitOrderDto } from '../dto/orders.dto.js';
+import type {
+  CalculationView,
+  HistoryStepView,
+  OrderItemView,
+  OrderView,
+  PendingOrderView,
+} from '../dto/orders.view.js';
+import { OrdersRepository, type OrderRow, type OrderWithItems } from '../repository/orders.repository.js';
 
 interface QuotedProduct extends CatalogProduct {
   sku: string;
@@ -29,10 +37,13 @@ interface QuotedProduct extends CatalogProduct {
 
 interface Prepared {
   client: { id: string; tradeName: string; priceTableId: string; priceTableFallback: boolean };
+  sellerName: string;
   supervisorId: string;
   products: Map<string, QuotedProduct>;
   calculation: OrderCalculation;
 }
+
+const PENDING_LIST_LIMIT = 100;
 
 @Injectable()
 export class OrdersService {
@@ -60,7 +71,7 @@ export class OrdersService {
       return this.replay(actor, existing);
     }
 
-    const { client, supervisorId, products, calculation } = await this.prepare(actor, dto);
+    const { client, sellerName, supervisorId, products, calculation } = await this.prepare(actor, dto);
     if (!calculation.canSubmit) {
       throw new UnprocessableEntityException({
         statusCode: 422,
@@ -93,34 +104,40 @@ export class OrdersService {
       }
     }
 
-    const inserted = await this.saveOrReleaseCredit(dto.orderId, () => this.repository.insert(
-      {
-        id: dto.orderId,
-        sellerId: actor.id,
-        clientId: client.id,
-        priceTableId: client.priceTableId,
-        status: calculation.status,
-        subtotalCents: calculation.subtotalCents,
-        orderDiscountBp: calculation.orderDiscountBp,
-        orderDiscountCents: calculation.orderDiscountCents,
-        totalCents: calculation.totalCents,
-        approvalReasons: calculation.approvalReasons,
-      },
-      calculation.lines.map((line) => ({
-        orderId: dto.orderId,
-        productId: line.productId,
-        sku: products.get(line.productId)!.sku,
-        description: line.description!,
-        unit: line.unit,
-        quantityInput: line.quantityInput,
-        quantityUnits: line.quantityUnits!,
-        packFactor: line.packFactor!,
-        unitPriceCents: line.unitPriceCents!,
-        discountBp: line.discountBp,
-        grossCents: line.grossCents!,
-        netCents: line.netCents!,
-      })),
-    ));
+    const inserted = await this.saveOrReleaseCredit(dto.orderId, () =>
+      this.repository.insert(
+        {
+          id: dto.orderId,
+          sellerId: actor.id,
+          sellerName,
+          supervisorId,
+          clientId: client.id,
+          clientTradeName: client.tradeName,
+          priceTableId: client.priceTableId,
+          status: calculation.status,
+          subtotalCents: calculation.subtotalCents,
+          orderDiscountBp: calculation.orderDiscountBp,
+          orderDiscountCents: calculation.orderDiscountCents,
+          totalCents: calculation.totalCents,
+          approvalReasons: calculation.approvalReasons,
+        },
+        calculation.lines.map((line) => ({
+          orderId: dto.orderId,
+          productId: line.productId,
+          sku: products.get(line.productId)!.sku,
+          description: line.description!,
+          unit: line.unit,
+          quantityInput: line.quantityInput,
+          quantityUnits: line.quantityUnits!,
+          packFactor: line.packFactor!,
+          unitPriceCents: line.unitPriceCents!,
+          discountBp: line.discountBp,
+          grossCents: line.grossCents!,
+          netCents: line.netCents!,
+        })),
+        { status: calculation.status, actor: `user:${actor.id}` },
+      ),
+    );
 
     const saved = await this.repository.findById(dto.orderId);
     if (!saved) {
@@ -131,17 +148,114 @@ export class OrdersService {
       return this.replay(actor, saved);
     }
 
-    await this.publisher.publishSubmitted(this.toSubmittedEvent(saved, supervisorId));
+    await this.publisher.publishPlaced(placedEvent(saved));
+    // An order within the limit is sent straight away.
+    if (saved.order.status === 'SUBMITTED') {
+      await this.publisher.publishSubmitted(submittedEvent(saved, saved.order.createdAt));
+    }
     return toOrderView(saved);
   }
 
+  // The seller who sent the order, or the supervisor who has to decide on it.
+  // Anyone else gets the answer for a missing order.
   async getOrder(actor: Actor, orderId: string): Promise<OrderView> {
     const found = await this.repository.findById(orderId);
-    // Someone else's order answers like a missing one.
-    if (!found || actor.role !== 'SELLER' || found.order.sellerId !== actor.id) {
+    if (!found || !canSee(actor, found.order)) {
       throw new NotFoundException(`Order ${orderId} not found`);
     }
     return toOrderView(found);
+  }
+
+  async pendingApprovals(actor: Actor): Promise<PendingOrderView[]> {
+    if (actor.role !== 'SUPERVISOR') {
+      throw new ForbiddenException('Only a supervisor has orders to approve');
+    }
+    const rows = await this.repository.listPendingApproval(actor.id, PENDING_LIST_LIMIT);
+    return rows.map((row) => ({
+      id: row.id,
+      sellerName: row.sellerName,
+      clientTradeName: row.clientTradeName,
+      totalCents: row.totalCents,
+      approvalReasons: row.approvalReasons as ApprovalReason[],
+      createdAt: row.createdAt.toISOString(),
+      status: row.status as OrderStatus,
+    }));
+  }
+
+  // Approving moves the order to APPROVED and then SUBMITTED in one step. The
+  // credit held for it stays held. Approving twice is a repeat, not an error.
+  async approve(actor: Actor, orderId: string): Promise<OrderView> {
+    let found = await this.requireOfSupervisor(actor, orderId);
+
+    // A second pass only happens if another decision landed in between.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const decision = decideApprove(
+        found.order.status as StoredStatus,
+        found.history.some((step) => step.status === 'APPROVED'),
+      );
+      if (decision.kind === 'already') {
+        return toOrderView(found);
+      }
+      if (decision.kind === 'refused') {
+        throw new ConflictException({ code: decision.reason, message: `The order cannot be approved: ${decision.reason}` });
+      }
+
+      if (await this.repository.applyApproval(orderId, actor.id)) {
+        const done = (await this.repository.findById(orderId))!;
+        const approvedAt = done.history.find((step) => step.status === 'APPROVED')!.createdAt;
+        await this.publisher.publishApproved({ orderId, approvedBy: actor.id, approvedAt: approvedAt.toISOString() });
+        await this.publisher.publishSubmitted(submittedEvent(done, done.history.at(-1)!.createdAt));
+        return toOrderView(done);
+      }
+      found = (await this.repository.findById(orderId))!;
+    }
+    throw new ConflictException({ code: 'ORDER_CHANGED', message: 'The order changed while it was being approved' });
+  }
+
+  // Rejecting is final. The credit goes back at once (and the event makes sure of it).
+  async reject(actor: Actor, orderId: string, dto: RejectOrderDto): Promise<OrderView> {
+    let found = await this.requireOfSupervisor(actor, orderId);
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const decision = decideReject(found.order.status as StoredStatus);
+      if (decision.kind === 'already') {
+        return toOrderView(found);
+      }
+      if (decision.kind === 'refused') {
+        throw new ConflictException({ code: decision.reason, message: `The order cannot be rejected: ${decision.reason}` });
+      }
+
+      const reason = { code: dto.reasonCode, text: dto.reasonText?.trim() || null };
+      if (await this.repository.applyRejection(orderId, actor.id, reason)) {
+        const done = (await this.repository.findById(orderId))!;
+        // Best effort: if this call fails, the OrderRejected consumer releases the credit.
+        await this.identity.releaseCredit(orderId).catch((error) => {
+          this.logger.error(`Could not release the credit of rejected order ${orderId}; the event will`, error as Error);
+        });
+        await this.publisher.publishRejected({
+          orderId,
+          rejectedBy: actor.id,
+          reasonCode: dto.reasonCode,
+          ...(reason.text ? { reasonText: reason.text } : {}),
+          rejectedAt: done.history.at(-1)!.createdAt.toISOString(),
+        });
+        return toOrderView(done);
+      }
+      found = (await this.repository.findById(orderId))!;
+    }
+    throw new ConflictException({ code: 'ORDER_CHANGED', message: 'The order changed while it was being rejected' });
+  }
+
+  private async requireOfSupervisor(actor: Actor, orderId: string): Promise<OrderWithItems> {
+    if (actor.role !== 'SUPERVISOR') {
+      throw new ForbiddenException('Only a supervisor can approve or reject an order');
+    }
+    const found = await this.repository.findById(orderId);
+    // Another team's order answers like a missing one.
+    if (!found || found.order.supervisorId !== actor.id) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+    return found;
   }
 
   // If the order cannot be saved, the credit held for it goes back at once
@@ -211,38 +325,60 @@ export class OrdersService {
         priceTableId: client.priceTableId,
         priceTableFallback: client.priceTableFallback,
       },
+      sellerName: seller.name,
       supervisorId: seller.supervisorId,
       products,
       calculation,
     };
   }
-
-  private toSubmittedEvent({ order, items }: OrderWithItems, supervisorId: string): OrderSubmittedEvent {
-    return {
-      orderId: order.id,
-      clientId: order.clientId,
-      sellerId: order.sellerId,
-      supervisorId,
-      status: order.status as OrderStatus,
-      totalCents: order.totalCents,
-      items: items.map((item) => ({ productId: item.productId, quantity: item.quantityUnits })),
-      submittedAt: order.createdAt.toISOString(),
-    };
-  }
 }
 
-export function toOrderView({ order, items }: OrderWithItems): OrderView {
+function canSee(actor: Actor, order: OrderRow): boolean {
+  return actor.role === 'SELLER' ? order.sellerId === actor.id : order.supervisorId === actor.id;
+}
+
+function placedEvent({ order, items }: OrderWithItems): OrderPlacedEvent {
+  return {
+    orderId: order.id,
+    clientId: order.clientId,
+    sellerId: order.sellerId,
+    supervisorId: order.supervisorId,
+    status: order.status as InitialOrderStatus,
+    totalCents: order.totalCents,
+    items: items.map((item) => ({ productId: item.productId, quantity: item.quantityUnits })),
+    placedAt: order.createdAt.toISOString(),
+  };
+}
+
+function submittedEvent({ order, items }: OrderWithItems, at: Date): OrderSubmittedEvent {
+  return {
+    orderId: order.id,
+    clientId: order.clientId,
+    sellerId: order.sellerId,
+    totalCents: order.totalCents,
+    items: items.map((item) => ({ productId: item.productId, quantity: item.quantityUnits })),
+    submittedAt: at.toISOString(),
+  };
+}
+
+export function toOrderView({ order, items, history }: OrderWithItems): OrderView {
   return {
     id: order.id,
     status: order.status as OrderStatus,
     sellerId: order.sellerId,
+    sellerName: order.sellerName,
+    supervisorId: order.supervisorId,
     clientId: order.clientId,
+    clientTradeName: order.clientTradeName,
     priceTableId: order.priceTableId,
     subtotalCents: order.subtotalCents,
     orderDiscountBp: order.orderDiscountBp,
     orderDiscountCents: order.orderDiscountCents,
     totalCents: order.totalCents,
     approvalReasons: order.approvalReasons as ApprovalReason[],
+    rejection: order.rejectionReasonCode
+      ? { code: order.rejectionReasonCode as RejectionReasonCode, text: order.rejectionReasonText }
+      : null,
     createdAt: order.createdAt.toISOString(),
     items: items.map(
       (item): OrderItemView => ({
@@ -257,6 +393,15 @@ export function toOrderView({ order, items }: OrderWithItems): OrderView {
         discountBp: item.discountBp,
         grossCents: item.grossCents,
         netCents: item.netCents,
+      }),
+    ),
+    history: history.map(
+      (step): HistoryStepView => ({
+        status: step.status as OrderStatus,
+        actor: step.actor,
+        reasonCode: step.reasonCode,
+        reasonText: step.reasonText,
+        at: step.createdAt.toISOString(),
       }),
     ),
   };
