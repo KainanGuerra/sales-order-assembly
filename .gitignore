@@ -10,3 +10,4 @@ coverage/
 # Helm: packaged dependencies are rebuilt by the scripts
 repositories/**/charts/*.tgz
 repositories/**/Chart.lock
+*.tsbuildinfo

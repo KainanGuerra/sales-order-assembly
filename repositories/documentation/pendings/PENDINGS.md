@@ -15,8 +15,7 @@
    - procurar caminhos locais, nomes de empresas e credenciais nos arquivos versionados;
    - `AI_LOG.md`: ler, escrever com as próprias palavras e resolver as duas marcas `_(confirmar)_` (quanto do código da interface foi lido; se os três métodos de arredondamento podem ser explicados);
    - conferir que cada commit termina com a linha `IA:`.
-3. **Tirar `repositories/catalog-api/tsconfig.build.tsbuildinfo` do controle de versão.** É um artefato de build versionado por engano; aparece como modificado a cada compilação. `git rm --cached` e uma linha no `.gitignore`.
-4. **Ver os diagramas desta documentação renderizados** (seção 3): a sintaxe foi conferida, a aparência não.
+3. **Ver os diagramas desta documentação renderizados** (seção 3): a sintaxe foi conferida, a aparência não.
 
 ## 2. Limites conhecidos (todos já escritos no `README.md`, "O que ficou de fora")
 
