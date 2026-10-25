@@ -2,60 +2,92 @@
 
 Registro do meu uso de IA neste desafio. Ferramenta: Claude Code, do começo ao fim. O objetivo é o retrato honesto: o que pedi, o que a IA respondeu, o que aceitei, alterei ou descartei, e por quê.
 
-> Texto redigido com a IA a partir do histórico da sessão e revisado por mim. Os trechos marcados com _(confirmar)_ são pontos que só eu posso atestar.
+> Texto redigido com a IA a partir da transcrição da sessão (e conferido contra o `DECISIONS.md` e o histórico do git). Os trechos marcados com _(confirmar)_ são pontos que só eu posso atestar.
 
-**Em uma frase:** eu decidi o desenho e as regras (cada decisão está em `DECISIONS.md` e `ASSUMPTIONS.md`); a IA escreveu o código e os documentos; eu revisei rodando, perguntando e recusando, não escrevendo código.
+## Como trabalhei com a IA
 
-**Em números:** 41 commits, todos declarados `IA: majoritária`, entre 20:26 e 23:55 de 24/10 (o histórico é a ordem real, sem squash).
+- **A IA escreveu quase todo o código e os documentos; eu decidi o desenho e as regras.** Cada decisão virou uma pergunta (a IA usava uma ferramenta de perguntas com opções), eu respondia, e o resultado está em `DECISIONS.md` (D1 a D51) e `ASSUMPTIONS.md` (A1 a A50).
+- **Regra que impus logo no começo:** "não pedi para você decidir, continue me perguntando sobre tudo". Também recusei perguntas densas ou cheias de jargão ("técnico demais, simplifique"), e várias vezes mandei a IA parar e explicar antes de eu escolher.
+- **Como revisei:** rodando o sistema, lendo as decisões escritas, perguntando "por quê", interrompendo quando algo não fazia sentido e exigindo que os testes provassem algo (verificação por mutação, momento 4). Não escrevi código na mão. _(confirmar)_ quanto do código eu li linha a linha.
+- **Regras do processo, pedidas por mim:** commits em inglês, Conventional Commits, última linha `IA: nenhuma|parcial|majoritária` e **sem** `Co-Authored-By`; documentos de entrega em português; nada de caminhos locais, nomes de empresas onde trabalho ou credenciais nos arquivos; só conferir no navegador quando a fatia inteira estiver pronta; nunca pular o hook de commit.
+- **Em números:** 42 commits, todos `IA: majoritária`, no dia 24/10 entre 20:26 e 23:55 e depois (o histórico está na ordem real, sem squash). Foram 5 serviços, 1 pacote de contratos e a tela, além dos documentos.
 
 ## Momentos significativos
 
-### 1. Escolha do ORM (Drizzle)
+### 1. Escolha do ORM (Drizzle): eu não pedi para a IA decidir
 
-- **O que pedi:** a IA já tinha seguido para uma escolha; eu recusei duas perguntas que pressupunham a decisão ("não pedi para você decidir") e pedi argumentos para comparar TypeORM, Prisma e Drizzle. Eu nunca tinha ouvido falar do Drizzle.
-- **O que a IA respondeu:** uma comparação dos três, com os riscos do Drizzle: API jovem, v1.0 ainda em beta, menos exemplos com Nest, `numeric` devolvido como texto. Registrou quando surgiu e por quê (julho de 2022, a partir de fontes secundárias, números aproximados).
-- **O que aceitei, alterei ou descartei:** escolhi o Drizzle de propósito. Descartei a ideia de deixar a IA decidir por mim.
-- **Por quê:** quero aprender uma tecnologia nova e poder dizer na conversa que experimento tecnologias novas, assumindo o risco de ter de explicar código que conheço menos. O risco do `numeric` some porque o dinheiro é inteiro em centavos. Ver `DECISIONS.md` D3.
+- **O que pedi:** definir stack, bibliotecas de DTO, ORM, estado e UI. A primeira rodada de perguntas da IA já trazia opções para ORM, DTO e UI numa tela só; recusei duas vezes ("preciso esclarecer"), e na pergunta seguinte escrevi que nunca tinha ouvido falar do Drizzle e queria saber por que ele e não TypeORM ou Prisma, que são mais famosos. Depois: "não pedi para você decidir, continue perguntando; me dê argumentos para comparar, tenho curiosidade sobre o Drizzle".
+- **O que a IA respondeu:** uma comparação dos três (maturidade, migrações, tipos, risco numa avaliação ao vivo). Pesquisou na web e registrou quando o Drizzle surgiu, por que cresce e onde (julho de 2022, números de adoção variando muito entre fontes, v1.0 ainda em beta, então fixar a versão exata).
+- **O que aceitei, alterei ou descartei:** escolhi o Drizzle de propósito, para ter contato com uma biblioteca nova e poder dizer na conversa que gosto de experimentar tecnologias novas; pedi que isso e a data de lançamento ficassem registrados.
+- **Por quê:** aceito o risco de explicar ao vivo uma biblioteca que conheço menos. O risco do `numeric` como texto desaparece porque o dinheiro é inteiro em centavos. Ver `DECISIONS.md` D3.
 
-### 2. A corrida de crédito
+### 2. A corrida de crédito: a IA criou o problema e eu pedi o conserto
 
-- **O que pedi:** "antes de continuar, vamos consertar essa corrida do crédito". Dois envios ao mesmo tempo podiam passar juntos pelo limite.
-- **O que a IA respondeu:** opções (reservar no envio de forma síncrona no identity, ou aceitar a corrida e corrigir depois). Escolhi reservar de forma síncrona. Eu propus um TTL no Redis para a reserva expirar; discutimos e escolhi linhas no Postgres com `expires_at`: uma peça a menos, o crédito em uso é calculado e não existe tarefa de limpeza.
-- **O que a IA errou:** o primeiro teste de concorrência **passava mesmo sem a trava da linha** (falsa confiança). Foi trocado por um teste determinístico que segura a trava numa transação à parte, e quebrar a trava de propósito passou a derrubar o teste.
-- **O que aceitei, alterei ou descartei:** aceitei a reserva síncrona, troquei o Redis pelo Postgres, e exigi que o teste provasse algo.
-- **Por quê:** é a regra em que um erro custa dinheiro. Ver `DECISIONS.md` D40 a D43 e `ASSUMPTIONS.md` A20, A38 a A40.
+- **O que a IA fez:** o primeiro desenho (D21) atualizava o crédito por evento. O risco que ele criava ficou registrado no D22: dois envios quase simultâneos liam o mesmo crédito e ambos passavam (exemplo do seed: C002 com R$ 350 disponíveis e dois pedidos de R$ 300).
+- **O que pedi:** "antes de continuar, vamos consertar só essa corrida do crédito". Pedi mais explicação antes de escolher e escolhi a opção A: o `identity` reserva o crédito de forma síncrona (D22).
+- **O que a IA propôs e eu mudei:** a reserva pendente precisava de uma tarefa agendada para expirar. Sugeri usar uma chave no Redis com TTL. Discutimos e escolhi linhas no Postgres com `expires_at`: uma peça a menos, o crédito em uso é calculado e não há tarefa de limpeza (D40).
+- **O que a IA errou:** o teste de concorrência **passava mesmo sem a trava da linha**, em três execuções, porque o segundo pedido só começava depois que o primeiro terminava. Quebrando o código de propósito, a IA viu que o teste não provava nada e o trocou por um determinístico: uma transação segura a trava, uma reserva começa e tem de esperar, e só depois a primeira confirma (D41).
+- **Por quê:** é a regra em que um erro custa dinheiro, e o teste precisava falhar quando a trava saísse. Ver `DECISIONS.md` D22, D40 a D43 e `ASSUMPTIONS.md` A20, A38 a A40.
 
-### 3. O vocabulário dos status (a IA errou)
+### 3. Os status do pedido: a IA inventou um e eu corrigi (a IA errou)
 
-- **O que pedi:** a aprovação do supervisor. A IA ofereceu "aprovar/rejeitar" e eu aceitei, então `REJECTED` entrou no código.
-- **O que deu errado:** o seed traz "Faturado" e "Cancelado" nos pedidos do histórico. Perguntei, irritado, desde quando `SUBMITTED` e `REJECTED` eram oficiais. A IA rastreou: `SUBMITTED` e `AWAITING_APPROVAL` vieram do enunciado (nomes em inglês escolhidos pela IA, D25); `REJECTED` foi invenção da IA, que não o reconciliou com o vocabulário do seed e, na primeira resposta, foi vaga sobre a origem.
-- **O que aceitei, alterei ou descartei:** descartei a ideia de trocar os nomes (contradiz o requisito 5) e decidi seis status reais em duas cadeias: `AWAITING_APPROVAL → APPROVED → SUBMITTED → INVOICED` e `AWAITING_APPROVAL → REJECTED → CANCELLED`. Contratos, orders, web e o D44 foram corrigidos.
-- **Por quê:** o dado real manda no vocabulário, e o enunciado manda no resto. Ver `DECISIONS.md` D44 e D47 (que corrige o D44) e `ASSUMPTIONS.md` A14, A46.
+- **O que aconteceu:** a IA ofereceu "aprovar/rejeitar" na pergunta da aprovação e eu aceitei, então `REJECTED` entrou no código, mais o fluxo de aprovação (22:43 de 24/10). O seed, porém, traz pedidos "Faturado" e "Cancelado". Antes disso eu já tinha proposto que `APPROVED` e `SUBMITTED` fossem passos seguidos e pedido para conversar sobre toda a máquina de estados.
+- **O que eu reclamei:** "quero saber quando `SUBMITTED` e `REJECTED` viraram oficiais, já que o seed traz Faturado e Cancelado". A primeira resposta da IA foi vaga sobre a origem; precisei cobrar. Rastreado: `SUBMITTED` e `AWAITING_APPROVAL` vêm do enunciado (nomes em inglês escolhidos pela IA, D25); `REJECTED` foi invenção da IA, nunca reconciliada com o vocabulário do seed.
+- **O que decidi:** seis status reais em duas cadeias, `AWAITING_APPROVAL → APPROVED → SUBMITTED → INVOICED` e `AWAITING_APPROVAL → REJECTED → CANCELLED`. Uma decisão leva o pedido pelos dois primeiros degraus de uma vez, e cada degrau fica no histórico. Descartei trocar `SUBMITTED` por `INVOICED` (contradiz o requisito 5 do enunciado).
+- **O que a IA corrigiu:** contratos, orders, web e o próprio D44 (marcado como corrigido pelo D47).
+- **Por quê:** o dado real manda no vocabulário e o enunciado manda no resto. Ver D44, D47 e A14, A46.
 
 ### 4. Testes que enganam: quebrar o código de propósito
 
-- **O que pedi:** que cada regra tivesse teste e que os testes provassem algo. Passei a exigir verificações por mutação: estragar o código e conferir que algum teste falha.
-- **O que a IA respondeu e o que as mutações acharam:**
-  - a regra "só o dono repete o pedido" estava escondida pela checagem do cliente; entrou um teste para o cliente transferido a outro vendedor;
-  - o repositório tratava qualquer violação de unicidade como "o pedido já existe"; passou a checar `orders_pkey`;
-  - depois de renomear um evento, uma ligação antiga da fila despejou 3 mensagens na fila de mortas sem falha real (`retireBindings`, D46);
+- **O que pedi:** que cada regra tivesse teste, e que o teste provasse algo. Passamos a estragar o código de propósito para confirmar que algum teste falha.
+- **O que isso achou (falhas da IA):**
+  - o teste de concorrência do crédito, acima;
+  - "só o dono repete o pedido" estava escondido pela checagem do cliente, e entrou um teste para o cliente que passou a outro vendedor;
+  - o repositório tratava qualquer violação de unicidade como "o pedido já existe", e passou a checar a restrição `orders_pkey`;
+  - ao renomear um evento, uma ligação antiga da fila despejou 3 mensagens na fila de mortas sem nenhuma falha real (`retireBindings`, D46);
   - nas notificações, duas mutações (marcar o aviso de outra pessoa; uma decisão fechando todos os tipos de aviso) foram pegas.
-- **O que aceitei, alterei ou descartei:** aceitei as correções e adotei a prática. Em cada caso, o teste só valeu depois de falhar com o código quebrado.
+- **O que aceitei:** a prática. Em cada caso, o teste só valeu depois de falhar com o código quebrado.
 - **Por quê:** um teste que nunca falha não protege nada, e na conversa ao vivo preciso mostrar que sei a diferença.
 
-### 5. Contas de arredondamento (a IA errou)
+### 5. Arredondamento: a IA errou a conta e eu não entendi as opções
 
-- **O que pedi:** exemplos para entender três formas de arredondar.
-- **O que a IA respondeu:** uma explicação com números. **A IA errou uma conta:** escreveu 106,7155 onde o correto é 106,7325 (7,49 × 15 × 0,95). Percebi quando os exemplos foram refeitos.
-- **O que aceitei, alterei ou descartei:** descartei os números errados, conferi os refeitos lado a lado e escolhi o método 1 (arredondar cada linha uma vez, e o desconto do pedido uma vez sobre a soma).
-- **Por quê:** a tela soma o que mostra e o desconto digitado é o desconto aplicado. Os exemplos viraram casos de teste (`ASSUMPTIONS.md` A18, A28).
+- **O que a IA errou:** na pergunta sobre arredondamento, o exemplo trazia "7,49 × 15 × 5% = 106,7155"; o correto é 106,7325. O erro estava na própria pergunta que me foi feita.
+- **O que eu fiz:** primeiro recusei a pergunta, depois pedi "um exemplo completo", depois "dê exemplos disso", e por fim "ainda não entendi esses métodos, escreva um arquivo mostrando os três". A IA refez os exemplos (e os números certos aparecem lado a lado), com quatro casos: um pedido de três linhas, linhas que não somam, o mínimo de R$ 300 mudando de veredito e o desconto do pedido.
+- **O que decidi:** depois dos exemplos, escolhi o método recomendado ("só escolha o recomendado"): arredondar cada linha uma vez, e o desconto do pedido uma vez sobre a soma das linhas arredondadas. _(confirmar)_ que entendi a diferença entre os três a ponto de explicá-la ao vivo.
+- **Por quê:** a tela soma o que mostra e o desconto digitado é o aplicado. Os exemplos viraram casos de teste (`ASSUMPTIONS.md` A18, A28, D8).
 
-### Outros usos, em uma linha
+## Outras decisões em que a IA propôs e eu redirecionei
 
-- **Guia de estilo:** pedi duas reescritas para que ele ficasse autônomo e sem nomes de empresa, caminhos locais, pipelines ou regras de negócio de projetos de trabalho.
-- **Segredo do BFF:** perguntei se o segredo interno poderia aparecer no navegador. Ficou só no servidor. A IA comentou, erradamente, que um login por formulário era recusado; não era, e passou a existir uma recusa de verdade (415 para corpo que não seja JSON).
-- **Perguntas da IA:** recusei várias perguntas densas ou cheias de jargão; passaram a ser simples.
-- **Navegador:** só conferir no Chrome quando a fatia estiver pronta.
+| Assunto | O que a IA propôs | O que eu decidi |
+|---|---|---|
+| DTOs | Zod num pacote compartilhado | Depois de uma pergunta sobre onde viveriam as regras: **o backend é dono das regras**, o front só mostra (D4). Tipos da API no front: "decidir depois" |
+| Distribuição | perguntou como entregar um único repositório se há um por serviço | Uma organização nova no GitHub, um repositório por serviço, e um **repositório guarda-chuva com submódulos**; por enquanto, um único repositório git |
+| Como o orders obtém preço e cliente | RabbitMQ para tudo | Eu pedi RabbitMQ; a IA separou os dois usos e eu fixei: **RabbitMQ para o assíncrono, gRPC para o síncrono** (e pedi para confirmar que gRPC é mais rápido; a resposta honesta, no D17, é que a justificativa é de contrato, não de desempenho) |
+| Consultas entre schemas | (a IA mostrou a contradição) | Eu tinha permitido consultas entre schemas; a IA apontou que isso tornava eventos e gRPC redundantes; respondi: "tudo bem, **nada de consultas entre schemas**" (D19) |
+| Consumidores dos eventos | — | Identity (crédito), catálogo (estatística) e um quarto serviço, `notifications` |
+| Pedido mínimo e desconto máximo | valores no código | Perguntei se os R$ 300 estavam em variável de ambiente (viraram `MIN_ORDER_CENTS`) e pedi um teto global de desconto por variável (`MAX_DISCOUNT_BP`); a alçada efetiva é o menor entre o teto e a do vendedor |
+| Produto inativo ou sem preço | comportamento fixo | Uma **flag**: se ligada, mostra o produto desabilitado com o motivo; se desligada, oculta, mas mostra o motivo na busca exata por EAN ou SKU |
+| EAN duplicado | "o ativo primeiro" | A IA percebeu na pergunta seguinte que os dois produtos são ativos; decidi: descrição exata e depois o id |
+| Cliente sem tabela de preço | bloquear ou usar a padrão | Usar a padrão (TP01) e avisar na tela |
+| Sessão | `nuxt-auth-utils` com Redis | A IA leu o código e viu que o módulo não guarda a sessão fora do cookie; foi trocado por um cookie com id opaco e Redis, escrito à mão (D36) |
+| Motivo da rejeição | texto livre | Uma lista de opções num campo de seleção **mais** "Outro" com texto livre |
+| Repetir pedido | copiar o pedido antigo | Copiar produtos, quantidades e unidade; **descontos em zero**; preços de hoje; perguntar antes de substituir o rascunho |
+| Notificações | um aviso só para o supervisor | "Todos, para todos os eventos", com entrega por SSE e "lido ao abrir, resolvido quando o pedido é decidido". A IA propôs a tabela de quem recebe o quê para evitar avisos duplicados (D49) |
+| Repositório de orquestração | — | Ideia minha: um repositório de orquestração como o de outro projeto meu, só na última fase (Helm, kind, ingress, NetworkPolicies) |
+| Pacotes e versões | npm | Perguntei por que pnpm e não npm; a IA explicou; escolhi pnpm via corepack. Pedi para instalar o Node 24 com nvm. Aceitei o TypeScript 7, que a IA teve de recuar no front (6.0.3, porque o `vue-tsc` não roda no 7, D37) |
+| Tipos do gRPC | — | Pedi para conversar só sobre isso; escolhi gerar no `contracts` e versionar a saída |
+
+## Onde a IA errou (resumo)
+
+1. Conta de arredondamento errada, dentro da pergunta que me fez (momento 5).
+2. Quis decidir ORM, DTO e UI sozinha e fez perguntas com jargão, recusadas por mim (momento 1).
+3. O desenho por evento do crédito tinha uma corrida (D21), e o teste que a cobria passava sem a trava (D41).
+4. Inventou o status `REJECTED` e não o reconciliou com o seed; foi vaga ao explicar a origem (D47).
+5. Planejou a sessão sobre um módulo que não guarda a sessão no Redis (D36); planejou o TypeScript 7 para tudo (D37).
+6. Um comentário errado dizendo que um login por formulário era recusado; não era, e passou a existir a recusa de verdade (415 para corpo que não é JSON).
+7. O repositório tratava qualquer violação de unicidade como "pedido existente"; a ligação antiga da fila despejou mensagens na fila de mortas (D46).
+8. Na tela, achados na revisão no navegador: botão de enviar desabilitado parecendo habilitado, campo numérico que só confirmava ao sair, selo "Enviado" aparecendo com o pedido bloqueado, "1 itens" no plural, e textos de aprovação sobrescritos por engano.
+9. Escreveu senhas de exemplo em arquivos de configuração e constantes de teste, e o hook de commit (que bloqueia linhas que parecem segredo) recusou; foi trocado por um gerador de `.env` e valores montados no teste, sem pular o hook. Um commit chegou a levar arquivos que não eram dele, e foi desfeito e refeito.
 
 ## Mapa de autoria
 
@@ -63,14 +95,14 @@ Legenda: **E** = eu escrevi; **R** = a IA gerou e eu revisei/alterei; **A** = a 
 
 | Parte da solução | Autoria | Observações |
 |---|---|---|
-| Modelagem de dados | R | Tabelas propostas pela IA a partir do seed. Minhas decisões: centavos e pontos-base inteiros, um schema por serviço sem consultas entre schemas, seis status, reserva de crédito com `expires_at` |
-| Regras de negócio | R | Regras decididas por mim (A15 a A31, D40 a D48). A IA as implementou como funções puras (`order-rules.ts`, `order-status.ts`, `plan.ts`), com os casos de borda testados |
-| API (serviços, BFF, eventos) | R | Gerada pela IA. Escolhi gRPC e RabbitMQ, o BFF com sessão em Redis, o envio idempotente, a tabela de avisos e o SSE |
-| Telas | R/A | Fluxos escolhidos por mim (lista e depois detalhe, motivo em lista com texto livre, perguntar antes de substituir o rascunho). Componentes gerados pela IA; conferi no navegador uma vez por fatia, não em celular de verdade. _(confirmar)_ quanto do código das telas eu li |
+| Modelagem de dados | R | Tabelas propostas pela IA a partir do seed. Minhas decisões: centavos e pontos-base inteiros, um schema por serviço e nenhuma consulta entre schemas, seis status em duas cadeias, reserva de crédito com `expires_at`, avisos únicos por pedido, pessoa e tipo |
+| Regras de negócio | R | Decididas por mim, uma por uma (A15 a A31, D32, D40 a D51). A IA as implementou como funções puras (`order-rules.ts`, `order-status.ts`, `plan.ts`), com os casos de borda testados |
+| API (serviços, BFF, eventos) | R | Gerada pela IA. Escolhi gRPC para o síncrono, RabbitMQ para o assíncrono, o BFF com sessão em Redis, o envio idempotente, a tabela de avisos e o SSE |
+| Telas | R/A | Fluxos escolhidos por mim (lista e depois detalhe, motivo em lista com texto livre, perguntar antes de substituir o rascunho, uma tela de pedido pensada para celular). Componentes gerados pela IA; conferi no navegador uma vez por fatia (inclusive numa moldura de 390 px), não num celular de verdade. _(confirmar)_ quanto do código das telas eu li |
 | Testes | R | Escritos pela IA; eu exigi as verificações por mutação. Hoje: orders 181, identity 91, web 69, catalog 53, notifications 37, contracts 18 |
 | Docker / CI | A | Compose e CI gerados e aceitos. O compose foi verificado rodando; o **CI nunca rodou no GitHub** |
-| Documentação | R | `DECISIONS.md` e `ASSUMPTIONS.md` redigidos pela IA a partir das minhas respostas; corrigi fatos (D44 virou D47). `style-guide/` gerado pela IA e revisado por mim |
+| Documentação | R | `DECISIONS.md` e `ASSUMPTIONS.md` redigidos pela IA a partir das minhas respostas; corrigi fatos (D44 virou D47). O guia de estilo foi gerado pela IA a partir de projetos meus anteriores e **reescrito duas vezes por pedido meu**, para tirar nomes de empresas, caminhos locais, pipelines e regras de negócio |
 
 ## Conversas brutas
 
-Opcional. A transcrição da sessão existe localmente e posso exportá-la se pedirem.
+Opcional. A transcrição da sessão existe localmente e posso exportá-la, revisada, se pedirem.
