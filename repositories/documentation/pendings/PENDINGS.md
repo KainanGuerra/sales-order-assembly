@@ -12,13 +12,12 @@
 4. A forma 1 de rodar foi conferida a partir de um clone público: `docker compose pull` sem login, `docker compose up` sem compilar.
 5. As ações do CI foram atualizadas para as versões que rodam no Node 24; o CI passou sem avisos de Node 20.
 6. As marcas de dúvida do `AI_LOG.md` foram resolvidas com as respostas reais: o código dos serviços não foi lido linha a linha, das telas só foi visto o que a IA mostrou no navegador, e o arredondamento ainda não pode ser explicado sozinho. O mapa de autoria passou a dizer **A** nas linhas de código.
+7. Sessão de estudo guiada com a IA (25/10/2026) sobre o arredondamento, `order-rules.ts`, `order-status.ts`, o crédito e `plan.ts`: cinco aulas, 15 perguntas, todas certas. Registrada no `AI_LOG.md`.
 
 **Falta:**
 
-0. A nova casca da interface (menu, tema, catálogo, lista de pedidos; `DECISIONS.md` D61) foi conferida à mão no Chrome (desktop; o celular, num iframe de 420 px) e não tem teste de ponta a ponta. A versão (`version` do `package.json` do `web`, lida por `runtimeConfig.public.appVersion`) é escrita à mão e aparece no cabeçalho (sem login) e no fim do menu (com login); nada a atualiza sozinho. O gráfico Helm do `web` não passa `NUXT_DEFAULT_PRICE_TABLE_ID`; vale o padrão `TP01`.
-
-7. Ler o código das regras (`order-rules.ts`, `order-status.ts`, `plan.ts`, as regras do crédito) e entender os três métodos de arredondamento (`ASSUMPTIONS.md`, seção "Arredondamento"). Hoje nada disso foi lido linha a linha (`AI_LOG.md`).
-8. Ver os diagramas desta documentação renderizados (seção 3): a sintaxe foi conferida, a aparência não (o GitHub os renderiza).
+8. Ler sozinho esses arquivos (e refazer à mão um exemplo de arredondamento, como o exemplo 1 de `ASSUMPTIONS.md`): a sessão acima foi explicada pela IA e conferida por perguntas, não foi leitura própria. Ficam ainda de fora do estudo `repeat-order.ts`, a busca do catálogo, o fluxo do BFF e o código do modo offline.
+9. Ver os diagramas desta documentação renderizados (seção 3): a sintaxe foi conferida, a aparência não (o GitHub os renderiza).
 
 ## 2. Limites conhecidos (todos já escritos no `README.md`, "O que ficou de fora")
 
