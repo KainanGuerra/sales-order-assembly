@@ -23,10 +23,11 @@ function approvalText(reason: ApprovalReason): string {
 
 <template>
   <div class="space-y-2">
-    <UAlert v-for="text in blockers" :key="text" color="error" variant="subtle" icon="i-lucide-octagon-alert" :title="text" data-testid="blocker" />
+    <UAlert v-for="text in blockers" :key="text" role="alert" color="error" variant="subtle" icon="i-lucide-octagon-alert" :title="text" data-testid="blocker" />
     <UAlert
       v-for="reason in calculation.approvalReasons"
       :key="reason.code + ('productId' in reason ? reason.productId : '')"
+      role="status"
       color="warning"
       variant="subtle"
       icon="i-lucide-user-check"

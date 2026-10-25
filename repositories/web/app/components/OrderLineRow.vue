@@ -67,7 +67,7 @@ const blockerTexts = computed(() => (props.calculated?.blockers ?? []).map((code
       </div>
     </div>
 
-    <ul v-if="blockerTexts.length" class="mt-2 space-y-1 text-sm text-red-600" data-testid="line-blockers">
+    <ul v-if="blockerTexts.length" role="alert" class="mt-2 space-y-1 text-sm text-red-600" data-testid="line-blockers">
       <li v-for="text in blockerTexts" :key="text">{{ text }}</li>
     </ul>
   </UCard>

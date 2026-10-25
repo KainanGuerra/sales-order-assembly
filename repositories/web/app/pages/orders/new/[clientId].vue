@@ -74,7 +74,7 @@ async function send() {
       </div>
     </div>
 
-    <UAlert v-if="clientError" color="error" variant="subtle" icon="i-lucide-user-x" :title="t('order.clientNotFound')" data-testid="client-not-found" />
+    <UAlert v-if="clientError" role="alert" color="error" variant="subtle" icon="i-lucide-user-x" :title="t('order.clientNotFound')" data-testid="client-not-found" />
 
     <template v-else>
       <section class="space-y-2">
@@ -98,10 +98,10 @@ async function send() {
         <OrderLineRow v-for="line in order.lines" :key="line.productId" :line="line" :calculated="calculatedByProduct.get(line.productId)" />
       </section>
 
-      <UAlert v-if="calculation.isError.value" color="warning" variant="subtle" icon="i-lucide-wifi-off" :title="t('order.calcFailed')" />
+      <UAlert v-if="calculation.isError.value" role="alert" color="warning" variant="subtle" icon="i-lucide-wifi-off" :title="t('order.calcFailed')" />
       <BlockerList v-if="showCalculation && calculation.data.value" :calculation="calculation.data.value" :descriptions="descriptions" />
-      <UAlert v-if="submitProblem === 'refused'" color="error" variant="subtle" icon="i-lucide-octagon-alert" :title="t('order.refused')" />
-      <UAlert v-if="submitProblem === 'failed'" color="error" variant="subtle" icon="i-lucide-wifi-off" :title="t('order.sendFailed')" />
+      <UAlert v-if="submitProblem === 'refused'" role="alert" color="error" variant="subtle" icon="i-lucide-octagon-alert" :title="t('order.refused')" />
+      <UAlert v-if="submitProblem === 'failed'" role="alert" color="error" variant="subtle" icon="i-lucide-wifi-off" :title="t('order.sendFailed')" />
 
       <footer class="fixed inset-x-0 bottom-0 z-20 border-t border-neutral-200 bg-white p-3 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
         <UContainer class="space-y-2 p-0">
