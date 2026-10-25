@@ -18,8 +18,16 @@ export const ORDER_EVENT_PATTERNS = {
 } as const;
 
 // Internal status codes; the UI shows "Enviado", "Aguardando aprovação"...
-// APPROVED is a step an order passes through on its way to SUBMITTED.
-export const OrderStatusSchema = z.enum(['AWAITING_APPROVAL', 'APPROVED', 'SUBMITTED', 'REJECTED']);
+//
+//   AWAITING_APPROVAL -> APPROVED -> SUBMITTED -> INVOICED
+//   AWAITING_APPROVAL -> REJECTED -> CANCELLED
+//
+// All six are statuses an order can have. A decision moves an order through the
+// first two of its chain at once (approving: APPROVED then SUBMITTED; rejecting:
+// REJECTED then CANCELLED), and every hop is recorded. INVOICED ("Faturado") is
+// set by billing, which is outside this system: only imported orders have it.
+// "Faturado" and "Cancelado" are the words the seed's history orders use.
+export const OrderStatusSchema = z.enum(['AWAITING_APPROVAL', 'APPROVED', 'SUBMITTED', 'INVOICED', 'REJECTED', 'CANCELLED']);
 export type OrderStatus = z.infer<typeof OrderStatusSchema>;
 
 // The two states an order can be in the moment it is created.
