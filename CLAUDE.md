@@ -8,7 +8,7 @@ The reviewers will pick code at random and ask me to explain it, make a live cha
 
 ## Status
 
-`contracts`, `catalog-api`, `identity-api` and `orders-api` exist under `repositories/`, pass their tests and run in Docker Compose together with RabbitMQ (phase A backend is complete: calculate, submit with the status, the rules). `web` does not exist yet; consumers of the order events and everything in phases B to D are not built. Delivery is phased:
+`contracts`, `catalog-api`, `identity-api`, `orders-api` and `web` exist under `repositories/`, pass their tests and run in Docker Compose together with RabbitMQ (phase A backend is complete: calculate, submit with the status, the rules). `web` (Nuxt app and BFF) exists too, so the phase A requirements 1 to 6 are implemented end to end. The consumers of the order events, approval, credit, history and everything in phases B to D are not built. Delivery is phased:
 
 - **Phase A:** mandatory requirements 1–6 (portfolio scoping, product search by name/EAN with the client's price table, order building, totals and blocking rules, submit with status, automated tests of the rules).
 - **Phase B:** credit limit, order history with "repeat order", minimal supervisor approve/reject.
@@ -29,6 +29,8 @@ Full picture in `ARQUITETURA.md`; reasoning in `DECISIONS.md` D15–D21.
 - **Draft lives in the browser (Pinia).** After each edit the BFF asks orders to calculate; nothing is saved until submit.
 - **Seed:** each service imports its own slice of `seed.json` at startup, idempotently.
 - Phase A needs identity, catalog, orders and web; notifications arrives in phase B.
+- **The browser holds only an opaque session id** (HttpOnly cookie); the user lives in Redis (`web/server/utils/session.ts`). The BFF's secret is read from a private `runtimeConfig` key (`NUXT_INNER_AUTH`) and never reaches the client. Every API request with a body must be JSON.
+- **The screen never computes money or rules**: totals, blockers and status shown come from `POST /api/orders/calculate`; the order store (Pinia) holds only what the seller typed.
 
 ## Stack
 

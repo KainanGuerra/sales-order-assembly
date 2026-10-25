@@ -4,11 +4,11 @@ Módulo para vendedores que visitam pequenos varejistas (mercadinhos, minimercad
 
 ## Estado atual
 
-**Backend da fase A funcionando em Docker Compose** (catálogo, identity e orders, com PostgreSQL e RabbitMQ). A interface (Nuxt) ainda não existe; as instruções que citam a aplicação web descrevem o resultado esperado.
+**Fase A funcionando em Docker Compose**: interface web (Nuxt), catálogo, identity e orders, com PostgreSQL, RabbitMQ e Redis. Os consumidores dos eventos, a aprovação, o crédito, o histórico e o modo offline ainda não existem.
 
 | Fase | Conteúdo | Estado |
 |---|---|---|
-| A | Requisitos obrigatórios 1–6 | Backend pronto (catálogo, identity, orders com regras e testes); falta a interface (Nuxt) |
+| A | Requisitos obrigatórios 1–6 | Pronta: backend (catálogo, identity, orders com regras e testes) e interface (Nuxt) |
 | B | Limite de crédito, histórico com "repetir pedido", aprovação do supervisor | Não iniciada |
 | C | Pedido offline com sincronização | Não iniciada |
 | D | Repositório de orquestração (Helm, kind, ingress), última fase | Não iniciada |
@@ -52,7 +52,7 @@ sh scripts/init-env.sh      # cria o .env com senhas aleatórias (nada de segred
 docker compose up
 ```
 
-Endereços esperados: aplicação web e API em `localhost` (portas a definir), Swagger em `/docs`.
+Depois de `docker compose up`, abra `http://localhost:8080`. É o único serviço com porta publicada; os demais ficam na rede interna.
 
 Cada serviço também roda sozinho: veja o `README.md` do repositório dele (`cp .env.example .env && docker compose up --build`).
 
@@ -81,4 +81,13 @@ Os testes das regras cobrem os casos de borda: desconto exatamente na alçada, p
 
 ## O que ficou de fora
 
-_(a preencher ao final de cada fase)_ Itens já previstos como fora do escopo: estoque, autenticação real, notificações ao supervisor, múltiplas moedas.
+**Da fase A, por escolha ou por falta de verificação**
+
+- A tela foi usada num navegador de computador; **não foi testada em um celular real nem em tela estreita** (o layout foi pensado para isso, mas não conferido).
+- O caminho em que o envio é recusado (422) e o aviso de "sem conexão" na tela do pedido foram escritos e cobertos nos testes do backend e do BFF, mas **não foram exercitados na interface**.
+- Não há testes de componente do front; a lógica testada está no motor de regras, nos serviços, no store, nos utilitários e no BFF.
+- Os fluxos de CI (testes e publicação das imagens no GHCR) estão escritos, **mas nunca rodaram no GitHub**.
+- Os eventos do pedido são publicados, mas ainda **não há consumidores** (crédito, estatística de produtos, notificações), e a publicação não usa outbox: se o RabbitMQ estiver fora no envio, o evento se perde.
+- Aprovação pelo supervisor, crédito, histórico com "repetir pedido", modo offline e a orquestração com Helm são as fases B, C e D.
+
+**Fora do escopo do enunciado:** estoque, autenticação real, notificações externas, várias moedas.

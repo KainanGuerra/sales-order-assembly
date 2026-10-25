@@ -293,3 +293,36 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 - **Contexto:** O segredo interno viaja nos metadados do gRPC, mas o cliente gerado só aceitava a requisição.
 - **Escolha:** `addGrpcMetadata=true` no `buf.gen.yaml`. As chamadas do orders passam `x-inner-auth` nos metadados, com prazo de `GRPC_TIMEOUT_MS`; `NOT_FOUND` vira "não encontrado" e qualquer outra falha vira 503 ("indisponível, tente de novo"), nunca 500.
+
+## D36. Sessão do BFF: cookie com id opaco + Redis, escrita à mão
+
+- **Contexto:** O D16 previa a sessão no Redis, dona do BFF. Ao ler o código do `nuxt-auth-utils`, vi que ele guarda a sessão inteira num cookie criptografado e que seus ganchos (`fetch`, `clear`) só acrescentam dados ou registram; não há armazenamento externo plugável.
+- **Alternativas consideradas:** `nuxt-auth-utils` como é (sem Redis, sessão não revogável); `nuxt-auth-utils` guardando só um id e eu buscando o usuário no Redis (o módulo viraria só um criptografador de cookie).
+- **Escolha:** Código próprio e pequeno em `server/utils/session.ts`. O navegador guarda só um id aleatório de 256 bits num cookie `HttpOnly` e `SameSite=Lax`; o usuário fica no Redis com expiração deslizante (8 h, renovada a cada leitura); o logout apaga a chave; cada login gera um id novo (contra fixação de sessão). O `Secure` do cookie é ligado por variável de ambiente quando houver HTTPS.
+- **Por quê:** A sessão pode ser encerrada no servidor, nada sobre o usuário viaja no cookie, e o código cabe numa tela para explicar ao vivo. Isso mantém a decisão de usar Redis.
+- **Verificado:** um cookie antigo depois do logout e um id inventado recebem 401; a resposta e o HTML entregue ao navegador não contêm o segredo interno nem URLs internas (busca textual).
+- **Falha encontrada na verificação:** um `POST` com corpo de formulário (`application/x-www-form-urlencoded`) fazia login, ao contrário do que um comentário meu afirmava. Agora toda requisição com corpo precisa ser JSON (415 caso contrário); há testes da regra.
+- **O que faria diferente:** Trocar o segredo compartilhado do BFF por tokens assinados por chamada (já anotado em D16) e adicionar limite de tentativas ao login quando ele deixar de ser simulado.
+
+## D37. Versões do TypeScript: 7 só no contracts; 6.0.3 no web (correção do D23)
+
+- **Contexto:** O D23 escolheu o TypeScript 7.0.2 e anotou o risco de ferramentas incompatíveis.
+- **O que aconteceu:** O `vue-tsc` 3.3.13 não roda sobre o TypeScript 7 (`ERR_PACKAGE_PATH_NOT_EXPORTED` para `typescript/lib/tsc`). Os serviços criados pela CLI do Nest já vieram com `typescript ^6.0.2`; só o `contracts` usa o 7.0.2 (e compila, checa tipos e testa sem problema).
+- **Escolha:** O `web` fica com o 6.0.3 (o plano de contingência do D23). Os serviços Nest ficam no 6.x da CLI. O `contracts` permanece no 7.0.2.
+- **Por quê:** O que importa é que `typecheck` funcione em cada repositório. Alinhar tudo no 6.0.3 seria mais simples de explicar.
+- **O que faria diferente:** Fixar o 6.0.3 em todos os repositórios até o `vue-tsc` suportar o 7, e então subir todos juntos.
+
+## D38. A tela do pedido: uma página mobile-first, totais sempre vindos do backend
+
+- **Contexto:** O vendedor usa o celular em campo; as regras são do backend (D4, D20).
+- **Alternativas consideradas:** duas páginas (catálogo e carrinho); botão "Calcular"; calcular totais no navegador.
+- **Escolha:** Uma única página: busca no topo, itens abaixo, totais e o botão Enviar fixos embaixo. Depois de cada edição (300 ms) o navegador pede o cálculo; a chave da consulta é o próprio rascunho, então uma resposta antiga nunca substitui uma nova. O botão Enviar só habilita quando o backend disse que pode enviar **e** nada mudou desde então. O Pinia guarda só o que o vendedor digitou (produtos, quantidades, unidade, descontos, id do pedido); o rascunho é gravado no `localStorage` e sobrevive a recarregar a página ou à sessão expirar. O id do pedido é gerado uma vez por pedido, então reenviar não duplica. Os tipos das respostas são escritos à mão no front (fecha a pendência "tipos do front" com a opção manual).
+- **Achados ao usar a tela de verdade:** o campo numérico do Nuxt UI só confirmava a quantidade ao perder o foco (o total ficava atrasado) e foi trocado por um campo numérico simples; o botão desabilitado quase não parecia desabilitado (o estilo do componente vencia o meu); e o selo "Enviado" aparecia mesmo com o pedido bloqueado, então agora só aparece quando o envio é possível.
+- **Custo assumido:** Os tipos escritos à mão podem se afastar das respostas reais; não há testes de componente (a lógica que vale testar está no store, nos utilitários e no BFF).
+- **O que faria diferente:** Gerar os tipos a partir da especificação OpenAPI dos serviços e testar a tela com Playwright.
+
+## D39. SPA com BFF, ícones locais e cache limpo quando a sessão termina
+
+- **Contexto:** O app precisa funcionar em contêiner sem acesso à internet para ícones e, depois, offline (fase C); e os dados em cache de uma pessoa não podem aparecer para a próxima.
+- **Escolha:** `ssr: false` (as páginas rodam no navegador; o servidor Nitro continua sendo o BFF). Os ícones vêm do pacote local `@iconify-json/lucide`, sem CDN. Uma sessão que termina (logout ou 401 no meio do pedido) esvazia o cache do TanStack Query; no 401 o visitante volta à tela de login e o rascunho continua guardado.
+- **O que faria diferente:** Ao implementar o modo offline, avaliar um service worker com `@vite-pwa/nuxt`.

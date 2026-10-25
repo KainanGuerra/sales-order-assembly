@@ -43,6 +43,11 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A30 | Linha com problema no total | Linhas bloqueadas não entram no total exibido, e o envio é recusado enquanto houver qualquer bloqueio. O mínimo é avaliado sobre as linhas calculáveis. Decisão minha |
 | A31 | Embalagem em produto vendido só por unidade | `PACK` em produto com fator 1 é bloqueado (`PACK_NOT_AVAILABLE`). Em produto que não exige múltiplo, tanto unidade quanto embalagem são aceitas. Decisão minha |
 | A32 | Quem monta pedidos | Só o vendedor. O supervisor recebe 403 ao calcular ou enviar e só verá pedidos na fase B (aprovação). Decisão minha |
+| A33 | O rascunho do pedido some ao recarregar a página? | Não: fica no `localStorage` até o pedido ser enviado, o vendedor abrir outro cliente ou sair. Se o armazenamento estiver bloqueado, o app funciona só em memória. Decisão minha |
+| A34 | Que status a tela mostra enquanto o pedido está bloqueado? | Nenhum: o selo ("Enviado" ou "Aguardando aprovação") só aparece quando o envio é possível; os motivos do bloqueio explicam o resto. Decisão minha |
+| A35 | Quantidade ao adicionar um produto | Uma unidade; uma embalagem se o produto só vende em múltiplos. A busca começa com 2 caracteres. Decisão minha |
+| A36 | O que o supervisor vê nesta versão | Uma página avisando que a aprovação ainda não está disponível; ele não abre as telas do vendedor. Decisão minha |
+| A37 | Duração da sessão | 8 horas, renovada a cada uso. Decisão minha |
 | A25 | "Login" | Simulado: tela para escolher vendedor ou supervisor, com sessão por cookie no servidor |
 | A26 | Pedido offline (fase C) | Comportamento a decidir quando chegarmos à fase C; o backend continua sendo o dono das regras |
 
