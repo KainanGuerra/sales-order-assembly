@@ -98,6 +98,10 @@ services:
       RABBITMQ_URL: amqp://sales:${RABBITMQ_PASSWORD}@rabbitmq:5672
       MIN_ORDER_CENTS: ${MIN_ORDER_CENTS:-30000}
       MAX_DISCOUNT_BP: ${MAX_DISCOUNT_BP:-1000}
+      DEFAULT_PRICE_TABLE_ID: ${DEFAULT_PRICE_TABLE_ID:-TP01}
+      SEED_FILE: /data/seed.json
+    volumes:
+      - ./seed.json:/data/seed.json:ro
     depends_on:
       postgres:
         condition: service_healthy
