@@ -6,7 +6,7 @@
 
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
-import type { handleUnaryCall, UntypedServiceImplementation } from "@grpc/grpc-js";
+import type { handleUnaryCall, Metadata, UntypedServiceImplementation } from "@grpc/grpc-js";
 import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
 import { Observable } from "rxjs";
 
@@ -326,7 +326,7 @@ export interface CatalogServiceClient {
    * for each requested product. Unknown ids are listed in unknown_product_ids.
    */
 
-  getProducts(request: GetProductsRequest): Observable<GetProductsResponse>;
+  getProducts(request: GetProductsRequest, metadata?: Metadata): Observable<GetProductsResponse>;
 }
 
 /**
@@ -342,6 +342,7 @@ export interface CatalogServiceController {
 
   getProducts(
     request: GetProductsRequest,
+    metadata?: Metadata,
   ): Promise<GetProductsResponse> | Observable<GetProductsResponse> | GetProductsResponse;
 }
 

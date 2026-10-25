@@ -6,7 +6,7 @@
 
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
-import type { handleUnaryCall, UntypedServiceImplementation } from "@grpc/grpc-js";
+import type { handleUnaryCall, Metadata, UntypedServiceImplementation } from "@grpc/grpc-js";
 import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
 import { Observable } from "rxjs";
 
@@ -448,9 +448,9 @@ export const Seller: MessageFns<Seller> = {
  */
 
 export interface IdentityServiceClient {
-  getClient(request: GetClientRequest): Observable<GetClientResponse>;
+  getClient(request: GetClientRequest, metadata?: Metadata): Observable<GetClientResponse>;
 
-  getSeller(request: GetSellerRequest): Observable<GetSellerResponse>;
+  getSeller(request: GetSellerRequest, metadata?: Metadata): Observable<GetSellerResponse>;
 }
 
 /**
@@ -460,9 +460,15 @@ export interface IdentityServiceClient {
  */
 
 export interface IdentityServiceController {
-  getClient(request: GetClientRequest): Promise<GetClientResponse> | Observable<GetClientResponse> | GetClientResponse;
+  getClient(
+    request: GetClientRequest,
+    metadata?: Metadata,
+  ): Promise<GetClientResponse> | Observable<GetClientResponse> | GetClientResponse;
 
-  getSeller(request: GetSellerRequest): Promise<GetSellerResponse> | Observable<GetSellerResponse> | GetSellerResponse;
+  getSeller(
+    request: GetSellerRequest,
+    metadata?: Metadata,
+  ): Promise<GetSellerResponse> | Observable<GetSellerResponse> | GetSellerResponse;
 }
 
 export function IdentityServiceControllerMethods() {

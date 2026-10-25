@@ -9,3 +9,4 @@ plugins:
       - useOptionals=messages
       - outputServices=grpc-js
       - importSuffix=.js
+      - addGrpcMetadata=true
