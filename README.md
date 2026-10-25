@@ -4,11 +4,11 @@ Módulo para vendedores que visitam pequenos varejistas (mercadinhos, minimercad
 
 ## Estado atual
 
-**Fase de documentação e definição da stack.** Ainda não há código de aplicação; as instruções de execução abaixo descrevem o resultado esperado e serão validadas quando o código existir.
+**Backend da fase A funcionando em Docker Compose** (catálogo, identity e orders, com PostgreSQL e RabbitMQ). A interface (Nuxt) ainda não existe; as instruções que citam a aplicação web descrevem o resultado esperado.
 
 | Fase | Conteúdo | Estado |
 |---|---|---|
-| A | Requisitos obrigatórios 1–6 | Não iniciada |
+| A | Requisitos obrigatórios 1–6 | Backend pronto (catálogo, identity, orders com regras e testes); falta a interface (Nuxt) |
 | B | Limite de crédito, histórico com "repetir pedido", aprovação do supervisor | Não iniciada |
 | C | Pedido offline com sincronização | Não iniciada |
 | D | Repositório de orquestração (Helm, kind, ingress), última fase | Não iniciada |

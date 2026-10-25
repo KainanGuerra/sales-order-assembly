@@ -45,7 +45,7 @@ Infraestrutura: um PostgreSQL (um schema e um papel por serviço, **sem consulta
 - **BFF → serviços:** HTTP/JSON. Cada chamada leva um segredo interno (`x-inner-auth`) e o usuário e papel da sessão. Os serviços só aceitam chamadas com o segredo.
 - **orders → catalog e identity:** gRPC, para as consultas que precisam estar corretas na hora (preço, regras de embalagem, cliente, tabela, limites, crédito disponível). Tanto o cálculo do pedido quanto o envio usam essas chamadas; as consultas são em lote para limitar o número de idas e voltas.
 - **orders → identity, no envio:** `ReserveCredit` e `ReleaseCredit` (gRPC), para fechar a corrida de crédito. Ver "Reserva de crédito" abaixo.
-- **Eventos (RabbitMQ, `@nestjs/microservices`):** só os eventos publicados por orders, em consumidores idempotentes.
+- **Eventos (RabbitMQ, `@nestjs/microservices`):** só os eventos publicados por orders, em consumidores idempotentes. Exchange `orders.events` (topic), chaves `order.submitted`, `order.approved`, `order.rejected`; cada consumidor vincula a própria fila (`<serviço>-api-<evento>`). A carga chega envolvida como `{ pattern, data }`.
 - **orders não guarda cópia de dados de outros serviços.** Guarda apenas o instantâneo (snapshot) do preço e do produto em cada item do pedido.
 
 ## Eventos

@@ -8,7 +8,7 @@ The reviewers will pick code at random and ask me to explain it, make a live cha
 
 ## Status
 
-`contracts`, `catalog-api` and `identity-api` exist under `repositories/`, pass their tests and run in Docker Compose. `orders-api` and `web` do not exist yet. Delivery is phased:
+`contracts`, `catalog-api`, `identity-api` and `orders-api` exist under `repositories/`, pass their tests and run in Docker Compose together with RabbitMQ (phase A backend is complete: calculate, submit with the status, the rules). `web` does not exist yet; consumers of the order events and everything in phases B to D are not built. Delivery is phased:
 
 - **Phase A:** mandatory requirements 1–6 (portfolio scoping, product search by name/EAN with the client's price table, order building, totals and blocking rules, submit with status, automated tests of the rules).
 - **Phase B:** credit limit, order history with "repeat order", minimal supervisor approve/reject.
@@ -81,6 +81,10 @@ Every one of these is also written, with the reasoning, in `ASSUMPTIONS.md` / `D
 | `style-guide/` | en | How I structure services; follow it unless `DECISIONS.md` says otherwise |
 
 Before proposing a design change, **check `DECISIONS.md` and `ASSUMPTIONS.md` first.** Most alternatives were already considered, and each entry says what would reopen it.
+
+## Where the rules live
+
+`repositories/orders-api/src/modules/orders/domain/order-rules.ts` is the single place for pricing, packs, discounts, rounding, the minimum and the discount limit: a pure function with tests. Change a rule there, in `ASSUMPTIONS.md` and in the tests together.
 
 ## Hard rules
 

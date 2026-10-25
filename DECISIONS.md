@@ -263,3 +263,33 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 - **Escolha:** A carga atualiza os demais campos, mas não toca em `credit_used_cents` depois da primeira carga. Há um teste para isso.
 - **Por quê:** Reiniciar o serviço não pode devolver crédito.
 - **O que faria diferente:** Separar a carga de dados de referência (a que reexecuta) da carga inicial de saldos (que roda uma vez).
+
+## D32. Motor de regras puro: bloqueios e motivos de aprovação são coisas diferentes
+
+- **Contexto:** O enunciado separa "bloquear o envio" (regras não atendidas) de "aguardando aprovação" (desconto acima da alçada). A avaliação pede testes das regras de negócio.
+- **Alternativas consideradas:** regras espalhadas pelo serviço e pelo controlador; lançar exceção no primeiro problema; regras no frontend.
+- **Escolha:** `calculateOrder(pedido, produtos, política)` é uma função pura em `order-rules.ts`: recebe dados simples e devolve dados simples. Ela devolve os totais, **todos** os bloqueios (por linha e do pedido) e todos os motivos de aprovação, de uma vez, para a tela mostrar tudo ao vendedor. Bloqueios: pedido vazio, abaixo do mínimo, produto desconhecido/inativo/sem preço, quantidade inválida, embalagem indisponível, quantidade que não é múltipla, linha repetida, desconto inválido. Aprovação: desconto de linha ou de pedido acima do limite efetivo (o menor entre a alçada do vendedor e o teto global `MAX_DISCOUNT_BP`, padrão 10%). A quantidade chega como `quantity` + `unit` (UNIT/PACK) e o backend converte; um produto aparece em uma linha só.
+- **Por quê:** Uma única implementação, sem I/O, que se testa com tabelas de exemplos. Os exemplos de arredondamento do `ASSUMPTIONS.md` e os casos de borda (desconto exatamente na alçada e um ponto-base acima, R$ 299,99 e R$ 300,00, quantidade fora do múltiplo) são testes. Quebrar de propósito sete linhas do motor derrubou testes em todos os casos.
+- **Custo assumido:** Linhas bloqueadas ficam fora do total exibido; o total só vale quando `canSubmit` é verdadeiro.
+- **O que faria diferente:** Tratar mais de uma moeda e tabelas de preço com vigência, que o enunciado não pede.
+
+## D33. Cálculo sem estado, envio idempotente pelo id do pedido
+
+- **Contexto:** O rascunho fica no navegador (D20) e o vendedor pode enviar duas vezes (toque duplo, sinal ruim).
+- **Alternativas consideradas:** rascunho salvo no servidor; chave de idempotência em uma tabela à parte; checar "já existe?" antes de inserir.
+- **Escolha:** `POST /orders/calculate` não grava nada. `POST /orders` recebe um `orderId` (UUID) gerado pelo cliente. Se o pedido já existe, devolve o mesmo pedido sem recalcular nem publicar de novo. A chave primária da tabela `orders` é a garantia: duas requisições simultâneas com o mesmo id resultam em um pedido e um evento. Preço e dados do produto são copiados para cada linha no envio. Um pedido de outro vendedor responde como inexistente.
+- **Bug encontrado pelos testes:** o repositório tratava qualquer violação de unicidade como "pedido já existe", inclusive uma linha repetida. Agora só a violação da chave `orders_pkey` conta como pedido existente.
+- **O que faria diferente:** Registrar a chave de idempotência também para o `approve`/`reject` da fase B.
+
+## D34. Eventos num exchange `topic`, publicados depois de salvar, sem outbox ainda
+
+- **Contexto:** Três serviços vão consumir os mesmos eventos (identity, catalog, notifications), e o `@nestjs/microservices` por padrão envia para uma única fila.
+- **Alternativas consideradas:** uma fila compartilhada; um exchange `fanout`; um outbox transacional.
+- **Escolha:** O orders publica no exchange `orders.events` (tipo `topic`, com curingas) com a chave `order.submitted`. Cada consumidor vincula a sua própria fila com nome explícito (`<serviço>-api-<evento>`). O Nest envolve a carga como `{ "pattern", "data" }`. Foi verificado com uma fila de teste vinculada a `order.*`. A publicação ocorre depois da gravação; se o broker falhar, o erro é registrado e o pedido continua salvo.
+- **Risco assumido:** Sem outbox, um evento pode se perder (broker parado no momento do envio). O limite de 15 minutos da reserva de crédito (D22) depende desse evento chegar.
+- **O que faria diferente:** Outbox transacional no orders, publicando por um processo que relê a tabela.
+
+## D35. O gerador do contracts passa a emitir o parâmetro de metadados
+
+- **Contexto:** O segredo interno viaja nos metadados do gRPC, mas o cliente gerado só aceitava a requisição.
+- **Escolha:** `addGrpcMetadata=true` no `buf.gen.yaml`. As chamadas do orders passam `x-inner-auth` nos metadados, com prazo de `GRPC_TIMEOUT_MS`; `NOT_FOUND` vira "não encontrado" e qualquer outra falha vira 503 ("indisponível, tente de novo"), nunca 500.

@@ -37,6 +37,12 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A23 | Envio duplicado (clique duplo, reconexão) | O envio usa uma chave de idempotência gerada no cliente; repetir a chave devolve o mesmo pedido |
 | A24 | Estoque | Não é modelado (não existe no enunciado nem no seed) |
 | A25b | O vendedor tenta abrir a carteira ou o cliente de outro | A carteira alheia responde 403; um cliente alheio responde 404, igual a um cliente inexistente. Decisão minha |
+| A27 | Teto global de desconto (`MAX_DISCOUNT_BP`) | Padrão de 10%. A alçada efetiva é o menor entre a do vendedor e o teto. Pedido com desconto acima dela vai para aprovação, não é bloqueado. Decisão minha |
+| A28 | Arredondamento do desconto do pedido | O valor do desconto (soma das linhas × percentual) é arredondado uma vez, meio para cima, e subtraído da soma. Decisão minha |
+| A29 | Quantidade máxima por linha | 100.000 unidades; acima disso a linha é bloqueada como quantidade inválida. Decisão minha |
+| A30 | Linha com problema no total | Linhas bloqueadas não entram no total exibido, e o envio é recusado enquanto houver qualquer bloqueio. O mínimo é avaliado sobre as linhas calculáveis. Decisão minha |
+| A31 | Embalagem em produto vendido só por unidade | `PACK` em produto com fator 1 é bloqueado (`PACK_NOT_AVAILABLE`). Em produto que não exige múltiplo, tanto unidade quanto embalagem são aceitas. Decisão minha |
+| A32 | Quem monta pedidos | Só o vendedor. O supervisor recebe 403 ao calcular ou enviar e só verá pedidos na fase B (aprovação). Decisão minha |
 | A25 | "Login" | Simulado: tela para escolher vendedor ou supervisor, com sessão por cookie no servidor |
 | A26 | Pedido offline (fase C) | Comportamento a decidir quando chegarmos à fase C; o backend continua sendo o dono das regras |
 
