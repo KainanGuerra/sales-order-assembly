@@ -148,7 +148,7 @@ describe.skipIf(!url)('OrdersRepository (real Postgres)', () => {
       await repository.insert(waiting(A), [item(A, 'P1')], first('AWAITING_APPROVAL'));
       await repository.applyRejection(A, 'S01', { code: 'CREDIT_RISK', text: null });
       expect(await repository.applyApproval(A, 'S01')).toBe(false);
-      expect((await repository.findById(A))?.order.status).toBe('REJECTED');
+      expect((await repository.findById(A))?.order.status).toBe('CANCELLED');
     });
   });
 
@@ -157,8 +157,14 @@ describe.skipIf(!url)('OrdersRepository (real Postgres)', () => {
       await repository.insert(waiting(A), [item(A, 'P1')], first('AWAITING_APPROVAL'));
       expect(await repository.applyRejection(A, 'S01', { code: 'OTHER', text: 'Cliente desistiu' })).toBe(true);
       const found = await repository.findById(A);
-      expect(found?.order).toMatchObject({ status: 'REJECTED', rejectionReasonCode: 'OTHER', rejectionReasonText: 'Cliente desistiu' });
-      expect(found?.history.at(-1)).toMatchObject({ status: 'REJECTED', actor: 'user:S01', reasonCode: 'OTHER', reasonText: 'Cliente desistiu' });
+      expect(found?.order).toMatchObject({ status: 'CANCELLED', rejectionReasonCode: 'OTHER', rejectionReasonText: 'Cliente desistiu' });
+      // REJECTED (by the supervisor, with the reason) and then CANCELLED (by the system), in that order.
+      expect(found?.history.map((h) => [h.status, h.actor])).toEqual([
+        ['AWAITING_APPROVAL', 'user:V01'],
+        ['REJECTED', 'user:S01'],
+        ['CANCELLED', 'system:orders'],
+      ]);
+      expect(found?.history[1]).toMatchObject({ reasonCode: 'OTHER', reasonText: 'Cliente desistiu' });
     });
 
     it('does not reject an order that was already sent', async () => {
@@ -197,10 +203,53 @@ describe.skipIf(!url)('OrdersRepository (real Postgres)', () => {
       holder.release();
     }
     const found = await repository.findById(A);
-    expect(['SUBMITTED', 'REJECTED']).toContain(found?.order.status);
+    expect(['SUBMITTED', 'CANCELLED']).toContain(found?.order.status);
     // The history matches the winner and has no steps from the loser.
     const steps = found!.history.map((h) => h.status);
-    expect(steps).toEqual(found?.order.status === 'SUBMITTED' ? ['AWAITING_APPROVAL', 'APPROVED', 'SUBMITTED'] : ['AWAITING_APPROVAL', 'REJECTED']);
+    expect(steps).toEqual(
+      found?.order.status === 'SUBMITTED' ? ['AWAITING_APPROVAL', 'APPROVED', 'SUBMITTED'] : ['AWAITING_APPROVAL', 'REJECTED', 'CANCELLED'],
+    );
+  });
+
+  describe('imported orders', () => {
+    const imported = (id: string): NewOrder => order(id, { status: 'INVOICED', origin: 'IMPORTED', createdAt: new Date('2026-09-15T12:00:00Z') });
+    const step = { status: 'INVOICED', actor: 'system:import', createdAt: new Date('2026-09-15T12:00:00Z') };
+
+    it('brings in an order with its lines and its one step, dated as the file says', async () => {
+      expect(await repository.insertImported(imported(A), [item(A, 'P1'), item(A, 'P2')], step)).toBe(true);
+      const found = await repository.findById(A);
+      expect(found?.order).toMatchObject({ status: 'INVOICED', origin: 'IMPORTED' });
+      expect(found?.order.createdAt.toISOString()).toBe('2026-09-15T12:00:00.000Z');
+      expect(found?.items).toHaveLength(2);
+      expect(found?.history.map((h) => [h.status, h.actor])).toEqual([['INVOICED', 'system:import']]);
+    });
+
+    it('importing the same order again changes nothing and says so', async () => {
+      await repository.insertImported(imported(A), [item(A, 'P1')], step);
+      expect(await repository.insertImported(imported(A), [item(A, 'P1')], step)).toBe(false);
+      const found = await repository.findById(A);
+      expect(found?.items).toHaveLength(1);
+      expect(found?.history).toHaveLength(1);
+    });
+
+    it('does not bring in a second line for the same product, and leaves nothing half-imported', async () => {
+      await expect(repository.insertImported(imported(A), [item(A, 'P1'), item(A, 'P1')], step)).rejects.toThrow();
+      expect(await repository.findById(A)).toBeNull();
+    });
+
+    it('marks an order made here as made here', async () => {
+      await repository.insert(order(A), [item(A, 'P1')], first());
+      expect((await repository.findById(A))?.order.origin).toBe('SYSTEM');
+    });
+  });
+
+  describe('counting lines', () => {
+    it('counts the lines of each order, and is happy with no ids', async () => {
+      await repository.insert(order(A), [item(A, 'P1'), item(A, 'P2'), item(A, 'P3')], first());
+      await repository.insert(order(B), [item(B, 'P1')], first());
+      expect(await repository.itemCounts([A, B, C])).toEqual(new Map([[A, 3], [B, 1]]));
+      expect(await repository.itemCounts([])).toEqual(new Map());
+    });
   });
 
   describe('lists', () => {

@@ -27,6 +27,13 @@ export type SubmitOrderDto = z.infer<typeof SubmitOrderSchema>;
 
 export const OrderIdSchema = z.uuid();
 
+// A client's history: the latest orders, newest first.
+export const ListOrdersQuerySchema = z.object({
+  clientId: z.string().trim().min(1).max(40),
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+});
+export type ListOrdersQuery = z.infer<typeof ListOrdersQuerySchema>;
+
 // A supervisor rejects with one of the listed reasons; "other" needs a text.
 export const RejectOrderSchema = z
   .object({

@@ -14,6 +14,10 @@ const EnvSchema = z.object({
   // Deadline for every gRPC call; a slower answer is treated as "unavailable".
   GRPC_TIMEOUT_MS: z.coerce.number().int().positive().default(3000),
   RABBITMQ_URL: z.string().min(1).default('amqp://rabbitmq:5672'),
+  // The history orders of the seed are imported from this file at startup.
+  SEED_FILE: z.string().default('/data/seed.json'),
+  // Price table of a client that has none of its own (used for imported orders).
+  DEFAULT_PRICE_TABLE_ID: z.string().min(1).default('TP01'),
   // Orders below this net total cannot be sent (R$ 300.00).
   MIN_ORDER_CENTS: z.coerce.number().int().nonnegative().default(30_000),
   // Global ceiling on the discount a seller may give without approval, in basis

@@ -56,6 +56,7 @@ export const ORDER_EVENTS_EXCHANGE = 'orders.events';
     ]),
   ],
   controllers: [OrdersController],
+  exports: [OrdersRepository],
   providers: [
     OrdersService,
     OrdersRepository,

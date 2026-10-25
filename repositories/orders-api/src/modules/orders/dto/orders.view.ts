@@ -30,6 +30,35 @@ export interface OrderItemView {
   netCents: number;
 }
 
+// One line of a client's history.
+export interface OrderSummaryView {
+  id: string;
+  status: OrderStatus;
+  origin: 'SYSTEM' | 'IMPORTED';
+  totalCents: number;
+  itemCount: number;
+  createdAt: string;
+}
+
+// A draft made from an old order. Nothing is saved: the screen loads it as the
+// order being built, and it is calculated like any other.
+export interface RepeatDraftView {
+  sourceOrderId: string;
+  clientId: string;
+  items: {
+    productId: string;
+    sku: string;
+    description: string;
+    packFactor: number;
+    multipleOnly: boolean;
+    quantity: number;
+    unit: 'UNIT' | 'PACK';
+    discountBp: 0;
+  }[];
+  // The lines of the old order that cannot be ordered again, and why.
+  skipped: { productId: string; description: string; reason: 'UNKNOWN_PRODUCT' | 'DISCONTINUED' | 'NO_PRICE_IN_TABLE' }[];
+}
+
 export interface HistoryStepView {
   status: OrderStatus;
   actor: string;
@@ -47,6 +76,7 @@ export interface OrderView {
   clientId: string;
   clientTradeName: string;
   priceTableId: string;
+  origin: 'SYSTEM' | 'IMPORTED';
   subtotalCents: number;
   orderDiscountBp: number;
   orderDiscountCents: number;

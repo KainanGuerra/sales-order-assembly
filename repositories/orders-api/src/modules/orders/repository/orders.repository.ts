@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { DB, type Database } from '../../../db/database.module.js';
 import { orderItems, orderStatusHistory, orders } from '../../../db/schema.js';
 
@@ -56,6 +56,34 @@ export class OrdersRepository {
     }
   }
 
+  // Brings in an order that came with the seed: the order, its lines and its one
+  // history step, all or nothing. Importing again changes nothing (the id is the
+  // same every time), so the import can run at every start.
+  async insertImported(order: NewOrder, items: NewOrderItem[], step: NewHistory & { createdAt: Date }): Promise<boolean> {
+    return this.db.transaction(async (tx) => {
+      const inserted = await tx.insert(orders).values(order).onConflictDoNothing().returning({ id: orders.id });
+      if (inserted.length === 0) {
+        return false;
+      }
+      await tx.insert(orderItems).values(items);
+      await tx.insert(orderStatusHistory).values({ ...step, orderId: order.id! });
+      return true;
+    });
+  }
+
+  // How many lines each of these orders has.
+  async itemCounts(orderIds: string[]): Promise<Map<string, number>> {
+    if (orderIds.length === 0) {
+      return new Map();
+    }
+    const rows = await this.db
+      .select({ orderId: orderItems.orderId, count: sql<number>`count(*)::int` })
+      .from(orderItems)
+      .where(inArray(orderItems.orderId, orderIds))
+      .groupBy(orderItems.orderId);
+    return new Map(rows.map((row) => [row.orderId, row.count]));
+  }
+
   // Orders waiting for this supervisor, oldest first.
   listPendingApproval(supervisorId: string, limit: number): Promise<OrderRow[]> {
     return this.db
@@ -70,6 +98,7 @@ export class OrdersRepository {
   // still awaiting approval, so approve and reject sent at the same moment
   // cannot both win. Records APPROVED (by the supervisor) and then SUBMITTED
   // (by the system). Returns false when the order was no longer waiting.
+  // Rejecting below is the mirror: REJECTED (by the supervisor), then CANCELLED.
   async applyApproval(orderId: string, supervisor: string): Promise<boolean> {
     return this.db.transaction(async (tx) => {
       const moved = await tx
@@ -96,19 +125,17 @@ export class OrdersRepository {
     return this.db.transaction(async (tx) => {
       const moved = await tx
         .update(orders)
-        .set({ status: 'REJECTED', rejectionReasonCode: reason.code, rejectionReasonText: reason.text })
+        .set({ status: 'CANCELLED', rejectionReasonCode: reason.code, rejectionReasonText: reason.text })
         .where(and(eq(orders.id, orderId), eq(orders.status, 'AWAITING_APPROVAL')))
         .returning({ id: orders.id });
       if (moved.length === 0) {
         return false;
       }
-      await tx.insert(orderStatusHistory).values({
-        orderId,
-        status: 'REJECTED',
-        actor: `user:${supervisor}`,
-        reasonCode: reason.code,
-        reasonText: reason.text,
-      });
+      // The supervisor's refusal (with its reason), then the cancellation it causes.
+      await tx.insert(orderStatusHistory).values([
+        { orderId, status: 'REJECTED', actor: `user:${supervisor}`, reasonCode: reason.code, reasonText: reason.text },
+        { orderId, status: 'CANCELLED', actor: 'system:orders' },
+      ]);
       return true;
     });
   }

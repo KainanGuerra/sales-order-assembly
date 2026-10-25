@@ -20,14 +20,17 @@ import {
   type InitialOrderStatus,
   type OrderCalculation,
 } from '../domain/order-rules.js';
-import { decideApprove, decideReject, type OrderStatus, type StoredStatus } from '../domain/order-status.js';
+import { decideApprove, decideReject, type OrderStatus } from '../domain/order-status.js';
 import type { CalculateOrderDto, RejectOrderDto, SubmitOrderDto } from '../dto/orders.dto.js';
+import { buildRepeatDraft, type CurrentProduct } from '../domain/repeat-order.js';
 import type {
   CalculationView,
   HistoryStepView,
   OrderItemView,
+  OrderSummaryView,
   OrderView,
   PendingOrderView,
+  RepeatDraftView,
 } from '../dto/orders.view.js';
 import { OrdersRepository, type OrderRow, type OrderWithItems } from '../repository/orders.repository.js';
 
@@ -166,6 +169,69 @@ export class OrdersService {
     return toOrderView(found);
   }
 
+  // The latest orders a seller made for one client, newest first. Orders of
+  // someone else are never in it.
+  async listClientOrders(actor: Actor, clientId: string, limit: number): Promise<OrderSummaryView[]> {
+    if (actor.role !== 'SELLER') {
+      throw new ForbiddenException('Only a seller has a client history');
+    }
+    const rows = await this.repository.listByClient(actor.id, clientId, limit);
+    const counts = await this.repository.itemCounts(rows.map((row) => row.id));
+    return rows.map((row) => ({
+      id: row.id,
+      status: row.status as OrderStatus,
+      origin: row.origin as 'SYSTEM' | 'IMPORTED',
+      totalCents: row.totalCents,
+      itemCount: counts.get(row.id) ?? 0,
+      createdAt: row.createdAt.toISOString(),
+    }));
+  }
+
+  // A draft that repeats an old order: the same products, quantities and units,
+  // ordered from today's catalog and the client's current price table. A product
+  // that cannot be ordered any more is left out and reported. Discounts start at
+  // zero. Nothing is saved.
+  async repeatDraft(actor: Actor, orderId: string): Promise<RepeatDraftView> {
+    if (actor.role !== 'SELLER') {
+      throw new ForbiddenException('Only a seller can repeat an order');
+    }
+    const found = await this.repository.findById(orderId);
+    if (!found || found.order.sellerId !== actor.id) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+    // The client may have moved to another seller since: then it is not theirs to order for.
+    const client = await this.identity.getClient(found.order.clientId);
+    if (!client || client.sellerId !== actor.id) {
+      throw new NotFoundException(`Client ${found.order.clientId} not found`);
+    }
+
+    const quotes = await this.catalog.getProducts(client.priceTableId, [...new Set(found.items.map((item) => item.productId))]);
+    const current = new Map<string, CurrentProduct>(
+      quotes.map((quote) => [
+        quote.productId,
+        {
+          productId: quote.productId,
+          sku: quote.sku,
+          description: quote.description,
+          active: quote.active,
+          hasPrice: quote.hasPrice,
+          packFactor: quote.packFactor,
+          multipleOnly: quote.multipleOnly,
+        },
+      ]),
+    );
+    const { items, skipped } = buildRepeatDraft(
+      found.items.map((item) => ({
+        productId: item.productId,
+        description: item.description,
+        unit: item.unit as 'UNIT' | 'PACK',
+        quantityInput: item.quantityInput,
+      })),
+      current,
+    );
+    return { sourceOrderId: orderId, clientId: client.id, items, skipped };
+  }
+
   async pendingApprovals(actor: Actor): Promise<PendingOrderView[]> {
     if (actor.role !== 'SUPERVISOR') {
       throw new ForbiddenException('Only a supervisor has orders to approve');
@@ -190,7 +256,7 @@ export class OrdersService {
     // A second pass only happens if another decision landed in between.
     for (let attempt = 0; attempt < 2; attempt++) {
       const decision = decideApprove(
-        found.order.status as StoredStatus,
+        found.order.status as OrderStatus,
         found.history.some((step) => step.status === 'APPROVED'),
       );
       if (decision.kind === 'already') {
@@ -217,7 +283,10 @@ export class OrdersService {
     let found = await this.requireOfSupervisor(actor, orderId);
 
     for (let attempt = 0; attempt < 2; attempt++) {
-      const decision = decideReject(found.order.status as StoredStatus);
+      const decision = decideReject(
+        found.order.status as OrderStatus,
+        found.history.some((step) => step.status === 'REJECTED'),
+      );
       if (decision.kind === 'already') {
         return toOrderView(found);
       }
@@ -237,7 +306,7 @@ export class OrdersService {
           rejectedBy: actor.id,
           reasonCode: dto.reasonCode,
           ...(reason.text ? { reasonText: reason.text } : {}),
-          rejectedAt: done.history.at(-1)!.createdAt.toISOString(),
+          rejectedAt: done.history.find((step) => step.status === 'REJECTED')!.createdAt.toISOString(),
         });
         return toOrderView(done);
       }
@@ -371,6 +440,7 @@ export function toOrderView({ order, items, history }: OrderWithItems): OrderVie
     clientId: order.clientId,
     clientTradeName: order.clientTradeName,
     priceTableId: order.priceTableId,
+    origin: order.origin as 'SYSTEM' | 'IMPORTED',
     subtotalCents: order.subtotalCents,
     orderDiscountBp: order.orderDiscountBp,
     orderDiscountCents: order.orderDiscountCents,

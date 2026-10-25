@@ -59,11 +59,21 @@ class FakeOrdersRepository {
       return false;
     }
     this.saved.set(order.id!, {
-      order: { ...order, createdAt: T0, rejectionReasonCode: null, rejectionReasonText: null } as OrderWithItems['order'],
+      order: { ...order, createdAt: T0, origin: 'SYSTEM', rejectionReasonCode: null, rejectionReasonText: null } as OrderWithItems['order'],
       items: items as OrderWithItems['items'],
       history: [{ id: 1, orderId: order.id!, reasonCode: null, reasonText: null, createdAt: T0, ...firstStep }] as OrderWithItems['history'],
     });
     return true;
+  }
+  async listByClient(sellerId: string, clientId: string, limit: number) {
+    return [...this.saved.values()]
+      .map((o) => o.order)
+      .filter((o) => o.sellerId === sellerId && o.clientId === clientId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, limit);
+  }
+  async itemCounts(ids: string[]) {
+    return new Map(ids.map((id) => [id, this.saved.get(id)?.items.length ?? 0]));
   }
   async listPendingApproval(supervisorId: string) {
     return [...this.saved.values()].map((o) => o.order).filter((o) => o.supervisorId === supervisorId && o.status === 'AWAITING_APPROVAL');
@@ -85,10 +95,13 @@ class FakeOrdersRepository {
     if (!found || found.order.status !== 'AWAITING_APPROVAL') {
       return false;
     }
-    found.order.status = 'REJECTED';
+    found.order.status = 'CANCELLED';
     found.order.rejectionReasonCode = reason.code;
     found.order.rejectionReasonText = reason.text;
-    found.history.push({ id: found.history.length + 1, orderId, status: 'REJECTED', actor: `user:${by}`, reasonCode: reason.code, reasonText: reason.text, createdAt: this.stamp() });
+    found.history.push(
+      { id: found.history.length + 1, orderId, status: 'REJECTED', actor: `user:${by}`, reasonCode: reason.code, reasonText: reason.text, createdAt: this.stamp() },
+      { id: found.history.length + 2, orderId, status: 'CANCELLED', actor: 'system:orders', reasonCode: null, reasonText: null, createdAt: this.stamp() },
+    );
     return true;
   }
 }
@@ -454,11 +467,16 @@ describe('OrdersService.reject', () => {
     ctx.publishPlaced.mockClear();
   });
 
-  it('rejects with the reason, keeps it, and records who did it', async () => {
+  it('rejects with the reason, keeps it, records who did it, and ends cancelled', async () => {
     const view = await ctx.service.reject(supervisor, ORDER_ID, { reasonCode: 'OTHER', reasonText: '  Cliente desistiu  ' });
-    expect(view.status).toBe('REJECTED');
+    expect(view.status).toBe('CANCELLED');
     expect(view.rejection).toEqual({ code: 'OTHER', text: 'Cliente desistiu' });
-    expect(view.history.at(-1)).toMatchObject({ status: 'REJECTED', actor: 'user:S01', reasonCode: 'OTHER', reasonText: 'Cliente desistiu' });
+    expect(view.history.map((h) => [h.status, h.actor])).toEqual([
+      ['AWAITING_APPROVAL', 'user:V01'],
+      ['REJECTED', 'user:S01'],
+      ['CANCELLED', 'system:orders'],
+    ]);
+    expect(view.history[1]).toMatchObject({ reasonCode: 'OTHER', reasonText: 'Cliente desistiu' });
   });
 
   it('gives the credit back at once and announces the rejection with its reason', async () => {
@@ -476,7 +494,7 @@ describe('OrdersService.reject', () => {
   it('still rejects, and announces it, when giving the credit back fails: the event releases it', async () => {
     ctx.releaseCredit.mockRejectedValue(new Error('identity is down'));
     const view = await ctx.service.reject(supervisor, ORDER_ID, { reasonCode: 'CREDIT_RISK' });
-    expect(view.status).toBe('REJECTED');
+    expect(view.status).toBe('CANCELLED');
     expect(ctx.publishRejected).toHaveBeenCalledTimes(1);
   });
 
@@ -500,5 +518,107 @@ describe('OrdersService.reject', () => {
     await expect(ctx.service.reject({ role: 'SUPERVISOR', id: 'S02' }, ORDER_ID, { reasonCode: 'CREDIT_RISK' })).rejects.toBeInstanceOf(NotFoundException);
     await expect(ctx.service.reject(seller, ORDER_ID, { reasonCode: 'CREDIT_RISK' })).rejects.toBeInstanceOf(ForbiddenException);
     expect(ctx.releaseCredit).not.toHaveBeenCalled();
+  });
+});
+
+describe('OrdersService.listClientOrders', () => {
+  it('lists the orders of the seller for one client, with total, items and status', async () => {
+    const { service } = build();
+    await service.submit(seller, submission());
+    const [row] = await service.listClientOrders(seller, 'C001', 10);
+    expect(row).toEqual({ id: ORDER_ID, status: 'SUBMITTED', origin: 'SYSTEM', totalCents: 50_000, itemCount: 1, createdAt: '2026-10-24T12:00:00.000Z' });
+  });
+
+  it("never lists another seller's orders, or another client's", async () => {
+    const { service } = build();
+    await service.submit(seller, submission());
+    expect(await service.listClientOrders({ role: 'SELLER', id: 'V02' }, 'C001', 10)).toEqual([]);
+    expect(await service.listClientOrders(seller, 'C002', 10)).toEqual([]);
+  });
+
+  it('respects the limit', async () => {
+    const ctx = build();
+    await ctx.service.submit(seller, submission({ orderId: '11111111-1111-4111-8111-111111111111' }));
+    await ctx.service.submit(seller, submission({ orderId: '22222222-2222-4222-8222-222222222222' }));
+    expect(await ctx.service.listClientOrders(seller, 'C001', 1)).toHaveLength(1);
+  });
+
+  it('is for sellers', async () => {
+    const { service } = build();
+    await expect(service.listClientOrders(supervisor, 'C001', 10)).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('OrdersService.repeatDraft', () => {
+  const twoLines = () =>
+    submission({
+      items: [
+        { productId: 'P1', quantity: 5, unit: 'UNIT', discountBp: 100 },
+        { productId: 'P2', quantity: 3, unit: 'PACK', discountBp: 0 },
+      ],
+    });
+
+  it('repeats the products, quantities and units, and starts every discount at zero', async () => {
+    const { service } = build();
+    await service.submit(seller, twoLines());
+    const draft = await service.repeatDraft(seller, ORDER_ID);
+    expect(draft).toMatchObject({ sourceOrderId: ORDER_ID, clientId: 'C001', skipped: [] });
+    expect(draft.items.map((i) => [i.productId, i.quantity, i.unit, i.discountBp])).toEqual([
+      ['P1', 5, 'UNIT', 0],
+      ['P2', 3, 'PACK', 0],
+    ]);
+    expect(draft.items[1]).toMatchObject({ packFactor: 12, multipleOnly: true, sku: 'SKU-P2' });
+  });
+
+  it("asks the catalog for the client's current price table, once for all the lines", async () => {
+    const { service, getProducts } = build();
+    await service.submit(seller, twoLines());
+    getProducts.mockClear();
+    await service.repeatDraft(seller, ORDER_ID);
+    expect(getProducts).toHaveBeenCalledTimes(1);
+    expect(getProducts).toHaveBeenCalledWith('TP01', ['P1', 'P2']);
+  });
+
+  it('leaves out a product that was discontinued since, and says why', async () => {
+    const { service, repository } = build({ quotes: [quote({ productId: 'P1' }), quote({ productId: 'P2', packFactor: 12, multipleOnly: true })] });
+    await service.submit(seller, twoLines());
+    // The catalog changes after the order was made.
+    const later = build({ quotes: [quote({ productId: 'P1', active: false }), quote({ productId: 'P2', packFactor: 12, multipleOnly: true })] });
+    later.repository.saved = repository.saved;
+    const draft = await later.service.repeatDraft(seller, ORDER_ID);
+    expect(draft.items.map((i) => i.productId)).toEqual(['P2']);
+    expect(draft.skipped).toEqual([{ productId: 'P1', description: 'Product P1', reason: 'DISCONTINUED' }]);
+  });
+
+  it('answers not found for an order of another seller, an unknown order, and a client that moved away', async () => {
+    const { service, repository } = build();
+    await service.submit(seller, twoLines());
+    await expect(service.repeatDraft({ role: 'SELLER', id: 'V02' }, ORDER_ID)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.repeatDraft(seller, '00000000-0000-4000-8000-000000000000')).rejects.toBeInstanceOf(NotFoundException);
+    const moved = build({ clients: { C001: { ...c001, sellerId: 'V02' } } });
+    moved.repository.saved = repository.saved;
+    await expect(moved.service.repeatDraft(seller, ORDER_ID)).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("does not let the seller who now owns a client repeat the previous seller's order", async () => {
+    // V01 made the order; the client has since passed to V02. The client check alone would let V02 in.
+    const { repository } = build();
+    const first = build();
+    await first.service.submit(seller, twoLines());
+    const afterTransfer = build({ clients: { C001: { ...c001, sellerId: 'V02' } } });
+    afterTransfer.repository.saved = first.repository.saved;
+    await expect(afterTransfer.service.repeatDraft({ role: 'SELLER', id: 'V02' }, ORDER_ID)).rejects.toBeInstanceOf(NotFoundException);
+    expect(repository.saved.size).toBe(0);
+  });
+
+  it('is for sellers, and saves and publishes nothing', async () => {
+    const ctx = build();
+    await ctx.service.submit(seller, twoLines());
+    ctx.publishPlaced.mockClear();
+    await expect(ctx.service.repeatDraft(supervisor, ORDER_ID)).rejects.toBeInstanceOf(ForbiddenException);
+    await ctx.service.repeatDraft(seller, ORDER_ID);
+    expect(ctx.repository.saved.size).toBe(1);
+    expect(ctx.publishPlaced).not.toHaveBeenCalled();
+    expect(ctx.reserveCredit).toHaveBeenCalledTimes(1);
   });
 });

@@ -17,9 +17,12 @@ export const orders = pgTable(
     supervisorId: text('supervisor_id').notNull().default(''),
     sellerName: text('seller_name').notNull().default(''),
     clientTradeName: text('client_trade_name').notNull().default(''),
-    // AWAITING_APPROVAL | SUBMITTED | REJECTED. APPROVED is a step on the way to
-    // SUBMITTED, so it only appears in the history.
+    // AWAITING_APPROVAL, APPROVED, SUBMITTED, INVOICED, REJECTED or CANCELLED.
+    // After a decision an order rests at SUBMITTED or CANCELLED; the history
+    // keeps every hop.
     status: text('status').notNull(),
+    // SYSTEM: made here. IMPORTED: a history order that came with the seed.
+    origin: text('origin').notNull().default('SYSTEM'),
     // Set when a supervisor rejects the order.
     rejectionReasonCode: text('rejection_reason_code'),
     rejectionReasonText: text('rejection_reason_text'),
