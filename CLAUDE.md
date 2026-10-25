@@ -82,6 +82,7 @@ Every one of these is also written, with the reasoning, in `ASSUMPTIONS.md` / `D
 | `repositories/documentation/context/CONTEXT.md` | pt-BR | The problem, the requirements and where each is met, phases, decisions by theme, glossary |
 | `repositories/documentation/architecture/ARCHITECTURE.md` | pt-BR | Services, data ownership, calls, life of an order, credit, events, notifications, session, offline, deployment, security |
 | `repositories/documentation/architecture/CODE_MAP.md` | pt-BR | Where to change each rule, a request traced through the code, routes, how to run one test |
+| `repositories/documentation/study-guide/STUDY_GUIDE.md` | pt-BR | Eight lessons on the core code with self-test questions and answers; read it to explain what you change |
 | `repositories/documentation/diagrams/` | pt-BR | Nine Mermaid diagrams, one per file |
 | `repositories/documentation/getting-started/GETTING_STARTED.md` | pt-BR | Running (Compose, Kubernetes), `.env`, common problems |
 | `repositories/documentation/testing/TESTING.md` | pt-BR | Test counts, how to run, mutation checks, what is not covered |

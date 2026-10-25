@@ -18,6 +18,7 @@ Em uma linha cada: [`DECISIONS.md`](../../DECISIONS.md) é o **porquê**, [`ASSU
 | [`context/CONTEXT.md`](context/CONTEXT.md) | O problema, os requisitos e onde foram atendidos, fases, como o trabalho foi conduzido, decisões por tema, glossário |
 | [`architecture/ARCHITECTURE.md`](architecture/ARCHITECTURE.md) | Serviços, dados, comunicação, ciclo do pedido, crédito, eventos, avisos, sessão, modo offline, implantação, segurança |
 | [`architecture/CODE_MAP.md`](architecture/CODE_MAP.md) | Onde mudar cada regra, o caminho de um pedido no código, rotas, como rodar um teste |
+| [`study-guide/STUDY_GUIDE.md`](study-guide/STUDY_GUIDE.md) | Oito aulas sobre as partes centrais do código (arredondamento, regras, status, crédito, avisos, BFF, offline, envio idempotente), com 24 perguntas de autoteste e gabarito |
 | [`diagrams/`](diagrams/) | Nove diagramas Mermaid (topologia, dados, envio, status, crédito, eventos, avisos, offline, Kubernetes) |
 | [`getting-started/GETTING_STARTED.md`](getting-started/GETTING_STARTED.md) | Pré-requisitos, `.env`, Compose, Kubernetes, problemas comuns |
 | [`testing/TESTING.md`](testing/TESTING.md) | Contagem de testes, como rodar, revisão por mutação, o que não é coberto |
