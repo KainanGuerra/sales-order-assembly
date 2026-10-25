@@ -9,6 +9,7 @@ const { user, logout } = useSession();
       <UContainer class="flex h-14 items-center justify-between gap-3">
         <NuxtLink to="/" class="font-semibold">{{ t('app.title') }}</NuxtLink>
         <div v-if="user" class="flex items-center gap-3 text-sm">
+          <NotificationBell />
           <span class="truncate text-neutral-600 dark:text-neutral-300">{{ user.name }}</span>
           <UButton size="sm" color="neutral" variant="outline" icon="i-lucide-log-out" :label="t('app.logout')" @click="logout" />
         </div>

@@ -176,5 +176,19 @@
       "NO_PRICE_IN_TABLE": "sem preço na tabela do cliente"
     },
     "notice": "Pedido copiado de um anterior: os preços são os de hoje e os descontos começam em zero."
+  },
+  "notifications": {
+    "title": "Notificações",
+    "readAll": "Marcar todas como lidas",
+    "empty": "Você não tem notificações.",
+    "unread": "Não lida",
+    "resolved": "Já decidido",
+    "messages": {
+      "APPROVAL_NEEDED": "Pedido de {client} ({total}) aguarda a sua aprovação.",
+      "ORDER_AWAITING_APPROVAL": "Seu pedido de {client} ({total}) aguarda aprovação do supervisor.",
+      "ORDER_SENT": "Pedido de {client} ({total}) enviado.",
+      "ORDER_APPROVED": "Seu pedido de {client} ({total}) foi aprovado.",
+      "ORDER_CANCELLED": "Seu pedido de {client} ({total}) foi cancelado. Motivo: {reason}"
+    }
   }
 }

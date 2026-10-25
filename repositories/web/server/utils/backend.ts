@@ -2,12 +2,13 @@ import { FetchError } from 'ofetch';
 import { requireUser, type SessionUser } from './session';
 import { mapUpstreamError } from './upstream-error';
 
-type Service = 'identity' | 'catalog' | 'orders';
+type Service = 'identity' | 'catalog' | 'orders' | 'notifications';
 
 const urls = (config: ReturnType<typeof useRuntimeConfig>): Record<Service, string> => ({
   identity: config.identityUrl,
   catalog: config.catalogUrl,
   orders: config.ordersUrl,
+  notifications: config.notificationsUrl,
 });
 
 interface Options {

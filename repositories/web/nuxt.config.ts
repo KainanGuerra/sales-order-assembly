@@ -24,6 +24,7 @@ export default defineNuxtConfig({
     identityUrl: 'http://identity-api:3001',
     catalogUrl: 'http://catalog-api:3002',
     ordersUrl: 'http://orders-api:3003',
+    notificationsUrl: 'http://notifications-api:3004',
     redisUrl: 'redis://redis:6379',
     session: {
       ttlSeconds: 8 * 60 * 60,

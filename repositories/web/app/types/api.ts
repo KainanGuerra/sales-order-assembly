@@ -191,3 +191,22 @@ export interface OrderView {
   items: OrderItemView[];
   history: HistoryStep[];
 }
+
+export type NotificationKind = 'APPROVAL_NEEDED' | 'ORDER_AWAITING_APPROVAL' | 'ORDER_SENT' | 'ORDER_APPROVED' | 'ORDER_CANCELLED';
+
+export interface NotificationView {
+  id: string;
+  kind: NotificationKind;
+  orderId: string;
+  data: {
+    clientTradeName: string;
+    totalCents: number;
+    decidedBy?: string;
+    reasonCode?: RejectionReasonCode;
+    reasonText?: string;
+  };
+  createdAt: string;
+  read: boolean;
+  // The decision it asked for, or waited on, was made.
+  resolved: boolean;
+}
