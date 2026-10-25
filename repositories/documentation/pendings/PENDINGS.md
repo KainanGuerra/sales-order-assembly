@@ -1,15 +1,21 @@
 # Pendências
 
-**Estado:** as fases A a D estão prontas e verificadas no ambiente local, e o código está num repositório só (D60). Falta **publicar** e conferir o que só dá para conferir depois (o CI no GitHub e as imagens no GHCR); há também limites conhecidos, listados abaixo com honestidade. O que **seria feito diferente** com mais tempo está em cada decisão de [`DECISIONS.md`](../../../DECISIONS.md) e foi reunido na seção 4.
+**Estado:** as fases A a D estão prontas e verificadas, o código está publicado num repositório só (D60) e o primeiro CI no GitHub passou. Restam poucos itens, listados abaixo, e há limites conhecidos, escritos com honestidade. O que **seria feito diferente** com mais tempo está em cada decisão de [`DECISIONS.md`](../../../DECISIONS.md) e foi reunido na seção 4.
 
-## 1. Para publicar (em ordem)
+## 1. Publicação
 
-1. **Criar o repositório público e enviar** (`KainanGuerra/sales-order-assembly`). O envio é feito uma vez, com o histórico como está (sem reescrever commits).
-2. **Primeira execução do CI** (nunca rodou no GitHub): conferir cada etapa (contratos, serviços, web, gráficos Helm) e corrigir o que falhar com novos commits.
-3. **Tornar públicos os cinco pacotes de imagem** no GHCR, se nascerem privados (não há como fazer por API): sem isso `docker compose pull` responde `denied` e vale a forma 2 (`docker compose up --build`).
-4. **Conferir a forma 1 sem login** (`docker logout ghcr.io`, `docker compose pull`, `docker compose up`) e só então escrever no `README.md` que ela funciona; hoje o texto diz como proceder se responder `denied`.
-5. **Passada final:** os dois `_(confirmar)_` do `AI_LOG.md` (quanto do código da interface foi lido; se os três métodos de arredondamento podem ser explicados) e a leitura do `AI_LOG.md` com as próprias palavras.
-6. **Ver os diagramas desta documentação renderizados** (seção 3): a sintaxe foi conferida, a aparência não.
+**Feito (25/10/2026):**
+
+1. Repositório público criado e enviado (`KainanGuerra/sales-order-assembly`), com o histórico como está (sem reescrever commits).
+2. Primeira execução do CI: passou em todas as etapas (contratos, quatro serviços, web, gráficos Helm, publicação das cinco imagens).
+3. Os cinco pacotes de imagem nasceram públicos (herdaram a visibilidade do repositório).
+4. A forma 1 de rodar foi conferida a partir de um clone público: `docker compose pull` sem login, `docker compose up` sem compilar.
+
+**Falta:**
+
+5. Os dois `_(confirmar)_` do `AI_LOG.md` (quanto do código da interface foi lido; se os três métodos de arredondamento podem ser explicados) e a leitura do `AI_LOG.md` com as próprias palavras.
+6. Ver os diagramas desta documentação renderizados (seção 3): a sintaxe foi conferida, a aparência não (o GitHub os renderiza).
+7. O CI avisa que as ações `actions/checkout@v4` e `actions/setup-node@v4` usam o Node 20, descontinuado, e foram forçadas para o Node 24: subir as ações para a versão seguinte.
 
 ## 2. Limites conhecidos (todos já escritos no `README.md`, "O que ficou de fora")
 
@@ -17,7 +23,7 @@
 - **Avisos em tempo real num processo só:** o difusor do `notifications` não funciona com mais de uma réplica (D50). A lista de avisos só cresce (D51).
 - **Nenhuma verificação em celular real nem com sinal fraco de verdade.** O limite de 8 s do modo offline é escolhido, não medido (D55). O envio da fila só acontece com o app aberto (D54). Os pedidos guardados ficam no `localStorage` (D56).
 - **Sem testes de componente do front nem testes ponta a ponta automatizados;** as passadas no navegador foram manuais.
-- **O CI foi escrito e seus comandos foram rodados na máquina; no GitHub só rodará no primeiro envio**, e `verify.sh` não está nele (D59).
+- **`verify.sh` (o sistema no cluster, as políticas de rede) não roda no CI** (D59); o CI confere o código, os testes, o build do web e os gráficos.
 - **Kubernetes:** uma réplica de tudo, sem TLS (de propósito, D59), sem escala automática, limites de recursos chutados, sem cópia de segurança do volume do banco; imagens construídas na máquina; a interface não foi conferida no navegador dentro do cluster.
 - **Login simulado** (D11): escolher a pessoa; sem senha.
 - **Sem faturamento** (o status `INVOICED` só existe nos pedidos do seed, D47) e sem cancelamento pelo vendedor (D44).

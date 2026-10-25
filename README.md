@@ -40,7 +40,7 @@ docker compose up
 docker compose up --build
 ```
 
-Se `docker compose pull` responder `denied`, as imagens ainda não estão públicas: use a forma 2. O `docker compose up` sozinho usa a imagem que já estiver na máquina; se não houver, tenta baixar e, não conseguindo, constrói. Para fixar uma versão publicada, ponha `IMAGE_TAG=<sha do commit>` no `.env`.
+As imagens publicadas são públicas e o `docker compose pull` funciona sem login (conferido, veja abaixo). Se um dia responder `denied`, use a forma 2. O `docker compose up` sozinho usa a imagem que já estiver na máquina; se não houver, tenta baixar e, não conseguindo, constrói. Para fixar uma versão publicada, ponha `IMAGE_TAG=<sha do commit>` no `.env`.
 
 Abra `http://localhost:8080` e escolha uma pessoa (Carlos Menezes, Paulo Andrade ou Renata Lima, vendedores; Marta Fernandes, supervisora). É o único serviço com porta publicada; os demais ficam na rede interna.
 
@@ -82,8 +82,8 @@ Os testes que usam o banco só rodam com `TEST_DATABASE_URL` apontando para o Po
 - A tela foi conferida num navegador de computador e numa moldura de 390 px de largura (uma aproximação de celular: sem rolagem horizontal, grade de duas colunas, barra de totais fixa); **não foi testada em um aparelho real**.
 - Os caminhos de erro da tela do pedido foram exercitados com **falhas simuladas** (a chamada de rede interceptada na própria página): recusa do envio (422), falha de rede ao enviar (o reenvio usa o mesmo id e conclui) e cálculo indisponível. Contra o backend de verdade, a recusa só foi exercitada por testes e por chamadas à API.
 - Não há testes de componente do front nem testes ponta a ponta automatizados; a lógica testada está no motor de regras, nos serviços, nas stores, nos utilitários e no BFF.
-- **Conferido a partir de um clone limpo** (25/10/2026): `docker compose up --build` subiu os oito contêineres saudáveis, cada serviço importou o próprio seed (10 clientes, 23 produtos, 4 pedidos de histórico), um pedido foi aceito, o mesmo id devolveu o mesmo pedido, o fluxo de avisos abriu e o segredo interno não está nos arquivos que o navegador baixa. **A forma 1 (`docker compose pull`) só pode ser conferida depois do primeiro envio ao GitHub**, quando as imagens existirem.
-- Os fluxos de CI (testes e publicação de imagens no GHCR) estão escritos, **mas nunca rodaram no GitHub**; isso inclui a conferência dos gráficos Helm (`helm lint` e `helm template`), que foi escrita e rodada só na máquina.
+- **Conferido a partir de um clone limpo** (25/10/2026): `docker compose up --build` subiu os oito contêineres saudáveis, cada serviço importou o próprio seed (10 clientes, 23 produtos, 4 pedidos de histórico), um pedido foi aceito, o mesmo id devolveu o mesmo pedido, o fluxo de avisos abriu e o segredo interno não está nos arquivos que o navegador baixa. **A forma 1 foi conferida depois do primeiro envio** (25/10/2026): clone público do GitHub, `docker compose pull` sem login (as cinco imagens vieram com o digest do registro), `docker compose up` sem compilar nada, e o mesmo resultado (contêineres saudáveis, seeds importados, pedido aceito, fluxo de avisos aberto).
+- O CI rodou no GitHub no primeiro envio (25/10/2026) e passou em todas as etapas: contratos, os quatro serviços, o web, os gráficos Helm e a publicação das cinco imagens. O `scripts/verify.sh` do cluster não roda nele.
 
 **Sistema**
 

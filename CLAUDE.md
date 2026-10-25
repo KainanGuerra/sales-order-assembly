@@ -142,7 +142,7 @@ Keep `AI_LOG.md` current as work happens. When the AI gets something wrong, or I
 
 - Backend: `pnpm test` (Vitest) green and the app answering `GET /health`.
 - Frontend: lint and build pass; exercise the changed flow in the browser when UI changes.
-- Whole system: `docker compose up --build` from a clean clone works (and `docker compose pull && docker compose up` once the images are published).
+- Whole system: `docker compose up --build` from a clean clone works (and `docker compose pull && docker compose up` with the published images).
 
 ## Writing rules
 

@@ -59,7 +59,7 @@ docker compose up --build
 
 - `IMAGE_REGISTRY` e `IMAGE_TAG` (no `.env`) escolhem o repositório e a versão das imagens; o padrão é `latest`. Para fixar uma versão publicada, use o sha completo do commit.
 - `docker compose pull` responde `denied` quando as imagens ainda não são públicas (ou o nome não existe): use a forma 2.
-- `docker compose up` sozinho usa a imagem que já estiver na máquina; se não houver, tenta baixar e, se não conseguir, constrói. Isso foi conferido com a imagem ainda não publicada (construiu) e com uma imagem local (usou-a).
+- `docker compose up` sozinho usa a imagem que já estiver na máquina; se não houver, tenta baixar e, se não conseguir, constrói. Isso foi conferido com a imagem ainda não publicada (construiu) e com uma imagem local (usou-a). A forma 1 foi conferida com as imagens publicadas, a partir de um clone público: `docker compose pull` sem login e `docker compose up` sem compilar subiram o sistema.
 - Cada serviço leva o próprio `seed/seed.json` dentro da imagem, então as duas formas importam os mesmos dados de exemplo na partida.
 
 Abra `http://localhost:8080`: é a **única** porta publicada; os serviços ficam na rede interna.

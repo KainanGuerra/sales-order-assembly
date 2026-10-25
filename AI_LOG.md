@@ -107,7 +107,7 @@ Legenda: **E** = eu escrevi; **R** = a IA gerou e eu revisei/alterei; **A** = a 
 | Testes | R | Escritos pela IA; eu exigi as verificações por mutação. Hoje: orders 181, identity 91, web 100, catalog 75, notifications 37, contracts 18 |
 | Modo offline | R | Comportamento escolhido por mim, pergunta a pergunta (fila no aparelho, totais "desatualizados", busca só entre o que já foi visto, envio automático, pedido recusado fica para corrigir; D54 a D56). A IA escreveu o código e os testes; conferido no navegador parando o servidor, não num celular real |
 | Kubernetes (Helm, kind) | R | Escolhas minhas: gráfico de biblioteca compartilhado, Traefik porque o ingress-nginx foi aposentado, negar todo o tráfego e abrir só o necessário, sem TLS (D57 a D59). A IA escreveu os gráficos e os scripts; `verify.sh` prova o sistema e as políticas, e as políticas foram apagadas de propósito para ver o teste falhar |
-| Docker / CI | A | Compose e CI gerados e aceitos. O compose foi verificado rodando; os comandos do CI foram rodados na máquina |
+| Docker / CI | A | Compose e CI gerados e aceitos. O compose foi verificado rodando (de um clone limpo e com as imagens publicadas); o CI passou no primeiro envio ao GitHub |
 | Documentação | R | `DECISIONS.md` e `ASSUMPTIONS.md` redigidos pela IA a partir das minhas respostas; corrigi fatos (D44 virou D47). O guia de estilo foi gerado pela IA a partir de projetos meus anteriores e **reescrito duas vezes por pedido meu**, para tirar nomes de empresas, caminhos locais, pipelines e regras de negócio |
 
 ## Conversas brutas
