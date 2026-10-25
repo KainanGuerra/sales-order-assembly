@@ -11,6 +11,8 @@ const { data, error, status } = await useFetch<{ items: ClientView[] }>('/api/cl
   <div class="space-y-3 pt-2">
     <h1 class="text-2xl font-semibold">{{ t('clients.title') }}</h1>
 
+    <PendingOrders />
+
     <UAlert v-if="error" color="error" variant="subtle" icon="i-lucide-triangle-alert" :title="t('errors.unavailable')" />
     <p v-else-if="status === 'success' && !data?.items.length" class="text-neutral-500">{{ t('clients.empty') }}</p>
 

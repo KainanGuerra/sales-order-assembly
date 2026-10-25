@@ -26,22 +26,22 @@ export interface DraftState {
 
 const newOrderId = () => crypto.randomUUID();
 
+// The body of a calculation or a send: only what the seller typed.
+export function orderRequest(clientId: string, lines: DraftLine[], orderDiscountBp: number) {
+  return {
+    clientId,
+    items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unit: l.unit, discountBp: l.discountBp })),
+    orderDiscountBp,
+  };
+}
+
 export const useOrderStore = defineStore('order', {
   state: (): DraftState => ({ clientId: null, lines: [], orderDiscountBp: 0, orderId: newOrderId() }),
 
   getters: {
     isEmpty: (state) => state.lines.length === 0,
     // The body of a calculation request.
-    request: (state) => ({
-      clientId: state.clientId ?? '',
-      items: state.lines.map((l) => ({
-        productId: l.productId,
-        quantity: l.quantity,
-        unit: l.unit,
-        discountBp: l.discountBp,
-      })),
-      orderDiscountBp: state.orderDiscountBp,
-    }),
+    request: (state) => orderRequest(state.clientId ?? '', state.lines, state.orderDiscountBp),
   },
 
   actions: {
@@ -82,6 +82,16 @@ export const useOrderStore = defineStore('order', {
       this.clientId = clientId;
       this.lines = items.map((item) => ({ ...item, discountBp: 0 }));
       this.orderDiscountBp = 0;
+      this.orderId = newOrderId();
+    },
+
+    // A pending order the server refused comes back to be fixed. It was never
+    // saved, and what the seller changes makes it a different order, so it gets
+    // a new id.
+    loadForFixing(clientId: string, lines: DraftLine[], orderDiscountBp: number) {
+      this.clientId = clientId;
+      this.lines = lines.map((l) => ({ ...l }));
+      this.orderDiscountBp = orderDiscountBp;
       this.orderId = newOrderId();
     },
 

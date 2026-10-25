@@ -72,7 +72,11 @@
       "SUBMITTED": "Será enviado direto.",
       "AWAITING_APPROVAL": "Vai para aprovação do supervisor."
     },
-    "clientNotFound": "Cliente não encontrado na sua carteira."
+    "clientNotFound": "Cliente não encontrado na sua carteira.",
+    "queue": "Guardar para enviar",
+    "offlineNotice": "Sem sinal. Os totais abaixo são da última conta feita e podem estar desatualizados; as regras serão conferidas quando o pedido for enviado.",
+    "outdated": "desatualizado",
+    "fromPhone": "Sem sinal: mostrando só produtos que você já viu para este cliente. Os preços podem ter mudado."
   },
   "availability": {
     "DISCONTINUED": "Descontinuado",
@@ -190,5 +194,27 @@
       "ORDER_APPROVED": "Seu pedido de {client} ({total}) foi aprovado.",
       "ORDER_CANCELLED": "Seu pedido de {client} ({total}) foi cancelado. Motivo: {reason}"
     }
+  },
+  "offline": {
+    "title": "Sem sinal",
+    "body": "Você pode continuar montando pedidos: eles ficam guardados neste aparelho e são enviados quando o sinal voltar.",
+    "withWaiting": "{n} pedido(s) guardado(s) aguardando o sinal voltar. Você pode continuar montando pedidos.",
+    "logoutNeedsSignal": "Sem sinal para encerrar a sessão com segurança. Tente de novo quando o sinal voltar."
+  },
+  "pending": {
+    "title": "Pedidos pendentes",
+    "items": "{n} item(ns)",
+    "savedAt": "guardado às {time}",
+    "waitingSignal": "Aguardando sinal",
+    "sendingSoon": "Será enviado em instantes",
+    "refused": "Recusado pelo servidor",
+    "refusedGeneric": "O servidor não aceitou este pedido. Corrija e envie de novo.",
+    "sendNow": "Enviar agora",
+    "fix": "Corrigir",
+    "discard": "Descartar",
+    "confirmDiscard": "Toque de novo para descartar",
+    "sent": "Pedido de {client} enviado: {status}.",
+    "refusedToast": "O pedido de {client} foi recusado. Veja os motivos em Pedidos pendentes.",
+    "queued": "Sem sinal: o pedido ficou guardado e será enviado quando o sinal voltar."
   }
 }

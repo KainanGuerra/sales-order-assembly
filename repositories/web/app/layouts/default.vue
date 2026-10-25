@@ -1,6 +1,15 @@
 <script setup lang="ts">
 const { t } = useI18n();
 const { user, logout } = useSession();
+const toast = useToast();
+// Sends what was left waiting whenever the signal is back (see usePendingSync).
+useAutoSync();
+
+async function leave() {
+  if (!(await logout())) {
+    toast.add({ title: t('offline.logoutNeedsSignal'), color: 'warning', icon: 'i-lucide-wifi-off' });
+  }
+}
 </script>
 
 <template>
@@ -11,11 +20,12 @@ const { user, logout } = useSession();
         <div v-if="user" class="flex items-center gap-3 text-sm">
           <NotificationBell />
           <span class="truncate text-neutral-600 dark:text-neutral-300">{{ user.name }}</span>
-          <UButton size="sm" color="neutral" variant="outline" icon="i-lucide-log-out" :label="t('app.logout')" @click="logout" />
+          <UButton size="sm" color="neutral" variant="outline" icon="i-lucide-log-out" :label="t('app.logout')" @click="leave" />
         </div>
       </UContainer>
     </header>
     <UContainer class="py-4 pb-40">
+      <ConnectionBanner class="mb-3" />
       <slot />
     </UContainer>
   </div>

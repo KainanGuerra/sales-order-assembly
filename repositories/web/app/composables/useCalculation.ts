@@ -10,7 +10,10 @@ export function useCalculation() {
   const request = computed(() => order.request);
   const settled = useDebouncedValue(request, 300);
 
-  const enabled = computed(() => settled.value.clientId !== '' && settled.value.items.length > 0);
+  // Without signal there is no one to ask: the screen keeps the last answer,
+  // marked as out of date, and asks again when the signal returns.
+  const { online } = useConnectivity();
+  const enabled = computed(() => online.value && settled.value.clientId !== '' && settled.value.items.length > 0);
 
   const query = useQuery({
     queryKey: ['calculate', settled],

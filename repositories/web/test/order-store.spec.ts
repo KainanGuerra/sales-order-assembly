@@ -143,4 +143,17 @@ describe('order store', () => {
     order.start('C001');
     expect(order.lines).toHaveLength(1);
   });
+  it('brings a refused queued order back with its discounts and a new id', () => {
+    const order = useOrderStore();
+    const before = order.orderId;
+    const line = { productId: 'P1', description: 'Arroz', sku: 'SKU-1', packFactor: 1, multipleOnly: false, unit: 'UNIT' as const, quantity: 10, discountBp: 300 };
+    order.loadForFixing('C001', [line], 200);
+    expect(order.clientId).toBe('C001');
+    expect(order.lines).toEqual([line]);
+    expect(order.orderDiscountBp).toBe(200);
+    expect(order.orderId).not.toBe(before);
+    // A copy: editing the order must not change the queued one.
+    order.setQuantity('P1', 99);
+    expect(line.quantity).toBe(10);
+  });
 });
