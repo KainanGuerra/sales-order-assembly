@@ -82,7 +82,7 @@ Os testes que usam o banco só rodam com `TEST_DATABASE_URL` apontando para o Po
 - A tela foi conferida num navegador de computador e numa moldura de 390 px de largura (uma aproximação de celular: sem rolagem horizontal, grade de duas colunas, barra de totais fixa); **não foi testada em um aparelho real**.
 - Os caminhos de erro da tela do pedido foram exercitados com **falhas simuladas** (a chamada de rede interceptada na própria página): recusa do envio (422), falha de rede ao enviar (o reenvio usa o mesmo id e conclui) e cálculo indisponível. Contra o backend de verdade, a recusa só foi exercitada por testes e por chamadas à API.
 - Não há testes de componente do front nem testes ponta a ponta automatizados; a lógica testada está no motor de regras, nos serviços, nas stores, nos utilitários e no BFF.
-- **Um clone limpo com `docker compose up --build` ainda não foi conferido** nesta versão do repositório.
+- **Conferido a partir de um clone limpo** (25/10/2026): `docker compose up --build` subiu os oito contêineres saudáveis, cada serviço importou o próprio seed (10 clientes, 23 produtos, 4 pedidos de histórico), um pedido foi aceito, o mesmo id devolveu o mesmo pedido, o fluxo de avisos abriu e o segredo interno não está nos arquivos que o navegador baixa. **A forma 1 (`docker compose pull`) só pode ser conferida depois do primeiro envio ao GitHub**, quando as imagens existirem.
 - Os fluxos de CI (testes e publicação de imagens no GHCR) estão escritos, **mas nunca rodaram no GitHub**; isso inclui a conferência dos gráficos Helm (`helm lint` e `helm template`), que foi escrita e rodada só na máquina.
 
 **Sistema**
