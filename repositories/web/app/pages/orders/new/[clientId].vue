@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQueryClient } from '@tanstack/vue-query';
-import type { ClientView, OrderView } from '~/types/api';
+import type { ClientView, OrderView, SkippedLine } from '~/types/api';
 
 const { t } = useI18n();
 useHead({ title: t('order.title') });
@@ -13,6 +13,14 @@ const order = useOrderStore();
 order.start(clientId.value);
 
 const { data: client, error: clientError } = await useFetch<ClientView>(() => `/api/clients/${encodeURIComponent(clientId.value)}`, { $fetch: api });
+
+// After "repeat order": what was left out, and a reminder about prices and discounts.
+const skipped = useState<SkippedLine[]>('repeat-skipped', () => []);
+const notice = useState<boolean>('repeat-notice', () => false);
+const dismissRepeatNotice = () => {
+  skipped.value = [];
+  notice.value = false;
+};
 
 const text = ref('');
 const search = useProductSearch(clientId, text);
@@ -78,6 +86,15 @@ async function send() {
     <UAlert v-if="clientError" role="alert" color="error" variant="subtle" icon="i-lucide-user-x" :title="t('order.clientNotFound')" data-testid="client-not-found" />
 
     <template v-else>
+      <UAlert v-if="notice" role="status" color="info" variant="subtle" icon="i-lucide-repeat" :title="t('repeat.notice')" :actions="[{ label: t('repeat.dismiss'), color: 'neutral', variant: 'outline', onClick: dismissRepeatNotice }]" data-testid="repeat-notice" />
+      <UAlert v-if="skipped.length" role="status" color="warning" variant="subtle" icon="i-lucide-triangle-alert" :title="t('repeat.skippedTitle')" data-testid="repeat-skipped">
+        <template #description>
+          <ul class="list-disc pl-4">
+            <li v-for="line in skipped" :key="line.productId">{{ line.description }}: {{ t(`repeat.reasons.${line.reason}`) }}</li>
+          </ul>
+        </template>
+      </UAlert>
+
       <section class="space-y-2">
         <UInput v-model="text" size="xl" icon="i-lucide-search" :placeholder="t('order.searchPlaceholder')" class="w-full" autocomplete="off" data-testid="search" />
         <p v-if="text.trim().length < 2" class="text-xs text-neutral-500">{{ t('order.searchHint') }}</p>

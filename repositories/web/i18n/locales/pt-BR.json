@@ -64,7 +64,9 @@
       "AWAITING_APPROVAL": "Aguardando aprovação",
       "APPROVED": "Aprovado",
       "SUBMITTED": "Enviado",
-      "REJECTED": "Rejeitado"
+      "INVOICED": "Faturado",
+      "REJECTED": "Rejeitado",
+      "CANCELLED": "Cancelado"
     },
     "statusHint": {
       "SUBMITTED": "Será enviado direto.",
@@ -147,5 +149,32 @@
     "client": "Cliente",
     "reasonLine": "Desconto de item de {discount}",
     "reasonOrder": "Desconto do pedido de {discount}"
+  },
+  "history": {
+    "title": "Histórico de pedidos",
+    "empty": "Este cliente ainda não tem pedidos.",
+    "items": "{n} item | {n} itens",
+    "imported": "Importado",
+    "view": "Ver pedido",
+    "open": "Histórico",
+    "failed": "Não foi possível carregar o histórico."
+  },
+  "repeat": {
+    "button": "Repetir pedido",
+    "working": "Preparando…",
+    "confirmTitle": "Substituir o pedido em andamento?",
+    "confirmBody": "Você tem um pedido em andamento. Repetir este pedido vai substituí-lo.",
+    "confirm": "Substituir",
+    "cancel": "Cancelar",
+    "failed": "Não foi possível repetir o pedido. Tente de novo.",
+    "noneLeft": "Nenhum produto deste pedido pode ser pedido de novo.",
+    "skippedTitle": "Alguns produtos não foram copiados",
+    "dismiss": "Entendi",
+    "reasons": {
+      "UNKNOWN_PRODUCT": "não existe mais no catálogo",
+      "DISCONTINUED": "descontinuado",
+      "NO_PRICE_IN_TABLE": "sem preço na tabela do cliente"
+    },
+    "notice": "Pedido copiado de um anterior: os preços são os de hoje e os descontos começam em zero."
   }
 }

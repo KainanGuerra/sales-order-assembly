@@ -73,6 +73,18 @@ export const useOrderStore = defineStore('order', {
       });
     },
 
+    // The order being built becomes a copy of an old one (see RepeatDraft). It is
+    // a new order, so it gets its own id; the discounts start at zero.
+    replaceWith(
+      clientId: string,
+      items: Pick<DraftLine, 'productId' | 'description' | 'sku' | 'packFactor' | 'multipleOnly' | 'unit' | 'quantity'>[],
+    ) {
+      this.clientId = clientId;
+      this.lines = items.map((item) => ({ ...item, discountBp: 0 }));
+      this.orderDiscountBp = 0;
+      this.orderId = newOrderId();
+    },
+
     removeLine(productId: string) {
       this.lines = this.lines.filter((l) => l.productId !== productId);
     },

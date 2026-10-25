@@ -117,4 +117,30 @@ describe('order store', () => {
     expect(order.clientId).toBeNull();
     expect(order.lines).toEqual([]);
   });
+
+  it('becomes a copy of an old order: its products, quantities and units, discounts at zero, a new id', () => {
+    const order = useOrderStore();
+    order.start('C001');
+    order.addProduct(product({ id: 'P9' }));
+    order.setOrderDiscount(300);
+    const before = order.orderId;
+    order.replaceWith('C002', [
+      { productId: 'P1', description: 'Product P1', sku: 'SKU-P1', packFactor: 1, multipleOnly: false, unit: 'UNIT', quantity: 12 },
+      { productId: 'P2', description: 'Product P2', sku: 'SKU-P2', packFactor: 12, multipleOnly: true, unit: 'PACK', quantity: 3 },
+    ]);
+    expect(order.clientId).toBe('C002');
+    expect(order.lines.map((l) => [l.productId, l.quantity, l.unit, l.discountBp])).toEqual([
+      ['P1', 12, 'UNIT', 0],
+      ['P2', 3, 'PACK', 0],
+    ]);
+    expect(order.orderDiscountBp).toBe(0);
+    expect(order.orderId).not.toBe(before);
+  });
+
+  it('keeps a repeated order when its own client is opened next', () => {
+    const order = useOrderStore();
+    order.replaceWith('C001', [{ productId: 'P1', description: 'Product P1', sku: 'SKU-P1', packFactor: 1, multipleOnly: false, unit: 'UNIT', quantity: 5 }]);
+    order.start('C001');
+    expect(order.lines).toHaveLength(1);
+  });
 });

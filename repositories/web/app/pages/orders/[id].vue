@@ -38,8 +38,9 @@ const { data: order, error } = await useFetch<OrderView>(() => `/api/orders/${en
         <OrderHistory :history="order.history" />
       </section>
 
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         <UButton to="/clients" color="neutral" variant="outline" :label="t('done.toClients')" />
+        <RepeatButton :order-id="order.id" />
       </div>
     </template>
   </div>

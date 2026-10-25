@@ -32,7 +32,10 @@ const { data, error, status } = await useFetch<{ items: ClientView[] }>('/api/cl
             <UBadge v-if="client.priceTableFallback" color="warning" variant="subtle" size="sm" class="ml-1">{{ t('clients.fallback') }}</UBadge>
           </p>
         </div>
-        <UButton :to="`/orders/new/${client.id}`" icon="i-lucide-shopping-cart" :label="t('clients.newOrder')" :data-testid="`order-${client.id}`" />
+        <div class="flex flex-col items-end gap-2">
+          <UButton :to="`/orders/new/${client.id}`" icon="i-lucide-shopping-cart" :label="t('clients.newOrder')" :data-testid="`order-${client.id}`" />
+          <UButton :to="`/clients/${client.id}/orders`" color="neutral" variant="outline" size="sm" icon="i-lucide-history" :label="t('history.open')" :data-testid="`history-${client.id}`" />
+        </div>
       </div>
     </UCard>
   </div>

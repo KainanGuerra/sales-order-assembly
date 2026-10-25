@@ -48,9 +48,13 @@ export interface ProductSearchItem {
 }
 
 export type QuantityUnit = 'UNIT' | 'PACK';
-// What an order can be: where it goes when created (SUBMITTED, AWAITING_APPROVAL),
-// and what a supervisor makes of it (APPROVED on the way to SUBMITTED, or REJECTED).
-export type OrderStatus = 'AWAITING_APPROVAL' | 'APPROVED' | 'SUBMITTED' | 'REJECTED';
+// What an order can be:
+//   AWAITING_APPROVAL -> APPROVED -> SUBMITTED -> INVOICED
+//   AWAITING_APPROVAL -> REJECTED -> CANCELLED
+// A decision carries the order through the first two of its chain at once.
+// INVOICED ("Faturado") and CANCELLED ("Cancelado") are also the words of the
+// orders that came with the seed.
+export type OrderStatus = 'AWAITING_APPROVAL' | 'APPROVED' | 'SUBMITTED' | 'INVOICED' | 'REJECTED' | 'CANCELLED';
 export type InitialOrderStatus = 'SUBMITTED' | 'AWAITING_APPROVAL';
 
 export const REJECTION_REASON_CODES = ['DISCOUNT_TOO_HIGH', 'CREDIT_RISK', 'PRODUCT_OR_QUANTITY', 'ORDER_DATA_WRONG', 'OTHER'] as const;
@@ -125,6 +129,39 @@ export interface HistoryStep {
   at: string;
 }
 
+export interface OrderSummary {
+  id: string;
+  status: OrderStatus;
+  origin: 'SYSTEM' | 'IMPORTED';
+  totalCents: number;
+  itemCount: number;
+  createdAt: string;
+}
+
+export type SkipReason = 'UNKNOWN_PRODUCT' | 'DISCONTINUED' | 'NO_PRICE_IN_TABLE';
+
+export interface SkippedLine {
+  productId: string;
+  description: string;
+  reason: SkipReason;
+}
+
+export interface RepeatDraft {
+  sourceOrderId: string;
+  clientId: string;
+  items: {
+    productId: string;
+    sku: string;
+    description: string;
+    packFactor: number;
+    multipleOnly: boolean;
+    quantity: number;
+    unit: QuantityUnit;
+    discountBp: 0;
+  }[];
+  skipped: SkippedLine[];
+}
+
 export interface PendingOrder {
   id: string;
   sellerName: string;
@@ -143,6 +180,7 @@ export interface OrderView {
   clientId: string;
   clientTradeName: string;
   priceTableId: string;
+  origin: 'SYSTEM' | 'IMPORTED';
   subtotalCents: number;
   orderDiscountBp: number;
   orderDiscountCents: number;
