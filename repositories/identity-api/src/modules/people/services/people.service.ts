@@ -1,4 +1,5 @@
 import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import type { OrderRejectedEvent, OrderSubmittedEvent } from 'contracts';
 import { ENV, type Env } from '../../../config/env.js';
 import type { ClientView, LoginOptions, UserProfile, ValidatePick } from '../dto/people.dto.js';
 import { PeopleRepository, type ClientRow, type SellerRow } from '../repository/people.repository.js';
@@ -52,7 +53,8 @@ export class PeopleService {
       throw new ForbiddenException('This portfolio belongs to another seller');
     }
     const clients = await this.repository.listClientsBySeller(sellerId);
-    return clients.map((client) => this.toClientView(client));
+    const holds = await this.repository.holdsByClient(clients.map((c) => c.id), new Date());
+    return clients.map((client) => this.toClientView(client, holds.get(client.id) ?? 0));
   }
 
   async getClientFor(actor: Actor, clientId: string): Promise<ClientView> {
@@ -62,13 +64,45 @@ export class PeopleService {
       // Same answer as a missing client, so ids cannot be probed.
       throw new NotFoundException(`Client ${clientId} not found`);
     }
-    return this.toClientView(client);
+    return this.toClientView(client, await this.holdsOf(client.id));
   }
 
   // Service-to-service reads (orders-api): the caller is trusted, no actor.
   async findClient(clientId: string): Promise<ClientView | null> {
     const client = await this.repository.findClient(clientId);
-    return client ? this.toClientView(client) : null;
+    return client ? this.toClientView(client, await this.holdsOf(client.id)) : null;
+  }
+
+  // ---- Credit ------------------------------------------------------------
+
+  // Holds credit for an order about to be saved. null when the client is unknown.
+  async reserveCredit(clientId: string, orderId: string, amountCents: number) {
+    return this.repository.reserve({
+      clientId,
+      orderId,
+      amountCents,
+      ttlSeconds: this.env.RESERVATION_TTL_SECONDS,
+      now: new Date(),
+    });
+  }
+
+  async releaseCredit(orderId: string): Promise<void> {
+    await this.repository.release(orderId);
+  }
+
+  // OrderSubmitted: the order exists now, so its hold becomes permanent.
+  async confirmSubmitted(event: OrderSubmittedEvent): Promise<void> {
+    await this.repository.confirm({
+      orderId: event.orderId,
+      clientId: event.clientId,
+      amountCents: event.totalCents,
+      now: new Date(),
+    });
+  }
+
+  // OrderRejected: the credit goes back.
+  async releaseRejected(event: OrderRejectedEvent): Promise<void> {
+    await this.repository.release(event.orderId);
   }
 
   async findSeller(sellerId: string): Promise<SellerRow | null> {
@@ -91,8 +125,15 @@ export class PeopleService {
     return client;
   }
 
-  private toClientView(client: ClientRow): ClientView {
+  private async holdsOf(clientId: string): Promise<number> {
+    return (await this.repository.holdsByClient([clientId], new Date())).get(clientId) ?? 0;
+  }
+
+  // creditUsedCents is what is spoken for: what the client had already used,
+  // plus the orders that were sent and the holds that have not expired.
+  private toClientView(client: ClientRow, heldCents: number): ClientView {
     const table = effectivePriceTable(client, this.env.DEFAULT_PRICE_TABLE_ID);
+    const creditUsedCents = client.creditUsedCents + heldCents;
     return {
       id: client.id,
       tradeName: client.tradeName,
@@ -104,8 +145,8 @@ export class PeopleService {
       priceTableId: table.priceTableId,
       priceTableFallback: table.fallback,
       creditLimitCents: client.creditLimitCents,
-      creditUsedCents: client.creditUsedCents,
-      creditAvailableCents: availableCreditCents(client),
+      creditUsedCents,
+      creditAvailableCents: availableCreditCents({ creditLimitCents: client.creditLimitCents, creditUsedCents }),
     };
   }
 }

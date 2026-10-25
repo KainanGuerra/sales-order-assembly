@@ -27,6 +27,8 @@
     "@nestjs/core": "^12.0.1",
     "@nestjs/microservices": "12.2.0",
     "@nestjs/platform-express": "^12.0.1",
+    "amqp-connection-manager": "^5.0.1",
+    "amqplib": "^2.2.0",
     "contracts": "file:../contracts",
     "drizzle-orm": "0.45.4",
     "pg": "^8.23.1",

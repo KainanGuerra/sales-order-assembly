@@ -42,3 +42,34 @@ export function effectivePriceTable(
 export function availableCreditCents(client: { creditLimitCents: number; creditUsedCents: number }): number {
   return Math.max(0, client.creditLimitCents - client.creditUsedCents);
 }
+
+// ---- Credit -------------------------------------------------------------
+// What is spoken for = what the client had already used (from the seed), plus
+// the orders that were sent, plus the holds that have not expired. Available
+// credit is the limit minus that. These are pure so every edge is a unit test.
+
+export type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'RELEASED';
+
+export interface Reservation {
+  status: ReservationStatus;
+  amountCents: number;
+  expiresAt: Date;
+}
+
+// A confirmed order always counts. A pending hold counts only until it expires.
+// A released one never counts.
+export function isHolding(reservation: Reservation, now: Date): boolean {
+  if (reservation.status === 'CONFIRMED') {
+    return true;
+  }
+  return reservation.status === 'PENDING' && reservation.expiresAt.getTime() > now.getTime();
+}
+
+export function creditInUseCents(baseUsedCents: number, reservations: Reservation[], now: Date): number {
+  return reservations.reduce((sum, r) => (isHolding(r, now) ? sum + r.amountCents : sum), baseUsedCents);
+}
+
+// The amount fits when it is no more than what is left, to the cent.
+export function fitsInCredit(limitCents: number, inUseCents: number, amountCents: number): boolean {
+  return amountCents <= limitCents - inUseCents;
+}

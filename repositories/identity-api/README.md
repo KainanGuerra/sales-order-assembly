@@ -11,7 +11,11 @@ Sellers, supervisors, clients (the portfolio) and credit. Owns the `identity` Po
 - Two doors in one process:
   - HTTP for the BFF: `GET /login-options`, `POST /sessions/validate`, `GET /sellers/:id/clients`, `GET /clients/:id`, `GET /health`. The portfolio routes need the forwarded user (`x-user-id`, `x-user-role`).
   - gRPC for orders-api: `sales.identity.v1.IdentityService/GetClient` and `GetSeller` (`NOT_FOUND` when missing).
-- Both require the `x-inner-auth` shared secret.
+- Credit: `ReserveCredit` and `ReleaseCredit` (gRPC) and the consumer of `order.submitted` and `order.rejected`.
+  - `credit_reservations` holds one row per order (`PENDING`, `CONFIRMED`, `RELEASED`, with `expires_at`). The credit in use is calculated: what the client had already used, plus `CONFIRMED` rows, plus `PENDING` rows that have not expired, so an unconfirmed hold frees itself.
+  - `reserve` locks the client's row for the transaction, so two reservations for one client are decided one after the other.
+  - Events come through the quorum queue `identity-api-order-events` (dead letters in `identity-api-order-events.dlq`): a message that does not match its schema is dead-lettered at once, a failing one is retried with a growing pause until the broker's delivery limit.
+- Both doors require the `x-inner-auth` shared secret.
 
 ## Run standalone
 

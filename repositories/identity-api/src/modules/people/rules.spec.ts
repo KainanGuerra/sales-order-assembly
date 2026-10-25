@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { availableCreditCents, canAccessPortfolio, effectivePriceTable, parseActor } from './rules.js';
+import { availableCreditCents, canAccessPortfolio, creditInUseCents, effectivePriceTable, fitsInCredit, isHolding, parseActor, type Reservation } from './rules.js';
 
 describe('parseActor', () => {
   it('reads the forwarded user', () => {
@@ -58,5 +58,54 @@ describe('availableCreditCents', () => {
 
   it('never goes negative', () => {
     expect(availableCreditCents({ creditLimitCents: 100, creditUsedCents: 150 })).toBe(0);
+  });
+});
+
+const now = new Date('2026-10-24T12:00:00Z');
+const later = new Date('2026-10-24T12:15:00Z');
+const earlier = new Date('2026-10-24T11:45:00Z');
+const hold = (status: Reservation['status'], amountCents: number, expiresAt: Date): Reservation => ({ status, amountCents, expiresAt });
+
+describe('isHolding', () => {
+  it('counts a confirmed order whatever its date', () => {
+    expect(isHolding(hold('CONFIRMED', 100, earlier), now)).toBe(true);
+  });
+
+  it('counts a pending hold until it expires', () => {
+    expect(isHolding(hold('PENDING', 100, later), now)).toBe(true);
+  });
+
+  it('stops counting a pending hold at the moment it expires', () => {
+    expect(isHolding(hold('PENDING', 100, now), now)).toBe(false);
+    expect(isHolding(hold('PENDING', 100, earlier), now)).toBe(false);
+  });
+
+  it('never counts a released one', () => {
+    expect(isHolding(hold('RELEASED', 100, later), now)).toBe(false);
+  });
+});
+
+describe('creditInUseCents', () => {
+  it('adds the live holds to what was already used', () => {
+    const reservations = [hold('CONFIRMED', 10_000, earlier), hold('PENDING', 5_000, later), hold('PENDING', 7_000, earlier), hold('RELEASED', 9_000, later)];
+    expect(creditInUseCents(120_000, reservations, now)).toBe(135_000);
+  });
+
+  it('is the base when there are no holds', () => {
+    expect(creditInUseCents(120_000, [], now)).toBe(120_000);
+  });
+});
+
+describe('fitsInCredit', () => {
+  it('fits when the amount is exactly what is left', () => {
+    expect(fitsInCredit(1_200_000, 1_165_000, 35_000)).toBe(true);
+  });
+
+  it('does not fit one cent over', () => {
+    expect(fitsInCredit(1_200_000, 1_165_000, 35_001)).toBe(false);
+  });
+
+  it('never fits when the credit is already over its limit', () => {
+    expect(fitsInCredit(100, 150, 1)).toBe(false);
   });
 });

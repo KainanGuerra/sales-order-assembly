@@ -27,8 +27,12 @@ function build() {
     findSeller: vi.fn().mockImplementation(async (id: string) => (id === 'V01' ? v01 : null)),
     listClientsBySeller: vi.fn().mockResolvedValue([c001, c004]),
     findClient: vi.fn().mockImplementation(async (id: string) => ({ C001: c001, C004: c004 })[id] ?? null),
+    holdsByClient: vi.fn().mockResolvedValue(new Map<string, number>()),
+    reserve: vi.fn().mockResolvedValue({ reserved: true, availableCents: 0 }),
+    confirm: vi.fn().mockResolvedValue(undefined),
+    release: vi.fn().mockResolvedValue(undefined),
   };
-  const service = new PeopleService(repository as unknown as PeopleRepository, { DEFAULT_PRICE_TABLE_ID: 'TP01' } as Env);
+  const service = new PeopleService(repository as unknown as PeopleRepository, { DEFAULT_PRICE_TABLE_ID: 'TP01', RESERVATION_TTL_SECONDS: 900 } as Env);
   return { service, repository };
 }
 
@@ -132,5 +136,44 @@ describe('PeopleService service-to-service reads', () => {
     const { service } = build();
     expect(await service.findClient('C999')).toBeNull();
     expect(await service.findSeller('V99')).toBeNull();
+  });
+});
+
+describe('PeopleService credit', () => {
+  it('counts holds as used credit in the portfolio', async () => {
+    const { service, repository } = build();
+    repository.holdsByClient.mockResolvedValue(new Map([['C001', 100_000]]));
+    const [first] = await service.listPortfolio({ role: 'SELLER', id: 'V01' }, 'V01');
+    // limit 5.000,00; already used 1.200,00; held 1.000,00
+    expect(first).toMatchObject({ creditUsedCents: 220_000, creditAvailableCents: 280_000 });
+  });
+
+  it('counts holds in the client read by orders too', async () => {
+    const { service, repository } = build();
+    repository.holdsByClient.mockResolvedValue(new Map([['C001', 380_000]]));
+    expect(await service.findClient('C001')).toMatchObject({ creditUsedCents: 500_000, creditAvailableCents: 0 });
+  });
+
+  it('reserves with the configured time to live', async () => {
+    const { service, repository } = build();
+    await service.reserveCredit('C001', 'order-1', 30_000);
+    expect(repository.reserve).toHaveBeenCalledWith(
+      expect.objectContaining({ clientId: 'C001', orderId: 'order-1', amountCents: 30_000, ttlSeconds: 900 }),
+    );
+  });
+
+  it('confirms the hold of a submitted order with its total', async () => {
+    const { service, repository } = build();
+    await service.confirmSubmitted({
+      orderId: 'o1', clientId: 'C001', sellerId: 'V01', supervisorId: 'S01', status: 'SUBMITTED',
+      totalCents: 41_860, items: [{ productId: 'P1', quantity: 1 }], submittedAt: '2026-10-24T12:00:00.000Z',
+    });
+    expect(repository.confirm).toHaveBeenCalledWith(expect.objectContaining({ orderId: 'o1', clientId: 'C001', amountCents: 41_860 }));
+  });
+
+  it('releases the hold of a rejected order', async () => {
+    const { service, repository } = build();
+    await service.releaseRejected({ orderId: 'o1', rejectedBy: 'S01', rejectedAt: '2026-10-24T12:00:00.000Z' });
+    expect(repository.release).toHaveBeenCalledWith('o1');
   });
 });

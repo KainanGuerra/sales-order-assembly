@@ -14,6 +14,12 @@ const EnvSchema = z.object({
   // the catalog; identity only knows the id.
   DEFAULT_PRICE_TABLE_ID: z.string().min(1).default('TP01'),
   SEED_FILE: z.string().default('/data/seed.json'),
+  RABBITMQ_URL: z.string().min(1).default('amqp://rabbitmq:5672'),
+  // How long a credit hold lives if the order is never confirmed.
+  RESERVATION_TTL_SECONDS: z.coerce.number().int().positive().default(900),
+  // Redeliveries of one failing event before the broker dead-letters it. The
+  // broker counts redeliveries, so the number of attempts is this plus one.
+  CONSUMER_MAX_DELIVERIES: z.coerce.number().int().min(1).default(5),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

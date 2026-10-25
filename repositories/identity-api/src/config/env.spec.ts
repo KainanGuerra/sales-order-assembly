@@ -9,6 +9,8 @@ describe('loadEnv', () => {
     expect(env.PORT).toBe(3001);
     expect(env.DB_SCHEMA).toBe('identity');
     expect(env.DEFAULT_PRICE_TABLE_ID).toBe('TP01');
+    expect(env.RESERVATION_TTL_SECONDS).toBe(900);
+    expect(env.CONSUMER_MAX_DELIVERIES).toBe(5);
   });
 
   it('fails when the database url is missing', () => {
