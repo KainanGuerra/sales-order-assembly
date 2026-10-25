@@ -2,7 +2,7 @@
 replicaCount: 1
 
 image:
-  repository: sales/web
+  repository: sales-web
   tag: local
   pullPolicy: IfNotPresent
 

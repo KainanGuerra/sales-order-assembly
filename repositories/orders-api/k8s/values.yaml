@@ -2,7 +2,7 @@
 replicaCount: 1
 
 image:
-  repository: sales/orders-api
+  repository: sales-orders-api
   tag: local
   pullPolicy: IfNotPresent
 

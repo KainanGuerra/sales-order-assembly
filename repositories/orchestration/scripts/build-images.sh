@@ -8,10 +8,10 @@ CLUSTER="${1:-sales}"
 
 for service in catalog-api identity-api orders-api notifications-api; do
   # These Dockerfiles also build the contracts package, so the context is this folder.
-  docker build -q -t "sales/$service:local" -f "$service/Dockerfile" .
+  docker build -q -t "sales-$service:local" -f "$service/Dockerfile" .
 done
-docker build -q -t sales/web:local web
+docker build -q -t sales-web:local web
 
 for service in catalog-api identity-api orders-api notifications-api web; do
-  kind load docker-image "sales/$service:local" --name "$CLUSTER"
+  kind load docker-image "sales-$service:local" --name "$CLUSTER"
 done

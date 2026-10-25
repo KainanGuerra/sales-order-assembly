@@ -123,7 +123,7 @@ Diagrama: [Pedido sem sinal](../diagrams/offline-sync.md). Razões: D54 a D56.
 
 ## 10. Implantação
 
-**Docker Compose** (`docker-compose.yml` na raiz): três de infraestrutura, quatro serviços, o `web` (única porta publicada, 8080) e um volume do PostgreSQL. `docker-compose.dev.yml` publica portas só em loopback para depuração (catalog 13002/15052, identity 13001/15051, orders 13003, notifications 13004, painel do RabbitMQ 15672, PostgreSQL 5432, Redis 6379). `scripts/init-env.sh` gera o `.env` com senhas aleatórias.
+**Docker Compose** (`docker-compose.yml` na raiz): três de infraestrutura, quatro serviços, o `web` (única porta publicada, 8080) e um volume do PostgreSQL. `docker-compose.dev.yml` publica portas só em loopback para depuração (catalog 13002/15052, identity 13001/15051, orders 13003, notifications 13004, painel do RabbitMQ 15672, PostgreSQL 5432, Redis 6379). `scripts/init-env.sh` gera o `.env` com senhas aleatórias. Cada serviço do Compose tem `image:` (`ghcr.io/kainanguerra/sales-<serviço>`, publicada pelo CI) e `build:` (a mesma imagem construída aqui): `docker compose pull` baixa, `docker compose up --build` constrói (veja `GETTING_STARTED.md`).
 
 **Kubernetes** (`repositories/orchestration`, D57 a D59). Diagrama: [Implantação em Kubernetes](../diagrams/kubernetes-deployment.md).
 

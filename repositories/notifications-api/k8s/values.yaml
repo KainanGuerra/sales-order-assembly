@@ -2,7 +2,7 @@
 replicaCount: 1
 
 image:
-  repository: sales/notifications-api
+  repository: sales-notifications-api
   tag: local
   pullPolicy: IfNotPresent
 

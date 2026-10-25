@@ -54,4 +54,4 @@ Depois de escrever um teste, **quebra-se o código de propósito e confere-se qu
 - Não há testes de componente do front (a lógica testada está nas stores, nos utilitários e no BFF) e não há testes ponta a ponta automatizados: as passadas no navegador foram manuais, num Chrome de computador.
 - Nada foi testado num celular real nem com sinal fraco de verdade.
 - O `scripts/verify.sh` da orquestração confere o sistema no cluster (pedido, segredo, políticas de rede), mas não roda em CI.
-- O CI (`.github/workflows/ci.yml`: contratos, serviços em matriz com PostgreSQL, publicação de imagens) está escrito e **nunca rodou no GitHub**.
+- O CI (`.github/workflows/ci.yml`: contratos, serviços em matriz com PostgreSQL, o web, os gráficos Helm e a publicação das imagens) está escrito e **nunca rodou no GitHub** até o primeiro push; os comandos de cada etapa foram rodados na máquina.

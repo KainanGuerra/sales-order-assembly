@@ -2,7 +2,7 @@
 replicaCount: 1
 
 image:
-  repository: sales/identity-api
+  repository: sales-identity-api
   tag: local
   pullPolicy: IfNotPresent
 

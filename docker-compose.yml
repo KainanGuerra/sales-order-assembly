@@ -42,6 +42,8 @@ services:
       retries: 10
 
   catalog-api:
+    # The published image, or the one built from this folder (docker compose up --build).
+    image: ${IMAGE_REGISTRY:-ghcr.io/kainanguerra}/sales-catalog-api:${IMAGE_TAG:-latest}
     build:
       context: ./repositories
       dockerfile: catalog-api/Dockerfile
@@ -63,6 +65,8 @@ services:
       retries: 6
 
   identity-api:
+    # The published image, or the one built from this folder (docker compose up --build).
+    image: ${IMAGE_REGISTRY:-ghcr.io/kainanguerra}/sales-identity-api:${IMAGE_TAG:-latest}
     build:
       context: ./repositories
       dockerfile: identity-api/Dockerfile
@@ -85,6 +89,8 @@ services:
       retries: 6
 
   orders-api:
+    # The published image, or the one built from this folder (docker compose up --build).
+    image: ${IMAGE_REGISTRY:-ghcr.io/kainanguerra}/sales-orders-api:${IMAGE_TAG:-latest}
     build:
       context: ./repositories
       dockerfile: orders-api/Dockerfile
@@ -113,6 +119,8 @@ services:
       retries: 6
 
   notifications-api:
+    # The published image, or the one built from this folder (docker compose up --build).
+    image: ${IMAGE_REGISTRY:-ghcr.io/kainanguerra}/sales-notifications-api:${IMAGE_TAG:-latest}
     build:
       context: ./repositories
       dockerfile: notifications-api/Dockerfile
@@ -132,6 +140,8 @@ services:
       retries: 6
 
   web:
+    # The published image, or the one built from this folder (docker compose up --build).
+    image: ${IMAGE_REGISTRY:-ghcr.io/kainanguerra}/sales-web:${IMAGE_TAG:-latest}
     build:
       context: ./repositories/web
     environment:

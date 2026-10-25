@@ -17,14 +17,30 @@ Todas as fases estão prontas e funcionam em Docker Compose; a fase D também ro
 
 ## Como rodar
 
-Pré-requisitos: Docker com Compose e acesso à internet (a primeira vez baixa as imagens base e constrói as cinco imagens, o que demora).
+Pré-requisitos: Docker com Compose e acesso à internet.
 
 ```bash
-git clone <url-do-repositório>
-cd <pasta>
+git clone https://github.com/KainanGuerra/sales-order-assembly.git
+cd sales-order-assembly
 sh scripts/init-env.sh      # cria o .env com senhas aleatórias (nada de segredo no repositório)
+```
+
+Há duas formas de subir o sistema:
+
+**1. Com as imagens publicadas (sem compilar nada).** O CI publica as cinco imagens no GitHub Container Registry a cada push na `main`.
+
+```bash
+docker compose pull
+docker compose up
+```
+
+**2. Construindo as imagens aqui** (a primeira vez demora).
+
+```bash
 docker compose up --build
 ```
+
+Se `docker compose pull` responder `denied`, as imagens ainda não estão públicas: use a forma 2. O `docker compose up` sozinho usa a imagem que já estiver na máquina; se não houver, tenta baixar e, não conseguindo, constrói. Para fixar uma versão publicada, ponha `IMAGE_TAG=<sha do commit>` no `.env`.
 
 Abra `http://localhost:8080` e escolha uma pessoa (Carlos Menezes, Paulo Andrade ou Renata Lima, vendedores; Marta Fernandes, supervisora). É o único serviço com porta publicada; os demais ficam na rede interna.
 
@@ -67,7 +83,7 @@ Os testes que usam o banco só rodam com `TEST_DATABASE_URL` apontando para o Po
 - Os caminhos de erro da tela do pedido foram exercitados com **falhas simuladas** (a chamada de rede interceptada na própria página): recusa do envio (422), falha de rede ao enviar (o reenvio usa o mesmo id e conclui) e cálculo indisponível. Contra o backend de verdade, a recusa só foi exercitada por testes e por chamadas à API.
 - Não há testes de componente do front nem testes ponta a ponta automatizados; a lógica testada está no motor de regras, nos serviços, nas stores, nos utilitários e no BFF.
 - **Um clone limpo com `docker compose up --build` ainda não foi conferido** nesta versão do repositório.
-- Os fluxos de CI (testes e publicação de imagens no GHCR) estão escritos, **mas nunca rodaram no GitHub**; os gráficos Helm não passam por lint no CI.
+- Os fluxos de CI (testes e publicação de imagens no GHCR) estão escritos, **mas nunca rodaram no GitHub**; isso inclui a conferência dos gráficos Helm (`helm lint` e `helm template`), que foi escrita e rodada só na máquina.
 
 **Sistema**
 

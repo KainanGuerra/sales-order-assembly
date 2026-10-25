@@ -72,8 +72,8 @@ Confere os pods, o sistema pelo ingress (login, pedido, mesmo id de novo, fluxo 
 
 ```bash
 cd repositories
-docker build -q -t sales/orders-api:local -f orders-api/Dockerfile .   # o web: docker build -t sales/web:local web
-kind load docker-image sales/orders-api:local --name sales
+docker build -q -t sales-orders-api:local -f orders-api/Dockerfile .   # o web: docker build -t sales-web:local web
+kind load docker-image sales-orders-api:local --name sales
 kubectl -n sales rollout restart deploy/orders-api
 ```
 

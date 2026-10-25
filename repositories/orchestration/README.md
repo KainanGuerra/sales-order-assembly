@@ -40,7 +40,7 @@ charts/umbrella       installs all of them; adds the Ingress and the namespace's
 
 Everything is named after its chart (`catalog-api`, `postgres`...), not after the release, so the names the services use for each other are the same as in compose. A service's `values.yaml` lists its ports, its environment, which Secret keys it reads, and its network rules. The umbrella's `values.yaml` can override any of it under the chart's name (for example `orders-api.env.MIN_ORDER_CENTS`).
 
-Settings every chart shares live under `global`: `imageTag`, `imageRegistry` (empty means images already on the node; set it, for example to `ghcr.io/<organization>`, to pull published images) and `secretName`.
+Settings every chart shares live under `global`: `imageTag`, `imageRegistry` (empty means images already on the node; set it, for example to `ghcr.io/kainanguerra`, and `imageTag` to `latest` (or a commit sha), to pull the published images instead) and `secretName`.
 
 ## Security settings
 

@@ -89,6 +89,23 @@ jobs:
       - run: pnpm test
       - run: pnpm build
 
+  charts:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: repositories
+    steps:
+      - uses: actions/checkout@v4
+      # Helm is already on the runner. Every service keeps its chart in <service>/k8s.
+      - name: Lint and render the umbrella chart
+        run: |
+          for chart in */k8s orchestration/charts/postgres orchestration/charts/rabbitmq orchestration/charts/redis; do
+            helm dependency update "$chart"
+          done
+          helm dependency update orchestration/charts/umbrella
+          helm lint orchestration/charts/umbrella
+          helm template sales orchestration/charts/umbrella --namespace sales > /dev/null
+
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: services

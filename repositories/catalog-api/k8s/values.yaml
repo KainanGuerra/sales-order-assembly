@@ -2,7 +2,7 @@
 replicaCount: 1
 
 image:
-  repository: sales/catalog-api
+  repository: sales-catalog-api
   tag: local
   pullPolicy: IfNotPresent
 

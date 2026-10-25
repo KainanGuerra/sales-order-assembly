@@ -38,14 +38,31 @@ Cria o `.env` a partir do `.env.example`, com senhas aleatórias (nenhum segredo
 | `RESERVATION_TTL_SECONDS` | validade de uma reserva de crédito | 900 |
 | `CONSUMER_MAX_DELIVERIES` | reentregas de um evento que falha | 5 |
 | `WEB_PORT` | porta do computador | 8080 |
+| `IMAGE_REGISTRY`, `IMAGE_TAG` | de onde vêm as imagens e qual versão | `ghcr.io/kainanguerra`, `latest` |
 
 ## 3. Subir com Docker Compose
+
+São duas formas. As duas dão o mesmo sistema (PostgreSQL, RabbitMQ, Redis e os cinco serviços); o que muda é de onde vêm as imagens.
+
+**Forma 1: imagens publicadas, sem compilar.** O CI publica as cinco imagens (`ghcr.io/kainanguerra/sales-<serviço>`) no GitHub Container Registry a cada push na `main`.
+
+```bash
+docker compose pull
+docker compose up
+```
+
+**Forma 2: construir as imagens aqui.** A primeira vez demora (instala as dependências e compila).
 
 ```bash
 docker compose up --build
 ```
 
-Constrói as imagens dos cinco serviços (a primeira vez demora) e sobe tudo com PostgreSQL, RabbitMQ e Redis. Abra `http://localhost:8080`: é a **única** porta publicada; os serviços ficam na rede interna.
+- `IMAGE_REGISTRY` e `IMAGE_TAG` (no `.env`) escolhem o repositório e a versão das imagens; o padrão é `latest`. Para fixar uma versão publicada, use o sha completo do commit.
+- `docker compose pull` responde `denied` quando as imagens ainda não são públicas (ou o nome não existe): use a forma 2.
+- `docker compose up` sozinho usa a imagem que já estiver na máquina; se não houver, tenta baixar e, se não conseguir, constrói. Isso foi conferido com a imagem ainda não publicada (construiu) e com uma imagem local (usou-a).
+- Cada serviço leva o próprio `seed/seed.json` dentro da imagem, então as duas formas importam os mesmos dados de exemplo na partida.
+
+Abra `http://localhost:8080`: é a **única** porta publicada; os serviços ficam na rede interna.
 
 Para depurar, `docker-compose.dev.yml` publica portas só em loopback:
 
@@ -112,6 +129,7 @@ pnpm test
 | Sintoma | Causa provável | O que fazer |
 |---|---|---|
 | `docker compose up` reclama de `POSTGRES_PASSWORD must be set` | falta o `.env` | `sh scripts/init-env.sh` |
+| `docker compose pull` responde `denied` | as imagens ainda não são públicas | `docker compose up --build` |
 | Os testes do banco aparecem como "skipped" | falta `TEST_DATABASE_URL` | seção 2 de [`TESTING.md`](../testing/TESTING.md) |
 | `Cannot find module 'contracts'` ou tipos de evento desatualizados | o `contracts` não foi construído, ou mudou | `pnpm build` no `contracts` e `pnpm install` no serviço |
 | A porta 8080 está ocupada | o Compose e o kind usam a mesma | pare um dos dois |
