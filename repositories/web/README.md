@@ -4,7 +4,7 @@ The seller's app and the BFF it talks to. One Nuxt project: the pages run in the
 
 ## What's here
 
-- `app/pages/` - login (pick a person), clients (the portfolio), the order screen, the confirmation, the supervisor placeholder.
+- `app/pages/` - login (pick a person), clients (the portfolio), the order screen, the order page (status, reason, history), and for supervisors the list of orders waiting (`/supervisor`) and the detail with Approve and Reject (`/approvals/:id`; rejecting asks for a reason from a list, and "Outro" needs a text).
   - **The order screen** is one mobile-first page: product search on top, the order lines below, totals and the Send button pinned at the bottom. After each edit (debounced 300 ms) it asks the backend to calculate; the totals, the blocking reasons and the status shown always come from that answer. The screen never computes them.
   - Send is enabled only when the backend said the order can be sent **and** nothing changed since.
 - `app/stores/order.ts` (Pinia) - only what the seller typed: products, quantities, units, discounts, and the order id. The draft is kept in `localStorage`, so a reload or an expired session does not lose it. The order id is generated once per order and sent with it, so a retry never creates two orders.
@@ -39,4 +39,4 @@ pnpm typecheck   # vue-tsc (TypeScript 6: vue-tsc does not run on TypeScript 7 y
 
 ## Not done here
 
-Component tests (the logic worth testing lives in the store, the helpers and the BFF, which are tested), the supervisor's approval screen, order history, the credit display and the offline mode (phases B and C).
+Component tests (the logic worth testing lives in the store, the helpers and the BFF, which are tested), order history with "repeat order" and the offline mode (phases B and C).

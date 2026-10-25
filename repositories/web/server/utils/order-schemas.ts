@@ -16,3 +16,17 @@ export const OrderDraftSchema = z.object({
 });
 
 export const SubmitOrderSchema = OrderDraftSchema.extend({ orderId: z.uuid() });
+
+// Why a supervisor rejects an order: one of the listed reasons, and for "other"
+// a text. The orders service checks it again; this stops junk early.
+export const REJECTION_REASON_CODES = ['DISCOUNT_TOO_HIGH', 'CREDIT_RISK', 'PRODUCT_OR_QUANTITY', 'ORDER_DATA_WRONG', 'OTHER'] as const;
+
+export const RejectOrderSchema = z
+  .object({
+    reasonCode: z.enum(REJECTION_REASON_CODES),
+    reasonText: z.string().trim().max(500).optional(),
+  })
+  .refine((value) => value.reasonCode !== 'OTHER' || (value.reasonText?.length ?? 0) >= 3, {
+    message: 'Describe the reason (at least 3 characters)',
+    path: ['reasonText'],
+  });

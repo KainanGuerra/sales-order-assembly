@@ -13,7 +13,13 @@
   },
   "supervisor": {
     "title": "Aprovações",
-    "body": "A aprovação de pedidos ainda não está disponível nesta versão."
+    "subtitle": "Pedidos da sua equipe aguardando decisão.",
+    "empty": "Nenhum pedido aguardando aprovação.",
+    "refresh": "Atualizar",
+    "from": "Vendedor",
+    "client": "Cliente",
+    "reasons": "Motivo da aprovação",
+    "open": "Analisar"
   },
   "clients": {
     "title": "Meus clientes",
@@ -55,8 +61,10 @@
     "sendFailed": "Não foi possível enviar. Seu pedido continua guardado; tente de novo.",
     "refused": "O pedido não foi enviado porque alguma regra não foi atendida.",
     "status": {
+      "AWAITING_APPROVAL": "Aguardando aprovação",
+      "APPROVED": "Aprovado",
       "SUBMITTED": "Enviado",
-      "AWAITING_APPROVAL": "Aguardando aprovação"
+      "REJECTED": "Rejeitado"
     },
     "statusHint": {
       "SUBMITTED": "Será enviado direto.",
@@ -87,11 +95,15 @@
     "ORDER_DISCOUNT_ABOVE_LIMIT": "Desconto do pedido ({discount}) acima da alçada ({limit})"
   },
   "done": {
-    "title": "Pedido registrado",
+    "title": "Pedido",
     "number": "Pedido",
     "newOrder": "Novo pedido",
     "toClients": "Voltar aos clientes",
-    "items": "Itens"
+    "items": "Itens",
+    "history": "Histórico",
+    "rejectedBecause": "Motivo da rejeição",
+    "system": "sistema",
+    "by": "por"
   },
   "errors": {
     "generic": "Algo deu errado. Tente de novo.",
@@ -103,5 +115,37 @@
   "approvalSaved": {
     "LINE_DISCOUNT_ABOVE_LIMIT": "Desconto de {discount} em {product} acima da alçada",
     "ORDER_DISCOUNT_ABOVE_LIMIT": "Desconto do pedido ({discount}) acima da alçada"
+  },
+  "rejectionReasons": {
+    "DISCOUNT_TOO_HIGH": "Desconto acima do que a empresa aceita",
+    "CREDIT_RISK": "Risco de crédito do cliente",
+    "PRODUCT_OR_QUANTITY": "Produto ou quantidade inadequados",
+    "ORDER_DATA_WRONG": "Dados do pedido incorretos",
+    "OTHER": "Outro (descrever)"
+  },
+  "approvals": {
+    "title": "Analisar pedido",
+    "approve": "Aprovar",
+    "approving": "Aprovando…",
+    "reject": "Rejeitar",
+    "rejecting": "Rejeitando…",
+    "cancel": "Cancelar",
+    "rejectTitle": "Motivo da rejeição",
+    "reasonLabel": "Motivo",
+    "reasonPlaceholder": "Escolha um motivo",
+    "reasonTextLabel": "Descreva o motivo",
+    "reasonTextHelp": "Mínimo de 3 caracteres.",
+    "confirmReject": "Confirmar rejeição",
+    "approved": "Pedido aprovado e enviado.",
+    "rejected": "Pedido rejeitado.",
+    "alreadyDecided": "Este pedido já foi decidido.",
+    "failed": "Não foi possível concluir. Tente de novo.",
+    "notFound": "Pedido não encontrado.",
+    "back": "Voltar à lista",
+    "history": "Histórico",
+    "seller": "Vendedor",
+    "client": "Cliente",
+    "reasonLine": "Desconto de item de {discount}",
+    "reasonOrder": "Desconto do pedido de {discount}"
   }
 }

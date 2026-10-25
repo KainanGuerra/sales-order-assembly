@@ -27,6 +27,17 @@ export function parsePercentToBasisPoints(text: string): number | null {
   return Math.round(Number(normalised) * 100);
 }
 
+// "24/10/2026 12:05", in the viewer's time zone unless one is given.
+export function formatDateTime(iso: string, timeZone?: string): string {
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone }).format(new Date(iso));
+}
+
+// "user:S01" is the person S01; "system:orders" is the system.
+export function parseActor(actor: string): { kind: 'user' | 'system'; name: string } {
+  const [kind, ...rest] = actor.split(':');
+  return { kind: kind === 'user' ? 'user' : 'system', name: rest.join(':') };
+}
+
 export function basisPointsToInput(bp: number): string {
   return bp === 0 ? '' : String(bp / 100).replace('.', ',');
 }

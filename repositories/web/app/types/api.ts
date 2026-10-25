@@ -48,7 +48,13 @@ export interface ProductSearchItem {
 }
 
 export type QuantityUnit = 'UNIT' | 'PACK';
-export type OrderStatus = 'SUBMITTED' | 'AWAITING_APPROVAL';
+// What an order can be: where it goes when created (SUBMITTED, AWAITING_APPROVAL),
+// and what a supervisor makes of it (APPROVED on the way to SUBMITTED, or REJECTED).
+export type OrderStatus = 'AWAITING_APPROVAL' | 'APPROVED' | 'SUBMITTED' | 'REJECTED';
+export type InitialOrderStatus = 'SUBMITTED' | 'AWAITING_APPROVAL';
+
+export const REJECTION_REASON_CODES = ['DISCOUNT_TOO_HIGH', 'CREDIT_RISK', 'PRODUCT_OR_QUANTITY', 'ORDER_DATA_WRONG', 'OTHER'] as const;
+export type RejectionReasonCode = (typeof REJECTION_REASON_CODES)[number];
 
 export type LineBlocker =
   | 'UNKNOWN_PRODUCT'
@@ -91,7 +97,7 @@ export interface Calculation {
   effectiveDiscountLimitBp: number;
   blockers: OrderBlocker[];
   approvalReasons: ApprovalReason[];
-  status: OrderStatus;
+  status: InitialOrderStatus;
   canSubmit: boolean;
   client: { id: string; tradeName: string; priceTableId: string; priceTableFallback: boolean };
 }
@@ -110,17 +116,40 @@ export interface OrderItemView {
   netCents: number;
 }
 
+export interface HistoryStep {
+  status: OrderStatus;
+  // user:<id> or system:<name>
+  actor: string;
+  reasonCode: string | null;
+  reasonText: string | null;
+  at: string;
+}
+
+export interface PendingOrder {
+  id: string;
+  sellerName: string;
+  clientTradeName: string;
+  totalCents: number;
+  approvalReasons: ApprovalReason[];
+  createdAt: string;
+}
+
 export interface OrderView {
   id: string;
   status: OrderStatus;
   sellerId: string;
+  sellerName: string;
+  supervisorId: string;
   clientId: string;
+  clientTradeName: string;
   priceTableId: string;
   subtotalCents: number;
   orderDiscountBp: number;
   orderDiscountCents: number;
   totalCents: number;
   approvalReasons: ApprovalReason[];
+  rejection: { code: RejectionReasonCode; text: string | null } | null;
   createdAt: string;
   items: OrderItemView[];
+  history: HistoryStep[];
 }

@@ -24,10 +24,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
   // Each role only opens its own pages.
   const sellerPage = to.path.startsWith('/clients') || to.path.startsWith('/orders');
+  const supervisorPage = to.path.startsWith('/supervisor') || to.path.startsWith('/approvals');
   if (user.value.role === 'SUPERVISOR' && sellerPage) {
     return navigateTo('/supervisor');
   }
-  if (user.value.role === 'SELLER' && to.path.startsWith('/supervisor')) {
+  if (user.value.role === 'SELLER' && supervisorPage) {
     return navigateTo('/clients');
   }
 });
