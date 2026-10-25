@@ -55,7 +55,7 @@ Infraestrutura: um PostgreSQL (um schema e um papel por serviço, **sem consulta
 | `OrderPlaced` (`order.placed`) | orders | identity | confirma a reserva de crédito do pedido (`PENDING` para `CONFIRMED`) |
 | | | notifications | avisa o supervisor (pede decisão) e o vendedor se o pedido aguarda aprovação |
 | `OrderSubmitted` (`order.submitted`) | orders | notifications | avisa vendedor e supervisor que o pedido foi enviado |
-| | | catalog | incrementa a estatística de produtos mais pedidos (ainda não construído) |
+| | | catalog | soma as unidades do pedido na estatística de produtos mais pedidos (uma vez por pedido); a busca usa o total para desempatar |
 | `OrderApproved` (`order.approved`) | orders | notifications | avisa o vendedor e resolve os avisos que esperavam a decisão |
 | `OrderRejected` (`order.rejected`) | orders | identity | libera o crédito (`RELEASED`); o orders também o libera por chamada direta |
 | | | notifications | avisa o vendedor (pedido cancelado, com o motivo) e resolve os avisos pendentes |

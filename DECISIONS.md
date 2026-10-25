@@ -433,3 +433,21 @@ Registro das decisões deste projeto, na ordem em que foram tomadas. Cada entrad
 
 - **Escolha:** Abrir o aviso o marca como lido e leva ao pedido (o supervisor vai à tela de análise, que também mostra pedidos já decididos; o vendedor, ao seu pedido). "Marcar todas como lidas" existe. Quando o pedido é decidido, os avisos que pediam ou esperavam a decisão (`APPROVAL_NEEDED`, `ORDER_AWAITING_APPROVAL`) ficam **resolvidos**: continuam na lista, esmaecidos e marcados "Já decidido". A leitura guarda o primeiro momento (marcar de novo não o muda). Marcar o aviso de outra pessoa responde "não encontrado".
 - **O que faria diferente:** Apagar avisos antigos (hoje a lista só cresce; a tela mostra os 30 mais novos).
+
+## D52. Produtos mais pedidos: o que se conta e para que serve
+
+- **Contexto:** O catálogo deveria manter uma estatística de "mais pedidos" a partir de `order.submitted` (D21), mas o enunciado não diz para que ela serve. Você escolheu que ela mude a ordem da busca.
+- **Alternativas consideradas:** só guardar o número (sem efeito na tela); mostrar um selo "mais pedido" (sem mudar a ordem); contar pedidos em vez de unidades; popularidade acima da qualidade da busca; agrupar combinações "parecidas" numa faixa de similaridade (um limite que eu teria que inventar e defender).
+- **Escolha:** Conta-se **unidades** (a soma das quantidades dos pedidos que chegaram a `SUBMITTED`, enviados direto ou depois de aprovados). Na busca, o total é só **desempate**: primeiro a descrição exata, depois a maior similaridade, **depois** o mais pedido, e por fim o id. Na busca por EAN/SKU (onde só há empate), o mais pedido vem antes do id; é o caso dos dois produtos com o mesmo EAN.
+- **Por quê:** A qualidade da correspondência continua mandando, então os testes de busca de antes mantêm o sentido e a regra cabe numa frase. Unidades combinam com a regra "quantidades são sempre em unidades".
+- **Limite:** como a similaridade é um número fracionário, os empates reais são raros (descrições idênticas, o mesmo EAN); o efeito na tela é pequeno e é isso que torna a mudança segura. Pedidos cancelados depois do envio (`CANCELLED` só vem de rejeição, antes de `SUBMITTED`) não entram.
+- **O que faria diferente:** Uma janela de tempo (mais pedidos nos últimos 90 dias), para que um campeão antigo não fique para sempre na frente.
+
+## D53. Como o consumidor do catálogo conta sem contar duas vezes
+
+- **Escolha:** Uma tabela `counted_orders` (chave primária: id do pedido) e a soma em `product_stats` ficam na **mesma transação**: o pedido é marcado com `INSERT ... ON CONFLICT DO NOTHING`; se já estava marcado, nada é somado; se a soma falha, a marca desfaz junto e a nova entrega conta o pedido. A soma é um `INSERT ... ON CONFLICT DO UPDATE` que acrescenta ao total do banco (não lê e grava), então entregas simultâneas de pedidos diferentes não perdem unidades.
+- **Sem chave estrangeira para `products`:** um evento com um produto que este catálogo não conhece não pode falhar para sempre e acabar na fila de mortas; o número fica guardado e a busca ignora o que não existe.
+- **Linhas repetidas:** o orders já bloqueia o mesmo produto em duas linhas (`DUPLICATE_PRODUCT`), então isso não chega pelo caminho normal; o consumidor soma as linhas repetidas de qualquer forma, porque o upsert falha se receber a mesma chave duas vezes na mesma instrução.
+- **Verificado:** testes no Postgres de verdade (idempotência, entrega simultânea do mesmo pedido e de pedidos diferentes, desfazer na falha, soma entre pedidos) e seis quebras de propósito que os testes pegaram (sem a marca, sem a transação, soma trocada por substituição, linhas repetidas sem somar, ler-e-gravar no lugar de somar no banco, popularidade antes da similaridade); e um pedido enviado pela tela/BFF chegou ao catálogo e virou 70 unidades.
+- **O que faria diferente:** Um relatório de reconciliação entre o que o orders tem e o que o catálogo contou, já que sem outbox (D34) um evento pode se perder.
+

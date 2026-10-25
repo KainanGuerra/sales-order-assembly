@@ -61,6 +61,8 @@ Cada ambiguidade encontrada no enunciado (`SCOPE.md`) ou nos dados (`seed.json`)
 | A48 | Quem é avisado de quê | Ver a tabela em `DECISIONS.md` D49: o supervisor é avisado de pedidos que esperam decisão e dos enviados; o vendedor, de tudo o que acontece com os seus pedidos. Pedido dentro da alçada só gera o aviso de "enviado". Decisão minha |
 | A49 | Quando o aviso conta como lido | Ao abrir (clicar), ou em "marcar todas". O toast na tela não conta como leitura. Decisão minha |
 | A50 | Quantos avisos a tela mostra | Os 30 mais novos (o serviço aceita até 100); não há expiração. Decisão minha |
+| A51 | O que entra na estatística de produtos mais pedidos | Unidades de todo pedido que chegou a `SUBMITTED` (direto ou depois de aprovado); pedidos aguardando ou rejeitados não contam. Decisão minha |
+| A52 | Como a estatística afeta a busca | Só desempata, depois da descrição exata e da similaridade (`DECISIONS.md` D52). Decisão minha |
 | A25 | "Login" | Simulado: tela para escolher vendedor ou supervisor, com sessão por cookie no servidor |
 | A26 | Pedido offline (fase C) | Comportamento a decidir quando chegarmos à fase C; o backend continua sendo o dono das regras |
 

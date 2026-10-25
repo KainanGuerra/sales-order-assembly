@@ -4,12 +4,12 @@ Módulo para vendedores que visitam pequenos varejistas (mercadinhos, minimercad
 
 ## Estado atual
 
-**Fase A funcionando em Docker Compose**: interface web (Nuxt), catálogo, identity e orders, com PostgreSQL, RabbitMQ e Redis. Crédito, aprovação do supervisor, histórico com "repetir pedido" e notificações já funcionam; faltam a estatística de produtos no catálogo e o modo offline.
+**Fase A funcionando em Docker Compose**: interface web (Nuxt), catálogo, identity e orders, com PostgreSQL, RabbitMQ e Redis. Crédito, aprovação do supervisor, histórico com "repetir pedido" e notificações já funcionam; a estatística de produtos mais pedidos no catálogo também; falta o modo offline.
 
 | Fase | Conteúdo | Estado |
 |---|---|---|
 | A | Requisitos obrigatórios 1–6 | Pronta: backend (catálogo, identity, orders com regras e testes) e interface (Nuxt) |
-| B | Limite de crédito, aprovação do supervisor, histórico com "repetir pedido", notificações | Em andamento: crédito, aprovação, histórico com "repetir pedido" e notificações prontos; falta o consumidor de estatística no catálogo |
+| B | Limite de crédito, aprovação do supervisor, histórico com "repetir pedido", notificações | Pronta: crédito, aprovação, histórico com "repetir pedido", notificações e a estatística de produtos no catálogo |
 | C | Pedido offline com sincronização | Não iniciada |
 | D | Repositório de orquestração (Helm, kind, ingress), última fase | Não iniciada |
 
@@ -87,7 +87,7 @@ Os testes das regras cobrem os casos de borda: desconto exatamente na alçada, p
 - Os caminhos de erro da tela do pedido foram exercitados com **falhas simuladas** (a chamada de rede foi interceptada na própria página): recusa do envio (422), falha de rede ao enviar (o reenvio usa o mesmo id e conclui) e cálculo indisponível (aviso, botão desabilitado, volta ao normal na edição seguinte). Contra o backend de verdade, a recusa só foi exercitada por testes e por chamadas à API.
 - Não há testes de componente do front; a lógica testada está no motor de regras, nos serviços, no store, nos utilitários e no BFF.
 - Os fluxos de CI (testes e publicação das imagens no GHCR) estão escritos, **mas nunca rodaram no GitHub**.
-- A publicação dos eventos não usa outbox: se o RabbitMQ estiver fora no envio, o evento se perde (e com ele um aviso ou uma confirmação de crédito, que a reserva só recupera pela expiração). O consumidor de estatística de produtos no catálogo ainda não existe.
+- A publicação dos eventos não usa outbox: se o RabbitMQ estiver fora no envio, o evento se perde (e com ele um aviso ou uma confirmação de crédito, que a reserva só recupera pela expiração).
 - Os avisos em tempo real (SSE) são difundidos no processo do notifications: com mais de uma réplica, precisariam de um corretor entre elas.
 - Modo offline e a orquestração com Helm são as fases C e D.
 
