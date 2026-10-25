@@ -4,7 +4,7 @@
 
 An order-assembly module for external sellers who visit small retailers and often have poor connectivity. The requirements are summarised in `repositories/documentation/context/CONTEXT.md`; the sample data is split per service: each of `identity-api`, `catalog-api` and `orders-api` has its own `seed/seed.json` (the slice it imports at start). They are copies of the supplied data with its imperfections kept on purpose (duplicate EAN, a client without a price table, prices with a decimal comma): do not clean them.
 
-**Everything in this repository must be code I can explain and defend.** Prefer the simple, readable option and say why in `DECISIONS.md`.
+**The goal is code I can explain and defend.** Prefer the simple, readable option and say why in `DECISIONS.md`. Be honest about the gap: the author has not read the code line by line yet (see `repositories/documentation/pendings/PENDINGS.md`), so explain what you change.
 
 ## Status
 

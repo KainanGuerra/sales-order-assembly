@@ -2,13 +2,13 @@
 
 Registro do meu uso de IA neste projeto. Ferramenta: Claude Code, do começo ao fim. O objetivo é o retrato honesto: o que pedi, o que a IA respondeu, o que aceitei, alterei ou descartei, e por quê.
 
-> Texto redigido com a IA a partir da transcrição da sessão (e conferido contra o `DECISIONS.md` e o histórico do git). Os trechos marcados com _(confirmar)_ são pontos que só eu posso atestar.
+> Texto redigido com a IA a partir da transcrição da sessão (e conferido contra o `DECISIONS.md` e o histórico do git). As frases sobre o que li e o que entendo são minhas.
 
 ## Como trabalhei com a IA
 
 - **A IA escreveu quase todo o código e os documentos; eu decidi o desenho e as regras.** Cada decisão virou uma pergunta (a IA usava uma ferramenta de perguntas com opções), eu respondia, e o resultado está em `DECISIONS.md` (D1 a D51) e `ASSUMPTIONS.md` (A1 a A50).
 - **Regra que impus logo no começo:** "não pedi para você decidir, continue me perguntando sobre tudo". Também recusei perguntas densas ou cheias de jargão ("técnico demais, simplifique"), e várias vezes mandei a IA parar e explicar antes de eu escolher.
-- **Como revisei:** rodando o sistema, lendo as decisões escritas, perguntando "por quê", interrompendo quando algo não fazia sentido e exigindo que os testes provassem algo (verificação por mutação, momento 4). Não escrevi código na mão. _(confirmar)_ quanto do código eu li linha a linha.
+- **Como verifiquei:** rodando o sistema, lendo as decisões escritas, perguntando "por quê", interrompendo quando algo não fazia sentido e exigindo que os testes provassem algo (verificação por mutação, momento 4). Não escrevi código na mão e **não li o código dos serviços linha a linha**. Das telas, só vi o que a IA me mostrou ao usar o navegador (Claude in Chrome); fora isso, não li o código delas.
 - **Regras do processo, pedidas por mim:** commits em inglês, Conventional Commits, última linha `IA: nenhuma|parcial|majoritária` e **sem** `Co-Authored-By`; documentos de entrega em português; nada de caminhos locais, nomes de empresas onde trabalho ou credenciais nos arquivos; só conferir no navegador quando a fatia inteira estiver pronta; nunca pular o hook de commit.
 - **Em números:** mais de 50 commits, todos `IA: majoritária`, em dois dias (24 e 25/10; o histórico está na ordem real, sem squash). Foram 5 serviços (identity, catalog, orders, notifications e a tela com o BFF), 1 pacote de contratos, os gráficos Helm e a documentação.
 
@@ -53,7 +53,7 @@ Registro do meu uso de IA neste projeto. Ferramenta: Claude Code, do começo ao 
 
 - **O que a IA errou:** na pergunta sobre arredondamento, o exemplo trazia "7,49 × 15 × 5% = 106,7155"; o correto é 106,7325. O erro estava na própria pergunta que me foi feita.
 - **O que eu fiz:** primeiro recusei a pergunta, depois pedi "um exemplo completo", depois "dê exemplos disso", e por fim "ainda não entendi esses métodos, escreva um arquivo mostrando os três". A IA refez os exemplos (e os números certos aparecem lado a lado), com quatro casos: um pedido de três linhas, linhas que não somam, o mínimo de R$ 300 mudando de veredito e o desconto do pedido.
-- **O que decidi:** depois dos exemplos, escolhi o método recomendado ("só escolha o recomendado"): arredondar cada linha uma vez, e o desconto do pedido uma vez sobre a soma das linhas arredondadas. _(confirmar)_ que entendi a diferença entre os três a ponto de explicá-la.
+- **O que decidi:** depois dos exemplos, escolhi o método recomendado ("só escolha o recomendado"): arredondar cada linha uma vez, e o desconto do pedido uma vez sobre a soma das linhas arredondadas. **Ainda não consigo explicar sozinho a diferença entre os três métodos**: escolhi o recomendado depois de ver os exemplos lado a lado (a conta está em `ASSUMPTIONS.md`, seção "Arredondamento").
 - **Por quê:** a tela soma o que mostra e o desconto digitado é o aplicado. Os exemplos viraram casos de teste (`ASSUMPTIONS.md` A18, A28, D8).
 
 ## Outras decisões em que a IA propôs e eu redirecionei
@@ -98,15 +98,17 @@ Registro do meu uso de IA neste projeto. Ferramenta: Claude Code, do começo ao 
 
 Legenda: **E** = eu escrevi; **R** = a IA gerou e eu revisei/alterei; **A** = a IA gerou e eu aceitei como veio.
 
+Nota: as decisões (o que o sistema faz e por quê) são minhas, perguntadas uma a uma. O código foi gerado pela IA e **eu não o li linha a linha**; por isso a coluna diz **A** nas linhas de código, mesmo onde eu dirigi o comportamento. O que verifiquei foi o resultado: os testes, o sistema rodando e, nas telas, o que a IA me mostrou no navegador. Só `DECISIONS.md` e `ASSUMPTIONS.md` eu li e corrigi (**R**).
+
 | Parte da solução | Autoria | Observações |
 |---|---|---|
-| Modelagem de dados | R | Tabelas propostas pela IA a partir do seed. Minhas decisões: centavos e pontos-base inteiros, um schema por serviço e nenhuma consulta entre schemas, seis status em duas cadeias, reserva de crédito com `expires_at`, avisos únicos por pedido, pessoa e tipo |
-| Regras de negócio | R | Decididas por mim, uma por uma (A15 a A31, D32, D40 a D51). A IA as implementou como funções puras (`order-rules.ts`, `order-status.ts`, `plan.ts`), com os casos de borda testados |
-| API (serviços, BFF, eventos) | R | Gerada pela IA. Escolhi gRPC para o síncrono, RabbitMQ para o assíncrono, o BFF com sessão em Redis, o envio idempotente, a tabela de avisos e o SSE |
-| Telas | R/A | Fluxos escolhidos por mim (lista e depois detalhe, motivo em lista com texto livre, perguntar antes de substituir o rascunho, uma tela de pedido pensada para celular). Componentes gerados pela IA; conferi no navegador uma vez por fatia (inclusive numa moldura de 390 px), não num celular de verdade. _(confirmar)_ quanto do código das telas eu li |
-| Testes | R | Escritos pela IA; eu exigi as verificações por mutação. Hoje: orders 181, identity 91, web 100, catalog 75, notifications 37, contracts 18 |
-| Modo offline | R | Comportamento escolhido por mim, pergunta a pergunta (fila no aparelho, totais "desatualizados", busca só entre o que já foi visto, envio automático, pedido recusado fica para corrigir; D54 a D56). A IA escreveu o código e os testes; conferido no navegador parando o servidor, não num celular real |
-| Kubernetes (Helm, kind) | R | Escolhas minhas: gráfico de biblioteca compartilhado, Traefik porque o ingress-nginx foi aposentado, negar todo o tráfego e abrir só o necessário, sem TLS (D57 a D59). A IA escreveu os gráficos e os scripts; `verify.sh` prova o sistema e as políticas, e as políticas foram apagadas de propósito para ver o teste falhar |
+| Modelagem de dados | A | Tabelas propostas pela IA a partir do seed. Minhas decisões: centavos e pontos-base inteiros, um schema por serviço e nenhuma consulta entre schemas, seis status em duas cadeias, reserva de crédito com `expires_at`, avisos únicos por pedido, pessoa e tipo |
+| Regras de negócio | A | Decididas por mim, uma por uma (A15 a A31, D32, D40 a D51). A IA as implementou como funções puras (`order-rules.ts`, `order-status.ts`, `plan.ts`), com os casos de borda testados |
+| API (serviços, BFF, eventos) | A | Gerada pela IA. Escolhi gRPC para o síncrono, RabbitMQ para o assíncrono, o BFF com sessão em Redis, o envio idempotente, a tabela de avisos e o SSE |
+| Telas | A | Fluxos escolhidos por mim (lista e depois detalhe, motivo em lista com texto livre, perguntar antes de substituir o rascunho, uma tela de pedido pensada para celular). Componentes gerados pela IA; conferi no navegador uma vez por fatia (inclusive numa moldura de 390 px), não num celular de verdade. Não li o código das telas; vi o que a IA me mostrou ao usar o navegador |
+| Testes | A | Escritos pela IA; eu exigi as verificações por mutação. Hoje: orders 181, identity 91, web 100, catalog 75, notifications 37, contracts 18 |
+| Modo offline | A | Comportamento escolhido por mim, pergunta a pergunta (fila no aparelho, totais "desatualizados", busca só entre o que já foi visto, envio automático, pedido recusado fica para corrigir; D54 a D56). A IA escreveu o código e os testes; conferido no navegador parando o servidor, não num celular real |
+| Kubernetes (Helm, kind) | A | Escolhas minhas: gráfico de biblioteca compartilhado, Traefik porque o ingress-nginx foi aposentado, negar todo o tráfego e abrir só o necessário, sem TLS (D57 a D59). A IA escreveu os gráficos e os scripts; `verify.sh` prova o sistema e as políticas, e as políticas foram apagadas de propósito para ver o teste falhar |
 | Docker / CI | A | Compose e CI gerados e aceitos. O compose foi verificado rodando (de um clone limpo e com as imagens publicadas); o CI passou no primeiro envio ao GitHub |
 | Documentação | R | `DECISIONS.md` e `ASSUMPTIONS.md` redigidos pela IA a partir das minhas respostas; corrigi fatos (D44 virou D47). O guia de estilo foi gerado pela IA a partir de projetos meus anteriores e **reescrito duas vezes por pedido meu**, para tirar nomes de empresas, caminhos locais, pipelines e regras de negócio |
 

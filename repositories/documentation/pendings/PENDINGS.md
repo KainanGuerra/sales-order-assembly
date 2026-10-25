@@ -10,12 +10,13 @@
 2. Primeira execução do CI: passou em todas as etapas (contratos, quatro serviços, web, gráficos Helm, publicação das cinco imagens).
 3. Os cinco pacotes de imagem nasceram públicos (herdaram a visibilidade do repositório).
 4. A forma 1 de rodar foi conferida a partir de um clone público: `docker compose pull` sem login, `docker compose up` sem compilar.
+5. As ações do CI foram atualizadas para as versões que rodam no Node 24; o CI passou sem avisos de Node 20.
+6. As marcas de dúvida do `AI_LOG.md` foram resolvidas com as respostas reais: o código dos serviços não foi lido linha a linha, das telas só foi visto o que a IA mostrou no navegador, e o arredondamento ainda não pode ser explicado sozinho. O mapa de autoria passou a dizer **A** nas linhas de código.
 
 **Falta:**
 
-5. Os dois `_(confirmar)_` do `AI_LOG.md` (quanto do código da interface foi lido; se os três métodos de arredondamento podem ser explicados) e a leitura do `AI_LOG.md` com as próprias palavras.
-6. Ver os diagramas desta documentação renderizados (seção 3): a sintaxe foi conferida, a aparência não (o GitHub os renderiza).
-7. O CI avisa que as ações `actions/checkout@v4` e `actions/setup-node@v4` usam o Node 20, descontinuado, e foram forçadas para o Node 24: subir as ações para a versão seguinte.
+7. Ler o código das regras (`order-rules.ts`, `order-status.ts`, `plan.ts`, as regras do crédito) e entender os três métodos de arredondamento (`ASSUMPTIONS.md`, seção "Arredondamento"). Hoje nada disso foi lido linha a linha (`AI_LOG.md`).
+8. Ver os diagramas desta documentação renderizados (seção 3): a sintaxe foi conferida, a aparência não (o GitHub os renderiza).
 
 ## 2. Limites conhecidos (todos já escritos no `README.md`, "O que ficou de fora")
 
