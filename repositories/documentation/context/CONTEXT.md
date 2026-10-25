@@ -45,7 +45,7 @@ O que falta, e os limites que continuam, está em [`PENDINGS.md`](../pendings/PE
 
 ## 5. Restrições
 
-- **O enunciado e o `seed.json` não são alterados**, com as imperfeições do seed (EAN repetido, cliente sem tabela de preço, preços com vírgula): cada uma virou uma interpretação em `ASSUMPTIONS.md`.
+- **Os dados de exemplo (cada `seed/seed.json`) mantêm as imperfeições**, de propósito (EAN repetido, cliente sem tabela de preço, preços com vírgula): cada uma virou uma interpretação em `ASSUMPTIONS.md`.
 - **Nada confidencial nos arquivos versionados:** sem caminhos locais, nomes de empresas de terceiros, sistemas de fornecedores, regras de negócio de outros projetos ou credenciais.
 - **Idioma:** documentos de entrega e esta documentação em português; código, comentários, commits, READMEs dos serviços e o guia de estilo em inglês.
 - **O segredo interno só no servidor:** nunca no pacote do navegador, em resposta ou em log.

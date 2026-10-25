@@ -11,9 +11,6 @@ ports:
 
 probePath: /health
 
-# Mounts the seed file (the "seed" ConfigMap) at /data/seed.json.
-seed: false
-
 # Wait for these (host:port) before the service starts.
 waitFor:
   - postgres:5432

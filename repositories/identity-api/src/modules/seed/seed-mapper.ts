@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-// Reads only the slice of seed.json that belongs to identity. Unknown fields
-// are ignored: the file is shared with the other services.
+// Reads identity's seed (seed/seed.json): only the fields this service uses.
+// Unknown fields are ignored, so the sample data can carry more than is read here.
 const SeedSchema = z.object({
   supervisores: z.array(z.object({ id: z.string().min(1), nome: z.string().min(1) })),
   vendedores: z.array(

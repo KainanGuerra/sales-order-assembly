@@ -7,7 +7,7 @@ set -eu
 
 HERE="$(cd "$(dirname "$0")/.." && pwd)"          # repositories/orchestration
 SERVICES="$(cd "$HERE/.." && pwd)"                  # repositories/
-ROOT="$(cd "$SERVICES/.." && pwd)"                  # project root: seed.json, infra/
+ROOT="$(cd "$SERVICES/.." && pwd)"                  # project root: infra/
 
 CLUSTER=sales
 NAMESPACE=sales
@@ -44,10 +44,8 @@ echo "==> images"
 echo "==> namespace, secrets and files"
 kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f - >/dev/null
 "$HERE/scripts/create-secrets.sh" "$NAMESPACE"
-# The seed and the database init script have one copy each in the project; the
-# cluster gets them as ConfigMaps (the charts mount them).
-kubectl -n "$NAMESPACE" create configmap seed --from-file=seed.json="$ROOT/seed.json" \
-  --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+# The database init script has one copy in the project; the cluster gets it as a
+# ConfigMap (the postgres chart mounts it). Each service carries its own seed in its image.
 kubectl -n "$NAMESPACE" create configmap postgres-init --from-file=init-schemas.sh="$ROOT/infra/postgres/init-schemas.sh" \
   --dry-run=client -o yaml | kubectl apply -f - >/dev/null
 

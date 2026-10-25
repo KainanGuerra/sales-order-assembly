@@ -11,9 +11,6 @@ ports:
 
 probePath: /health
 
-# Mounts the seed file (the "seed" ConfigMap) at /data/seed.json.
-seed: true
-
 # Wait for these (host:port) before the service starts.
 waitFor:
   - postgres:5432
@@ -35,7 +32,6 @@ env:
   MAX_DISCOUNT_BP: "1000"
   MIN_ORDER_CENTS: "30000"
   RABBITMQ_URL: "amqp://sales:$(RABBITMQ_PASSWORD)@rabbitmq:5672"
-  SEED_FILE: "/data/seed.json"
 
 resources:
   requests: { cpu: 50m, memory: 128Mi }

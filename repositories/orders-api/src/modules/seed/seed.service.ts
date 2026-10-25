@@ -4,7 +4,7 @@ import { ENV, type Env } from '../../config/env.js';
 import { OrdersRepository } from '../orders/repository/orders.repository.js';
 import { mapHistoryOrders } from './seed-mapper.js';
 
-// Brings in the history orders of seed.json at startup. Idempotent: an order
+// Brings in the history orders of the orders seed (seed/seed.json) at startup. Idempotent: an order
 // that is already there is left as it is. Imported orders take no credit (the
 // client's "already used" amount in the seed counts them) and have no
 // reservation.

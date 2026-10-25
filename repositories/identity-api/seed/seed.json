@@ -1,0 +1,153 @@
+{
+  "_meta": {
+    "moeda": "BRL"
+  },
+  "supervisores": [
+    {
+      "id": "S01",
+      "nome": "Marta Fernandes"
+    }
+  ],
+  "vendedores": [
+    {
+      "id": "V01",
+      "nome": "Carlos Menezes",
+      "supervisor_id": "S01",
+      "alcada_desconto_percentual": 5
+    },
+    {
+      "id": "V02",
+      "nome": "Renata Lima",
+      "supervisor_id": "S01",
+      "alcada_desconto_percentual": 7
+    },
+    {
+      "id": "V03",
+      "nome": "Paulo Andrade",
+      "supervisor_id": "S01",
+      "alcada_desconto_percentual": 3
+    }
+  ],
+  "clientes": [
+    {
+      "id": "C001",
+      "nome_fantasia": "Mercadinho São José",
+      "razao_social": "Mercadinho São José Ltda",
+      "cnpj": "99.671.412/0001-10",
+      "vendedor_id": "V01",
+      "tabela_preco_id": "TP01",
+      "limite_credito": 5000,
+      "credito_utilizado": 1200,
+      "cidade": "Fortaleza",
+      "uf": "CE"
+    },
+    {
+      "id": "C002",
+      "nome_fantasia": "Minibox Bom Preço",
+      "razao_social": "Bom Preço Comércio de Alimentos Ltda",
+      "cnpj": "63.331.148/0001-29",
+      "vendedor_id": "V01",
+      "tabela_preco_id": "TP02",
+      "limite_credito": 12000,
+      "credito_utilizado": 11650,
+      "cidade": "Fortaleza",
+      "uf": "CE"
+    },
+    {
+      "id": "C003",
+      "nome_fantasia": "Conveniência Esquina",
+      "razao_social": "Esquina Conveniência ME",
+      "cnpj": "67.717.889/0001-01",
+      "vendedor_id": "V01",
+      "tabela_preco_id": "TP01",
+      "limite_credito": 2500,
+      "credito_utilizado": 0,
+      "cidade": "Caucaia",
+      "uf": "CE"
+    },
+    {
+      "id": "C004",
+      "nome_fantasia": "Mercearia Dona Lúcia",
+      "razao_social": "L. Barbosa Mercearia ME",
+      "cnpj": "45.948.749/0001-01",
+      "vendedor_id": "V01",
+      "tabela_preco_id": null,
+      "limite_credito": 3000,
+      "credito_utilizado": 0,
+      "cidade": "Maracanaú",
+      "uf": "CE"
+    },
+    {
+      "id": "C005",
+      "nome_fantasia": "Supermercado Família",
+      "razao_social": "Família Supermercados Ltda",
+      "cnpj": "10.895.667/0001-53",
+      "vendedor_id": "V02",
+      "tabela_preco_id": "TP02",
+      "limite_credito": 20000,
+      "credito_utilizado": 8300,
+      "cidade": "Natal",
+      "uf": "RN"
+    },
+    {
+      "id": "C006",
+      "nome_fantasia": "Mercadinho Central",
+      "razao_social": "Central Alimentos Ltda",
+      "cnpj": "30.832.052/0001-95",
+      "vendedor_id": "V02",
+      "tabela_preco_id": "TP03",
+      "limite_credito": 4000,
+      "credito_utilizado": 3900,
+      "cidade": "Mossoró",
+      "uf": "RN"
+    },
+    {
+      "id": "C007",
+      "nome_fantasia": "Empório Sertão",
+      "razao_social": "Empório Sertão Comércio Ltda",
+      "cnpj": "64.456.778/0001-92",
+      "vendedor_id": "V02",
+      "tabela_preco_id": "TP03",
+      "limite_credito": 6000,
+      "credito_utilizado": 1500,
+      "cidade": "Caicó",
+      "uf": "RN"
+    },
+    {
+      "id": "C008",
+      "nome_fantasia": "Mini Mercado Avenida",
+      "razao_social": "Avenida Mini Mercado ME",
+      "cnpj": "45.263.032/0001-18",
+      "vendedor_id": "V03",
+      "tabela_preco_id": "TP01",
+      "limite_credito": 3500,
+      "credito_utilizado": 500,
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    {
+      "id": "C009",
+      "nome_fantasia": "Mercantil Santa Rita",
+      "razao_social": "Santa Rita Mercantil Ltda",
+      "cnpj": "37.900.581/0001-28",
+      "vendedor_id": "V03",
+      "tabela_preco_id": "TP03",
+      "limite_credito": 8000,
+      "credito_utilizado": 2000,
+      "cidade": "Parnaíba",
+      "uf": "PI"
+    },
+    {
+      "id": "C010",
+      "nome_fantasia": "Conveniência 24h Posto Sol",
+      "razao_social": "Posto Sol Combustíveis Ltda",
+      "cnpj": "53.207.175/0001-30",
+      "vendedor_id": "V03",
+      "tabela_preco_id": "TP01",
+      "limite_credito": 4500,
+      "credito_utilizado": 4500,
+      "cidade": "Picos",
+      "uf": "PI"
+    }
+  ]
+}

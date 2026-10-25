@@ -51,8 +51,8 @@ describe('mapCatalogSeed', () => {
   });
 
   // The real file keeps its imperfections; the mapper must accept it as is.
-  it('accepts the delivered seed.json, duplicate EAN and all', () => {
-    const file = new URL('../../../../../seed.json', import.meta.url);
+  it('accepts the seed slice, duplicate EAN and all', () => {
+    const file = new URL('../../../seed/seed.json', import.meta.url);
     const result = mapCatalogSeed(JSON.parse(readFileSync(file, 'utf8')));
 
     expect(result.products).toHaveLength(23);

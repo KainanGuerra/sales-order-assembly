@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 
 // All configuration comes from the environment and is validated at startup, so
@@ -14,8 +15,9 @@ const EnvSchema = z.object({
   // Deadline for every gRPC call; a slower answer is treated as "unavailable".
   GRPC_TIMEOUT_MS: z.coerce.number().int().positive().default(3000),
   RABBITMQ_URL: z.string().min(1).default('amqp://rabbitmq:5672'),
-  // The history orders of the seed are imported from this file at startup.
-  SEED_FILE: z.string().default('/data/seed.json'),
+  // The slice of the sample data this service imports at start: next to the code, in
+  // the image too (the same trick as the migrations folder).
+  SEED_FILE: z.string().default(fileURLToPath(new URL('../../seed/seed.json', import.meta.url))),
   // Price table of a client that has none of its own (used for imported orders).
   DEFAULT_PRICE_TABLE_ID: z.string().min(1).default('TP01'),
   // Orders below this net total cannot be sent (R$ 300.00).

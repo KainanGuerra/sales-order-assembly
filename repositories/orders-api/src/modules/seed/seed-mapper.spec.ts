@@ -62,8 +62,8 @@ describe('mapHistoryOrders', () => {
     expect(() => mapHistoryOrders(seed({ produtos: [] }), 'TP01')).toThrow(/unknown product/);
   });
 
-  it('accepts the delivered seed.json: four orders, three invoiced and one cancelled', () => {
-    const file = new URL('../../../../../seed.json', import.meta.url);
+  it('accepts the seed slice: four orders, three invoiced and one cancelled', () => {
+    const file = new URL('../../../seed/seed.json', import.meta.url);
     const orders = mapHistoryOrders(JSON.parse(readFileSync(file, 'utf8')), 'TP01');
     expect(orders).toHaveLength(4);
     expect(orders.map((o) => o.order.status)).toEqual(['INVOICED', 'INVOICED', 'INVOICED', 'CANCELLED']);

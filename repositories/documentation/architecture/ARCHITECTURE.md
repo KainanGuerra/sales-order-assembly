@@ -22,9 +22,9 @@ Infraestrutura: **PostgreSQL** (um schema e um papel por serviço), **RabbitMQ**
 
 Cada serviço é dono de um schema e de um papel (`<serviço>_role`) que só enxerga o próprio schema. **Não há consulta entre schemas** nem chave estrangeira entre serviços. O `orders` não guarda cópia de dados de outros serviços: cada item leva só o instantâneo (descrição, SKU, preço) do momento do envio. Diagrama: [Dono dos dados](../diagrams/data-ownership.md).
 
-- **Dinheiro** é inteiro em centavos e **desconto** é inteiro em pontos-base (5% = 500). O `seed.json` tem reais com vírgula: a conversão é feita na importação (D8, D25).
+- **Dinheiro** é inteiro em centavos e **desconto** é inteiro em pontos-base (5% = 500). Os dados de exemplo (o seed) têm reais com vírgula: a conversão é feita na importação (D8, D25).
 - **Migrações** com `drizzle-kit`, aplicadas na partida do serviço; as tabelas não levam o nome do schema, que vem do `search_path` da conexão (por isso os testes rodam em `<serviço>_test`).
-- **Semente:** cada serviço importa a própria fatia do `seed.json` na partida, de forma idempotente: identity (supervisores, vendedores, clientes), catalog (produtos e tabelas), orders (pedidos do histórico, com `origin = IMPORTED`).
+- **Semente:** cada serviço importa o próprio `seed/seed.json` (a fatia que usa, copiada dos dados fornecidos; vai dentro da imagem) na partida, de forma idempotente: identity (supervisores, vendedores, clientes), catalog (produtos e tabelas), orders (pedidos do histórico, com `origin = IMPORTED`).
 - Restrições únicas no banco garantem as regras de unicidade (o id do pedido, `counted_orders`, o aviso por pedido+pessoa+tipo).
 
 ## 3. Comunicação

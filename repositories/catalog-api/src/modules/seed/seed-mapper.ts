@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-// Reads only the slice of seed.json that belongs to the catalog. Unknown
-// fields are ignored: the file belongs to the other services as well.
+// Reads the catalog's seed (seed/seed.json): only the fields this service uses.
+// Unknown fields are ignored, so the sample data can carry more than is read here.
 const SeedProductSchema = z.object({
   id: z.string().min(1),
   sku: z.string().min(1),

@@ -7,7 +7,7 @@ Sellers, supervisors, clients (the portfolio) and credit. Owns the `identity` Po
 - `src/db/schema.ts` - Drizzle tables (`supervisors`, `sellers`, `clients`). Money is integer cents; the seller's discount limit is in basis points (1% = 100). `price_table_id` is the id of a catalog table (no foreign key across services); it is null for a client without one.
 - `src/modules/people/rules.ts` - the pure rules: who may see which portfolio (a seller only their own; a supervisor only the sellers they supervise), the price-table fallback, available credit.
 - `src/modules/people/services/` - applies the rules. A seller asking for another seller's client gets the same answer as for a missing client, so ids cannot be probed.
-- `src/modules/seed/` - loads this service's slice of `seed.json` at startup, idempotently. A restart never overwrites `credit_used_cents`, so credit consumed by orders survives.
+- `src/modules/seed/` - loads this service's `seed/seed.json` at startup, idempotently (the file also ships in the image). A restart never overwrites `credit_used_cents`, so credit consumed by orders survives.
 - Two doors in one process:
   - HTTP for the BFF: `GET /login-options`, `POST /sessions/validate`, `GET /sellers/:id/clients`, `GET /clients/:id`, `GET /health`. The portfolio routes need the forwarded user (`x-user-id`, `x-user-role`).
   - gRPC for orders-api: `sales.identity.v1.IdentityService/GetClient` and `GetSeller` (`NOT_FOUND` when missing).

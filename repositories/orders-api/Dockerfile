@@ -24,6 +24,7 @@ WORKDIR /app/orders-api
 COPY --from=build --chown=node:node /app/orders-api/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/orders-api/dist ./dist
 COPY --from=build --chown=node:node /app/orders-api/drizzle ./drizzle
+COPY --from=build --chown=node:node /app/orders-api/seed ./seed
 COPY --from=build --chown=node:node /app/orders-api/package.json ./package.json
 USER node
 EXPOSE 3003

@@ -17,7 +17,7 @@ import { ProductsRepository, escapeLike } from './products.repository.js';
 //   TEST_DATABASE_URL=postgres://catalog_role:<password>@127.0.0.1:5432/sales pnpm test
 const url = process.env.TEST_DATABASE_URL;
 const TEST_SCHEMA = 'catalog_test';
-const seedFile = fileURLToPath(new URL('../../../../../../seed.json', import.meta.url));
+const seedFile = fileURLToPath(new URL('../../../../seed/seed.json', import.meta.url));
 
 describe.skipIf(!url)('ProductsRepository (real Postgres)', () => {
   let pool: Pool;

@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 
 // All configuration comes from the environment and is validated at startup, so
@@ -14,7 +15,9 @@ const EnvSchema = z.object({
   // disabled with the reason, and an inactive product appears on an exact
   // EAN/SKU match. When off, both are hidden.
   SHOW_UNAVAILABLE_PRODUCTS: z.stringbool().default(true),
-  SEED_FILE: z.string().default('/data/seed.json'),
+  // The slice of the sample data this service imports at start: next to the code, in
+  // the image too (the same trick as the migrations folder).
+  SEED_FILE: z.string().default(fileURLToPath(new URL('../../seed/seed.json', import.meta.url))),
   RABBITMQ_URL: z.string().min(1).default('amqp://rabbitmq:5672'),
   // Deliveries a failing event gets before the broker dead-letters it.
   CONSUMER_MAX_DELIVERIES: z.coerce.number().int().min(1).default(5),

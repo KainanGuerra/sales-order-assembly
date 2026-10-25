@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 
 // All configuration comes from the environment and is validated at startup, so
@@ -13,7 +14,9 @@ const EnvSchema = z.object({
   // Used for a client that has no price table of its own. The tables belong to
   // the catalog; identity only knows the id.
   DEFAULT_PRICE_TABLE_ID: z.string().min(1).default('TP01'),
-  SEED_FILE: z.string().default('/data/seed.json'),
+  // The slice of the sample data this service imports at start: next to the code, in
+  // the image too (the same trick as the migrations folder).
+  SEED_FILE: z.string().default(fileURLToPath(new URL('../../seed/seed.json', import.meta.url))),
   RABBITMQ_URL: z.string().min(1).default('amqp://rabbitmq:5672'),
   // How long a credit hold lives if the order is never confirmed.
   RESERVATION_TTL_SECONDS: z.coerce.number().int().positive().default(900),

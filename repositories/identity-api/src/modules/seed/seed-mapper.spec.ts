@@ -54,8 +54,8 @@ describe('mapIdentitySeed', () => {
     );
   });
 
-  it('accepts the delivered seed.json, including the client without a price table', () => {
-    const file = new URL('../../../../../seed.json', import.meta.url);
+  it('accepts the seed slice, including the client without a price table', () => {
+    const file = new URL('../../../seed/seed.json', import.meta.url);
     const seed = mapIdentitySeed(JSON.parse(readFileSync(file, 'utf8')));
 
     expect(seed.supervisors).toHaveLength(1);

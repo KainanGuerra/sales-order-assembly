@@ -6,7 +6,7 @@ import { DB, type Database } from '../../db/database.module.js';
 import { priceTableItems, priceTables, products } from '../../db/schema.js';
 import { mapCatalogSeed } from './seed-mapper.js';
 
-// Loads the catalog's slice of seed.json at startup. Idempotent: running it
+// Loads the catalog's seed (seed/seed.json) at startup. Idempotent: running it
 // again updates the same rows instead of duplicating them.
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {

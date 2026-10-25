@@ -2,7 +2,7 @@
 
 ## What this is
 
-A technical challenge: an order-assembly module for external sellers who visit small retailers and often have poor connectivity. The raw brief is in `repositories/documentation/context/SCOPE.md` (Portuguese); the data is in `seed.json`. Use `seed.json` as is, with its imperfections. Never edit it.
+A technical challenge: an order-assembly module for external sellers who visit small retailers and often have poor connectivity. The raw brief is in `repositories/documentation/context/SCOPE.md` (Portuguese); the sample data is split per service: each of `identity-api`, `catalog-api` and `orders-api` has its own `seed/seed.json` (the slice it imports at start). They are copies of the supplied data with its imperfections kept on purpose (duplicate EAN, a client without a price table, prices with a decimal comma): do not clean them.
 
 The reviewers will pick code at random and ask me to explain it, make a live change, and debug a defect they inject. **Everything must be code I can explain.** Prefer the simple, readable option and say why in `DECISIONS.md`.
 
@@ -27,7 +27,7 @@ Full picture in `repositories/documentation/architecture/ARCHITECTURE.md` (and w
 - **RabbitMQ (`@nestjs/microservices` RMQ):** only events published by orders (`order.placed` on creation, `order.submitted` when SUBMITTED is reached, `order.approved`, `order.rejected`). Consumers are idempotent: identity (confirms or releases the credit reservation; built) and notifications (a notice per order, person and kind, announced to open screens through SSE; built); catalog (units ordered per product, used only to break ties in search; built). Consumer queues are quorum queues with a delivery limit and a `.dlq` dead-letter queue; a message that fails its schema is dead-lettered at once.
 - **Credit is reserved synchronously.** At submit, orders calls identity `ReserveCredit` (gRPC) before saving the order, and `ReleaseCredit` if saving fails. identity locks the client row and holds the credit atomically, idempotent by order id; credit in use is *calculated* (already used + `CONFIRMED` + unexpired `PENDING` reservations), so an unconfirmed hold expires by itself (no job). `OrderPlaced` confirms the hold, `OrderRejected` releases it. See `ARCHITECTURE.md` §5 and `DECISIONS.md` D40 to D43.
 - **Draft lives in the browser (Pinia).** After each edit the BFF asks orders to calculate; nothing is saved until submit.
-- **Seed:** each service imports its own slice of `seed.json` at startup, idempotently.
+- **Seed:** each service imports its own `seed/seed.json` at startup, idempotently; the file also ships inside the service's image.
 - Phase A needs identity, catalog, orders and web; notifications arrived in phase B.
 - **The browser holds only an opaque session id** (HttpOnly cookie); the user lives in Redis (`web/server/utils/session.ts`). The BFF's secret is read from a private `runtimeConfig` key (`NUXT_INNER_AUTH`) and never reaches the client. Every API request with a body must be JSON.
 - **The screen never computes money or rules**: totals, blockers and status shown come from `POST /api/orders/calculate`; the order store (Pinia) holds only what the seller typed.
@@ -55,7 +55,7 @@ Exact versions are pinned in the code phase after checking compatibility. Fronte
 ## Domain rules (decided)
 
 - **The backend owns every rule.** The frontend only displays and sends intent. It never recomputes totals or enforces limits.
-- **Money is integer cents.** `seed.json` has reais as floats: convert on import. Format R$ only in the UI.
+- **Money is integer cents.** The seed files have reais as floats: convert on import. Format R$ only in the UI.
 - **Discounts are integer basis points** (1% = 100): 5% is 500. Internal status codes are `SUBMITTED` and `AWAITING_APPROVAL`; the UI shows "Enviado" / "Aguardando aprovação".
 - **Quantities are in units.** The seller may choose "unit" or "pack" in the UI; it is converted to units and priced per unit. Pack-only products (`venda_somente_multiplo`) require multiples of `fator_embalagem`.
 - **Line total** = unit price × quantity × (1 − discount%), rounded once, half-up. **Order discount** applies to the sum of rounded lines and is rounded once. Discounts: per item **plus** an order-level one.

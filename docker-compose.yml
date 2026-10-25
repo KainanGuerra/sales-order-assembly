@@ -51,9 +51,6 @@ services:
       SHOW_UNAVAILABLE_PRODUCTS: ${SHOW_UNAVAILABLE_PRODUCTS:-true}
       RABBITMQ_URL: amqp://sales:${RABBITMQ_PASSWORD}@rabbitmq:5672
       CONSUMER_MAX_DELIVERIES: ${CONSUMER_MAX_DELIVERIES:-5}
-      SEED_FILE: /data/seed.json
-    volumes:
-      - ./seed.json:/data/seed.json:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -73,12 +70,9 @@ services:
       DATABASE_URL: postgres://identity_role:${IDENTITY_DB_PASSWORD}@postgres:5432/sales
       INNER_AUTH: ${INNER_AUTH:?INNER_AUTH must be set}
       DEFAULT_PRICE_TABLE_ID: ${DEFAULT_PRICE_TABLE_ID:-TP01}
-      SEED_FILE: /data/seed.json
       RABBITMQ_URL: amqp://sales:${RABBITMQ_PASSWORD}@rabbitmq:5672
       RESERVATION_TTL_SECONDS: ${RESERVATION_TTL_SECONDS:-900}
       CONSUMER_MAX_DELIVERIES: ${CONSUMER_MAX_DELIVERIES:-5}
-    volumes:
-      - ./seed.json:/data/seed.json:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -103,9 +97,6 @@ services:
       MIN_ORDER_CENTS: ${MIN_ORDER_CENTS:-30000}
       MAX_DISCOUNT_BP: ${MAX_DISCOUNT_BP:-1000}
       DEFAULT_PRICE_TABLE_ID: ${DEFAULT_PRICE_TABLE_ID:-TP01}
-      SEED_FILE: /data/seed.json
-    volumes:
-      - ./seed.json:/data/seed.json:ro
     depends_on:
       postgres:
         condition: service_healthy

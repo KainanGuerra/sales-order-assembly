@@ -6,7 +6,7 @@ import { DB, type Database } from '../../db/database.module.js';
 import { clients, sellers, supervisors } from '../../db/schema.js';
 import { mapIdentitySeed } from './seed-mapper.js';
 
-// Loads identity's slice of seed.json at startup. Idempotent: running it again
+// Loads identity's seed (seed/seed.json) at startup. Idempotent: running it again
 // updates the same rows. credit_used_cents is NOT overwritten on a re-run, so a
 // restart never erases credit consumed by orders created after the first load.
 @Injectable()

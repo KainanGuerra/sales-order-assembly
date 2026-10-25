@@ -24,6 +24,7 @@ WORKDIR /app/catalog-api
 COPY --from=build --chown=node:node /app/catalog-api/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/catalog-api/dist ./dist
 COPY --from=build --chown=node:node /app/catalog-api/drizzle ./drizzle
+COPY --from=build --chown=node:node /app/catalog-api/seed ./seed
 COPY --from=build --chown=node:node /app/catalog-api/package.json ./package.json
 USER node
 EXPOSE 3002 50052

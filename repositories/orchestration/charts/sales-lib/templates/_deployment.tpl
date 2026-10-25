@@ -92,18 +92,7 @@ spec:
             # The root filesystem is read-only; temporary files go here.
             - name: tmp
               mountPath: /tmp
-            {{- if .Values.seed }}
-            - name: seed
-              mountPath: /data/seed.json
-              subPath: seed.json
-              readOnly: true
-            {{- end }}
       volumes:
         - name: tmp
           emptyDir: {}
-        {{- if .Values.seed }}
-        - name: seed
-          configMap:
-            name: seed
-        {{- end }}
 {{- end }}

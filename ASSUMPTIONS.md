@@ -1,8 +1,10 @@
 # ASSUMPTIONS
 
-Cada ambiguidade encontrada no enunciado (`repositories/documentation/context/SCOPE.md`) ou nos dados (`seed.json`) e a interpretação adotada. Quando eu mesmo decidi, está marcado como **Decisão minha**; quando houver resposta da equipe, ela será registrada como **Resposta recebida**.
+Cada ambiguidade encontrada no enunciado (`repositories/documentation/context/SCOPE.md`) ou nos dados de exemplo e a interpretação adotada. Quando eu mesmo decidi, está marcado como **Decisão minha**; quando houver resposta da equipe, ela será registrada como **Resposta recebida**.
 
-## Dados (`seed.json`)
+## Dados de exemplo (o seed)
+
+Cada serviço guarda a própria cópia da fatia que usa, em `seed/seed.json` (identity: supervisores, vendedores, clientes; catalog: produtos e tabelas de preço; orders: o histórico, com os vendedores, clientes e produtos que ele cita). As imperfeições dos dados foram mantidas de propósito, e cada uma virou uma linha abaixo.
 
 | # | Achado | Interpretação adotada |
 |---|---|---|

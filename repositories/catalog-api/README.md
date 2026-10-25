@@ -9,7 +9,7 @@ Products, price tables and search. Owns the `catalog` Postgres schema. Read by `
 - `src/modules/products/search-rules.ts` - the pure rules for what a seller sees (available / no price / inactive, and when each is shown).
 - `src/modules/products/repository/` - the search query: exact EAN or SKU, otherwise accent-insensitive "contains" plus pg_trgm word similarity; exact description first, then closest, then units ordered, then id (which also orders the two products that share an EAN).
 - `src/modules/products/controllers/order-events.controller.ts` - consumes `order.submitted` from its own quorum queue (`catalog-api-order-events`, with a `.dlq`) and adds the order's units to `product_stats`. `counted_orders` records each order id in the same transaction, so a redelivered event adds nothing. Search uses the total only after exact description and similarity, to decide between equally good matches (and between the two products that share an EAN).
-- `src/modules/seed/` - loads this service's slice of `seed.json` at startup, idempotently. Prices become integer cents.
+- `src/modules/seed/` - loads this service's `seed/seed.json` at startup, idempotently (the file also ships in the image). Prices become integer cents.
 - Two doors in one process: HTTP `GET /products?q=&priceTableId=&limit=` (and `GET /health`), and gRPC `sales.catalog.v1.CatalogService/GetProducts`. Both require the `x-inner-auth` secret.
 
 ## Run standalone

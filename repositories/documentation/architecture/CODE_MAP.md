@@ -7,7 +7,7 @@ Para achar rápido onde está cada coisa: onde mudar uma regra, como seguir um p
 | Quero mudar... | Arquivo (função) | Também mexer em |
 |---|---|---|
 | O pedido mínimo (R$ 300,00) | valor: `orders-api/src/config/env.ts` (`MIN_ORDER_CENTS`); regra: `orders-api/src/modules/orders/domain/order-rules.ts` (`calculateOrder`, bloqueio `BELOW_MINIMUM`) | `ASSUMPTIONS.md` A17, teste `order-rules.spec.ts` (299,99 × 300,00) |
-| O limite de desconto (alçada) | `order-rules.ts` (`calculateOrder`: `effectiveDiscountLimitBp = min(do vendedor, MAX_DISCOUNT_BP)`, motivos `LINE_DISCOUNT_ABOVE_LIMIT` e `ORDER_DISCOUNT_ABOVE_LIMIT`) | o limite de cada vendedor vem do `seed.json` (identity); `ASSUMPTIONS.md` A16, A27 |
+| O limite de desconto (alçada) | `order-rules.ts` (`calculateOrder`: `effectiveDiscountLimitBp = min(do vendedor, MAX_DISCOUNT_BP)`, motivos `LINE_DISCOUNT_ABOVE_LIMIT` e `ORDER_DISCOUNT_ABOVE_LIMIT`) | o limite de cada vendedor vem do `seed/seed.json` do identity; `ASSUMPTIONS.md` A16, A27 |
 | O arredondamento | `order-rules.ts` (`divideRoundHalfUp`; cada linha arredonda uma vez, o desconto do pedido sai da soma das linhas arredondadas) | `ASSUMPTIONS.md` A18, A28 (com os exemplos) e `order-rules.spec.ts` |
 | Embalagem e múltiplos | `order-rules.ts` (bloqueios `PACK_NOT_AVAILABLE`, `NOT_PACK_MULTIPLE`, `INVALID_QUANTITY`) | |
 | Produto repetido no pedido | `order-rules.ts` (bloqueio `DUPLICATE_PRODUCT`) | |
@@ -50,7 +50,7 @@ Camadas são pastas (`DECISIONS.md` D1; `style-guide/`): controllers chamam serv
 │   ├── repository/               acesso ao banco (sem regra de negócio)
 │   ├── domain/ (ou rules.ts)     funções puras: as regras
 │   └── dto/                      Zod
-├── modules/seed/                 importação idempotente do seed.json
+├── modules/seed/                 importação idempotente do seed/seed.json do serviço
 └── shared/                       guard de inner-auth, mensageria (consume, topology)
 ```
 

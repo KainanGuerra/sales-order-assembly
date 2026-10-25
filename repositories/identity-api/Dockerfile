@@ -24,6 +24,7 @@ WORKDIR /app/identity-api
 COPY --from=build --chown=node:node /app/identity-api/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/identity-api/dist ./dist
 COPY --from=build --chown=node:node /app/identity-api/drizzle ./drizzle
+COPY --from=build --chown=node:node /app/identity-api/seed ./seed
 COPY --from=build --chown=node:node /app/identity-api/package.json ./package.json
 USER node
 EXPOSE 3001 50051
