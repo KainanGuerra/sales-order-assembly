@@ -6,9 +6,9 @@ Registro do meu uso de IA neste projeto. Ferramenta: Claude Code, do começo ao 
 
 ## Como trabalhei com a IA
 
-- **A IA escreveu quase todo o código e os documentos; eu decidi o desenho e as regras.** Cada decisão virou uma pergunta (a IA usava uma ferramenta de perguntas com opções), eu respondia, e o resultado está em `DECISIONS.md` (D1 a D51) e `ASSUMPTIONS.md` (A1 a A50).
+- **Divisão de papéis.** **O meu papel:** as decisões de arquitetura e a direção do trabalho por prompts (perguntar, recusar, corrigir, impor regras de processo). **O papel da IA:** o desenvolvimento, os testes, a conferência e a verificação das regras de negócio. Cada decisão virou uma pergunta (a IA usava uma ferramenta de perguntas com opções), eu respondia, e o resultado está em `DECISIONS.md` e `ASSUMPTIONS.md`.
 - **Regra que impus logo no começo:** "não pedi para você decidir, continue me perguntando sobre tudo". Também recusei perguntas densas ou cheias de jargão ("técnico demais, simplifique"), e várias vezes mandei a IA parar e explicar antes de eu escolher.
-- **Como verifiquei:** rodando o sistema, lendo as decisões escritas, perguntando "por quê", interrompendo quando algo não fazia sentido e exigindo que os testes provassem algo (verificação por mutação, momento 4). Não escrevi código na mão e **não li o código dos serviços linha a linha**. Das telas, só vi o que a IA me mostrou ao usar o navegador (Claude in Chrome); fora isso, não li o código delas.
+- **Como a verificação foi feita:** os testes, a conferência das regras de negócio, o sistema rodando e as passadas no navegador foram trabalho da IA. O meu papel nela foi cobrar: perguntar "por quê", interromper quando algo não fazia sentido e exigir que os testes provassem algo (verificação por mutação, momento 4). Não escrevi código na mão e **não li o código dos serviços linha a linha**. Das telas, só vi o que a IA me mostrou ao usar o navegador (Claude in Chrome).
 - **Regras do processo, pedidas por mim:** commits em inglês, Conventional Commits, última linha `IA: nenhuma|parcial|majoritária` e **sem** `Co-Authored-By`; documentos de entrega em português; nada de caminhos locais, nomes de empresas onde trabalho ou credenciais nos arquivos; só conferir no navegador quando a fatia inteira estiver pronta; nunca pular o hook de commit.
 - **Em números:** mais de 50 commits, todos `IA: majoritária`, em dois dias (24 e 25/10; o histórico está na ordem real, sem squash). Foram 5 serviços (identity, catalog, orders, notifications e a tela com o BFF), 1 pacote de contratos, os gráficos Helm e a documentação.
 
@@ -98,7 +98,7 @@ Registro do meu uso de IA neste projeto. Ferramenta: Claude Code, do começo ao 
 
 Legenda: **E** = eu escrevi; **R** = a IA gerou e eu revisei/alterei; **A** = a IA gerou e eu aceitei como veio.
 
-Nota: as decisões (o que o sistema faz e por quê) são minhas, perguntadas uma a uma. O código foi gerado pela IA e **eu não o li linha a linha**; por isso a coluna diz **A** nas linhas de código, mesmo onde eu dirigi o comportamento. O que verifiquei foi o resultado: os testes, o sistema rodando e, nas telas, o que a IA me mostrou no navegador. Só `DECISIONS.md` e `ASSUMPTIONS.md` eu li e corrigi (**R**).
+Nota: o meu papel foi a arquitetura e a direção por prompts (as decisões e as regras de negócio, perguntadas uma a uma); o papel da IA foi desenvolver, testar, conferir e verificar as regras de negócio. O código foi gerado pela IA e **eu não o li linha a linha**; por isso a coluna diz **A** nas linhas de código, mesmo onde eu dirigi o comportamento. A verificação (testes, sistema rodando, navegador) também foi feita pela IA. Só `DECISIONS.md` e `ASSUMPTIONS.md` eu li e corrigi (**R**).
 
 | Parte da solução | Autoria | Observações |
 |---|---|---|

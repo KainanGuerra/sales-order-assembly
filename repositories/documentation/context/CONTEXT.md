@@ -37,7 +37,7 @@ O que falta, e os limites que continuam, está em [`PENDINGS.md`](../pendings/PE
 
 ## 4. Como o trabalho foi conduzido
 
-- **Decisões são minhas, a IA propõe e escreve.** Cada escolha de desenho foi perguntada a mim e respondida antes de entrar no código; quando a IA sugeriu algo que eu não pedi ou errou (o vocabulário dos status, uma conta de arredondamento), a correção está registrada. O retrato honesto está em [`AI_LOG.md`](../../../AI_LOG.md).
+- **Papéis divididos.** Eu decido a arquitetura e dirijo o trabalho por prompts; a IA desenvolve, testa, confere e verifica as regras de negócio. Cada escolha de desenho foi perguntada a mim e respondida antes de entrar no código; quando a IA sugeriu algo que eu não pedi ou errou (o vocabulário dos status, uma conta de arredondamento), a correção está registrada. Não li o código linha a linha. O retrato honesto está em [`AI_LOG.md`](../../../AI_LOG.md).
 - **Convenções antes do código** (D1): o guia em [`style-guide/`](../style-guide/README.md) vem de projetos anteriores, sem nomes, caminhos ou regras de negócio deles.
 - **Cada commit** é Conventional Commits em inglês e termina com a linha `IA: nenhuma`, `IA: parcial` ou `IA: majoritária` (D14). Nada foi reescrito depois de feito.
 - **Testes de verdade:** as regras são funções puras com teste de borda; o que depende do banco é testado no PostgreSQL real; depois de escrever um teste, o código é quebrado de propósito para ver o teste falhar (veja `TESTING.md`).
