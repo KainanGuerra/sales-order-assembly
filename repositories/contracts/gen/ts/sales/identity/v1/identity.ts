@@ -30,6 +30,33 @@ export interface GetSellerResponse {
   seller?: Seller | undefined;
 }
 
+export interface ReserveCreditRequest {
+  clientId: string;
+  /** The order the hold is for; also the idempotency key. */
+  orderId: string;
+  amountCents: number;
+}
+
+export interface ReserveCreditResponse {
+  /**
+   * false when the amount does not fit in the credit still available. This is
+   * an answer, not an error.
+   */
+  reserved: boolean;
+  /**
+   * Credit available after this call (when reserved) or at the time of the
+   * refusal (when not).
+   */
+  availableCents: number;
+}
+
+export interface ReleaseCreditRequest {
+  orderId: string;
+}
+
+export interface ReleaseCreditResponse {
+}
+
 export interface Client {
   id: string;
   tradeName: string;
@@ -42,6 +69,11 @@ export interface Client {
   priceTableId: string;
   priceTableFallback: boolean;
   creditLimitCents: number;
+  /**
+   * Credit that is spoken for: what was already used, plus the orders that
+   * were sent, plus the holds that have not expired. Available credit is
+   * credit_limit_cents minus this.
+   */
   creditUsedCents: number;
 }
 
@@ -229,6 +261,212 @@ export const GetSellerResponse: MessageFns<GetSellerResponse> = {
             message.seller = Seller.decode(reader, reader.uint32());
             continue;
           }
+        }
+        if ((tag & 7) === 4 || tag === 0) {
+          break;
+        }
+        reader.skip(tag & 7);
+      }
+      return message;
+    } finally {
+      (reader as any).__tsProtoDecodeDepth = previousRecursionDepth;
+    }
+  },
+};
+
+function createBaseReserveCreditRequest(): ReserveCreditRequest {
+  return { clientId: "", orderId: "", amountCents: 0 };
+}
+
+export const ReserveCreditRequest: MessageFns<ReserveCreditRequest> = {
+  encode(message: ReserveCreditRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.clientId !== "") {
+      writer.uint32(10).string(message.clientId);
+    }
+    if (message.orderId !== "") {
+      writer.uint32(18).string(message.orderId);
+    }
+    if (message.amountCents !== 0) {
+      writer.uint32(24).int32(message.amountCents);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ReserveCreditRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const previousRecursionDepth = (reader as any).__tsProtoDecodeDepth ?? 0;
+    if (previousRecursionDepth >= 100) {
+      throw new globalThis.Error("protobuf decode recursion limit exceeded");
+    }
+    (reader as any).__tsProtoDecodeDepth = previousRecursionDepth + 1;
+    try {
+      const end = length === undefined ? reader.len : reader.pos + length;
+      const message = createBaseReserveCreditRequest();
+      while (reader.pos < end) {
+        const tag = reader.uint32();
+        switch (tag >>> 3) {
+          case 1: {
+            if (tag !== 10) {
+              break;
+            }
+
+            message.clientId = reader.string();
+            continue;
+          }
+          case 2: {
+            if (tag !== 18) {
+              break;
+            }
+
+            message.orderId = reader.string();
+            continue;
+          }
+          case 3: {
+            if (tag !== 24) {
+              break;
+            }
+
+            message.amountCents = reader.int32();
+            continue;
+          }
+        }
+        if ((tag & 7) === 4 || tag === 0) {
+          break;
+        }
+        reader.skip(tag & 7);
+      }
+      return message;
+    } finally {
+      (reader as any).__tsProtoDecodeDepth = previousRecursionDepth;
+    }
+  },
+};
+
+function createBaseReserveCreditResponse(): ReserveCreditResponse {
+  return { reserved: false, availableCents: 0 };
+}
+
+export const ReserveCreditResponse: MessageFns<ReserveCreditResponse> = {
+  encode(message: ReserveCreditResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.reserved !== false) {
+      writer.uint32(8).bool(message.reserved);
+    }
+    if (message.availableCents !== 0) {
+      writer.uint32(16).int32(message.availableCents);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ReserveCreditResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const previousRecursionDepth = (reader as any).__tsProtoDecodeDepth ?? 0;
+    if (previousRecursionDepth >= 100) {
+      throw new globalThis.Error("protobuf decode recursion limit exceeded");
+    }
+    (reader as any).__tsProtoDecodeDepth = previousRecursionDepth + 1;
+    try {
+      const end = length === undefined ? reader.len : reader.pos + length;
+      const message = createBaseReserveCreditResponse();
+      while (reader.pos < end) {
+        const tag = reader.uint32();
+        switch (tag >>> 3) {
+          case 1: {
+            if (tag !== 8) {
+              break;
+            }
+
+            message.reserved = reader.bool();
+            continue;
+          }
+          case 2: {
+            if (tag !== 16) {
+              break;
+            }
+
+            message.availableCents = reader.int32();
+            continue;
+          }
+        }
+        if ((tag & 7) === 4 || tag === 0) {
+          break;
+        }
+        reader.skip(tag & 7);
+      }
+      return message;
+    } finally {
+      (reader as any).__tsProtoDecodeDepth = previousRecursionDepth;
+    }
+  },
+};
+
+function createBaseReleaseCreditRequest(): ReleaseCreditRequest {
+  return { orderId: "" };
+}
+
+export const ReleaseCreditRequest: MessageFns<ReleaseCreditRequest> = {
+  encode(message: ReleaseCreditRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.orderId !== "") {
+      writer.uint32(10).string(message.orderId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ReleaseCreditRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const previousRecursionDepth = (reader as any).__tsProtoDecodeDepth ?? 0;
+    if (previousRecursionDepth >= 100) {
+      throw new globalThis.Error("protobuf decode recursion limit exceeded");
+    }
+    (reader as any).__tsProtoDecodeDepth = previousRecursionDepth + 1;
+    try {
+      const end = length === undefined ? reader.len : reader.pos + length;
+      const message = createBaseReleaseCreditRequest();
+      while (reader.pos < end) {
+        const tag = reader.uint32();
+        switch (tag >>> 3) {
+          case 1: {
+            if (tag !== 10) {
+              break;
+            }
+
+            message.orderId = reader.string();
+            continue;
+          }
+        }
+        if ((tag & 7) === 4 || tag === 0) {
+          break;
+        }
+        reader.skip(tag & 7);
+      }
+      return message;
+    } finally {
+      (reader as any).__tsProtoDecodeDepth = previousRecursionDepth;
+    }
+  },
+};
+
+function createBaseReleaseCreditResponse(): ReleaseCreditResponse {
+  return {};
+}
+
+export const ReleaseCreditResponse: MessageFns<ReleaseCreditResponse> = {
+  encode(_: ReleaseCreditResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ReleaseCreditResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const previousRecursionDepth = (reader as any).__tsProtoDecodeDepth ?? 0;
+    if (previousRecursionDepth >= 100) {
+      throw new globalThis.Error("protobuf decode recursion limit exceeded");
+    }
+    (reader as any).__tsProtoDecodeDepth = previousRecursionDepth + 1;
+    try {
+      const end = length === undefined ? reader.len : reader.pos + length;
+      const message = createBaseReleaseCreditResponse();
+      while (reader.pos < end) {
+        const tag = reader.uint32();
+        switch (tag >>> 3) {
         }
         if ((tag & 7) === 4 || tag === 0) {
           break;
@@ -451,6 +689,19 @@ export interface IdentityServiceClient {
   getClient(request: GetClientRequest, metadata?: Metadata): Observable<GetClientResponse>;
 
   getSeller(request: GetSellerRequest, metadata?: Metadata): Observable<GetSellerResponse>;
+
+  /**
+   * Holds credit for an order that is about to be saved. The check and the hold
+   * are one atomic step, so two orders sent at once cannot both fit in credit
+   * that only fits one. Repeating the call for the same order id answers the
+   * same way and holds nothing extra.
+   */
+
+  reserveCredit(request: ReserveCreditRequest, metadata?: Metadata): Observable<ReserveCreditResponse>;
+
+  /** Gives the hold back (the order could not be saved). Idempotent. */
+
+  releaseCredit(request: ReleaseCreditRequest, metadata?: Metadata): Observable<ReleaseCreditResponse>;
 }
 
 /**
@@ -469,11 +720,30 @@ export interface IdentityServiceController {
     request: GetSellerRequest,
     metadata?: Metadata,
   ): Promise<GetSellerResponse> | Observable<GetSellerResponse> | GetSellerResponse;
+
+  /**
+   * Holds credit for an order that is about to be saved. The check and the hold
+   * are one atomic step, so two orders sent at once cannot both fit in credit
+   * that only fits one. Repeating the call for the same order id answers the
+   * same way and holds nothing extra.
+   */
+
+  reserveCredit(
+    request: ReserveCreditRequest,
+    metadata?: Metadata,
+  ): Promise<ReserveCreditResponse> | Observable<ReserveCreditResponse> | ReserveCreditResponse;
+
+  /** Gives the hold back (the order could not be saved). Idempotent. */
+
+  releaseCredit(
+    request: ReleaseCreditRequest,
+    metadata?: Metadata,
+  ): Promise<ReleaseCreditResponse> | Observable<ReleaseCreditResponse> | ReleaseCreditResponse;
 }
 
 export function IdentityServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["getClient", "getSeller"];
+    const grpcMethods: string[] = ["getClient", "getSeller", "reserveCredit", "releaseCredit"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("IdentityService", method)(constructor.prototype[method], method, descriptor);
@@ -515,11 +785,47 @@ export const IdentityServiceService = {
     responseSerialize: (value: GetSellerResponse): Buffer => Buffer.from(GetSellerResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): GetSellerResponse => GetSellerResponse.decode(value),
   },
+  /**
+   * Holds credit for an order that is about to be saved. The check and the hold
+   * are one atomic step, so two orders sent at once cannot both fit in credit
+   * that only fits one. Repeating the call for the same order id answers the
+   * same way and holds nothing extra.
+   */
+  reserveCredit: {
+    path: "/sales.identity.v1.IdentityService/ReserveCredit" as const,
+    requestStream: false as const,
+    responseStream: false as const,
+    requestSerialize: (value: ReserveCreditRequest): Buffer => Buffer.from(ReserveCreditRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ReserveCreditRequest => ReserveCreditRequest.decode(value),
+    responseSerialize: (value: ReserveCreditResponse): Buffer =>
+      Buffer.from(ReserveCreditResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ReserveCreditResponse => ReserveCreditResponse.decode(value),
+  },
+  /** Gives the hold back (the order could not be saved). Idempotent. */
+  releaseCredit: {
+    path: "/sales.identity.v1.IdentityService/ReleaseCredit" as const,
+    requestStream: false as const,
+    responseStream: false as const,
+    requestSerialize: (value: ReleaseCreditRequest): Buffer => Buffer.from(ReleaseCreditRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ReleaseCreditRequest => ReleaseCreditRequest.decode(value),
+    responseSerialize: (value: ReleaseCreditResponse): Buffer =>
+      Buffer.from(ReleaseCreditResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ReleaseCreditResponse => ReleaseCreditResponse.decode(value),
+  },
 } as const;
 
 export interface IdentityServiceServer extends UntypedServiceImplementation {
   getClient: handleUnaryCall<GetClientRequest, GetClientResponse>;
   getSeller: handleUnaryCall<GetSellerRequest, GetSellerResponse>;
+  /**
+   * Holds credit for an order that is about to be saved. The check and the hold
+   * are one atomic step, so two orders sent at once cannot both fit in credit
+   * that only fits one. Repeating the call for the same order id answers the
+   * same way and holds nothing extra.
+   */
+  reserveCredit: handleUnaryCall<ReserveCreditRequest, ReserveCreditResponse>;
+  /** Gives the hold back (the order could not be saved). Idempotent. */
+  releaseCredit: handleUnaryCall<ReleaseCreditRequest, ReleaseCreditResponse>;
 }
 
 export interface MessageFns<T> {

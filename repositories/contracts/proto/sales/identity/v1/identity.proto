@@ -8,6 +8,15 @@ package sales.identity.v1;
 service IdentityService {
   rpc GetClient(GetClientRequest) returns (GetClientResponse);
   rpc GetSeller(GetSellerRequest) returns (GetSellerResponse);
+
+  // Holds credit for an order that is about to be saved. The check and the hold
+  // are one atomic step, so two orders sent at once cannot both fit in credit
+  // that only fits one. Repeating the call for the same order id answers the
+  // same way and holds nothing extra.
+  rpc ReserveCredit(ReserveCreditRequest) returns (ReserveCreditResponse);
+
+  // Gives the hold back (the order could not be saved). Idempotent.
+  rpc ReleaseCredit(ReleaseCreditRequest) returns (ReleaseCreditResponse);
 }
 
 message GetClientRequest {
@@ -26,6 +35,28 @@ message GetSellerResponse {
   Seller seller = 1;
 }
 
+message ReserveCreditRequest {
+  string client_id = 1;
+  // The order the hold is for; also the idempotency key.
+  string order_id = 2;
+  int32 amount_cents = 3;
+}
+
+message ReserveCreditResponse {
+  // false when the amount does not fit in the credit still available. This is
+  // an answer, not an error.
+  bool reserved = 1;
+  // Credit available after this call (when reserved) or at the time of the
+  // refusal (when not).
+  int32 available_cents = 2;
+}
+
+message ReleaseCreditRequest {
+  string order_id = 1;
+}
+
+message ReleaseCreditResponse {}
+
 message Client {
   string id = 1;
   string trade_name = 2;
@@ -36,6 +67,9 @@ message Client {
   string price_table_id = 4;
   bool price_table_fallback = 5;
   int32 credit_limit_cents = 6;
+  // Credit that is spoken for: what was already used, plus the orders that
+  // were sent, plus the holds that have not expired. Available credit is
+  // credit_limit_cents minus this.
   int32 credit_used_cents = 7;
 }
 
