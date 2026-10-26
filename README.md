@@ -1,4 +1,25 @@
-# Hermes: montagem de pedidos para vendedores externos
+<h1 align="center"><img src="repositories/web/public/logo.svg" alt="Hermes" width="380"></h1>
+
+<p align="center"><b>Montagem de pedidos para vendedores externos</b><br>
+Do catálogo ao pedido enviado, mesmo com sinal ruim.</p>
+
+<p align="center">
+  <a href="https://github.com/KainanGuerra/sales-order-assembly/actions/workflows/ci.yml"><img src="https://github.com/KainanGuerra/sales-order-assembly/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licen%C3%A7a-MIT-0f766e?style=flat-square&labelColor=0f172a" alt="Licença MIT"></a>
+  <img src="https://img.shields.io/badge/offline--first-sim-fbbf24?style=flat-square&labelColor=0f172a" alt="Offline-first">
+  <br>
+  <img src="https://img.shields.io/badge/Nuxt-4-14b8a6?style=flat-square&labelColor=0f172a" alt="Nuxt 4">
+  <img src="https://img.shields.io/badge/NestJS-12-14b8a6?style=flat-square&labelColor=0f172a" alt="NestJS 12">
+  <img src="https://img.shields.io/badge/PostgreSQL-17-14b8a6?style=flat-square&labelColor=0f172a" alt="PostgreSQL 17">
+  <img src="https://img.shields.io/badge/RabbitMQ-3.13-14b8a6?style=flat-square&labelColor=0f172a" alt="RabbitMQ 3.13">
+  <img src="https://img.shields.io/badge/gRPC-s%C3%ADncrono-14b8a6?style=flat-square&labelColor=0f172a" alt="gRPC">
+  <img src="https://img.shields.io/badge/Docker-Compose-14b8a6?style=flat-square&labelColor=0f172a" alt="Docker Compose">
+  <img src="https://img.shields.io/badge/Kubernetes-Helm-14b8a6?style=flat-square&labelColor=0f172a" alt="Kubernetes e Helm">
+</p>
+
+<p align="center"><img src="repositories/documentation/brand/palette.svg" alt="Paleta do Hermes: teal, teal escuro, âmbar e slate" width="560"></p>
+
+---
 
 Módulo para vendedores que visitam pequenos varejistas (mercadinhos, minimercados, conveniências), consultam o catálogo e fecham o pedido no cliente, muitas vezes com sinal ruim.
 

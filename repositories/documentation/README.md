@@ -20,6 +20,7 @@ Em uma linha cada: [`DECISIONS.md`](../../DECISIONS.md) é o **porquê**, [`ASSU
 | [`architecture/CODE_MAP.md`](architecture/CODE_MAP.md) | Onde mudar cada regra, o caminho de um pedido no código, rotas, como rodar um teste |
 | [`study-guide/STUDY_GUIDE.md`](study-guide/STUDY_GUIDE.md) | Oito aulas sobre as partes centrais do código (arredondamento, regras, status, crédito, avisos, BFF, offline, envio idempotente), com 24 perguntas de autoteste e gabarito |
 | [`diagrams/`](diagrams/) | Nove diagramas Mermaid (topologia, dados, envio, status, crédito, eventos, avisos, offline, Kubernetes) |
+| [`brand/palette.svg`](brand/palette.svg) | A paleta da marca (teal, âmbar, slate), usada no `README.md`; o logo está em `web/public/logo.svg` |
 | [`getting-started/GETTING_STARTED.md`](getting-started/GETTING_STARTED.md) | Pré-requisitos, `.env`, Compose, Kubernetes, problemas comuns |
 | [`testing/TESTING.md`](testing/TESTING.md) | Contagem de testes, como rodar, revisão por mutação, o que não é coberto |
 | [`operations/RUNBOOK.md`](operations/RUNBOOK.md) | Logs, banco, filas e mensagens mortas, voltar ao zero, falhas do cluster |

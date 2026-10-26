@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 96" role="img" aria-label="Paleta do Hermes: teal, teal escuro, âmbar e slate">
+  <title>Paleta do Hermes</title>
+  <g font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" text-anchor="middle">
+    <rect x="0"   y="0" width="144" height="96" rx="12" fill="#14b8a6"/>
+    <rect x="120" y="0" width="24" height="96" fill="#14b8a6"/>
+    <text x="72"  y="46" font-size="15" font-weight="700" fill="#042f2e">Teal</text>
+    <text x="72"  y="68" font-size="12" fill="#042f2e">#14b8a6 · primária</text>
+
+    <rect x="144" y="0" width="144" height="96" fill="#0f766e"/>
+    <text x="216" y="46" font-size="15" font-weight="700" fill="#ffffff">Teal escuro</text>
+    <text x="216" y="68" font-size="12" fill="#ccfbf1">#0f766e · nome</text>
+
+    <rect x="288" y="0" width="144" height="96" fill="#115e59"/>
+    <text x="360" y="46" font-size="15" font-weight="700" fill="#ffffff">Teal profundo</text>
+    <text x="360" y="68" font-size="12" fill="#ccfbf1">#115e59 · degradê</text>
+
+    <rect x="432" y="0" width="144" height="96" fill="#fbbf24"/>
+    <text x="504" y="46" font-size="15" font-weight="700" fill="#451a03">Âmbar</text>
+    <text x="504" y="68" font-size="12" fill="#451a03">#fbbf24 · destaque</text>
+
+    <rect x="576" y="0" width="144" height="96" rx="12" fill="#0f172a"/>
+    <rect x="576" y="0" width="24" height="96" fill="#0f172a"/>
+    <text x="648" y="46" font-size="15" font-weight="700" fill="#ffffff">Slate</text>
+    <text x="648" y="68" font-size="12" fill="#cbd5e1">#0f172a · neutra</text>
+  </g>
+</svg>
